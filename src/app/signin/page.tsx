@@ -65,6 +65,7 @@ export default function LoginPage() {
                 name="username"
                 type="text"
                 autoComplete="username"
+                placeholder="Enter your username"
                 required
                 className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                 value={username}
@@ -83,6 +84,7 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 autoComplete="current-password"
+                placeholder="Enter your password"
                 required
                 className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                 value={password}
