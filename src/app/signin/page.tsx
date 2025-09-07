@@ -1,5 +1,6 @@
 "use client"; // cần client component để handle form
 
+import { Input } from "antd";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -46,21 +47,16 @@ export default function LoginPage() {
                 className="object-cover rounded-full"
               />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800">
-              Welcome Back To DeepEyeX
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-800">Welcome Back To DeepEyeX</h2>
             <p className="text-gray-500">Please sign in to continue.</p>
           </div>
 
           <form className="w-full max-w-sm space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label
-                htmlFor="username"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="username" className="mb-1 block text-sm font-medium text-gray-700">
                 Username
               </label>
-              <input
+              <Input
                 id="username"
                 name="username"
                 type="text"
@@ -70,25 +66,21 @@ export default function LoginPage() {
                 className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                size="large"
               />
             </div>
             <div>
-              <label
-                htmlFor="password"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
+              <Input.Password
                 placeholder="Enter your password"
-                required
                 className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                size="large"
               />
             </div>
 
@@ -132,10 +124,7 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-gray-500">
             Don't have an account?{" "}
-            <Link
-              href="/register"
-              className="font-semibold text-cyan-600 hover:text-cyan-500"
-            >
+            <Link href="/signup" className="font-semibold text-cyan-600 hover:text-cyan-500">
               Register
             </Link>
           </p>
