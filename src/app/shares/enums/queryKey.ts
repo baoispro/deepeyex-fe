@@ -3,4 +3,5 @@ export enum QueryKeyEnum {
   Hospital = "hospitals",
   Doctor = "doctors",
   User = "users",
+  Predict = "predict",
 }
