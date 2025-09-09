@@ -67,7 +67,7 @@ export default function RegisterPage() {
         showMessage(errorData.message || "Đăng ký thất bại. Vui lòng thử lại.");
       }
     } catch (error) {
-      showMessage("Đã xảy ra lỗi. Vui lòng kiểm tra kết nối mạng của bạn.");
+      showMessage("Đã xảy ra lỗi. Vui lòng kiểm tra kết nối mạng của bạn. " + error);
     }
   };
 
@@ -146,7 +146,10 @@ export default function RegisterPage() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="mb-1 block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="confirmPassword"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
                 Confirm Password
               </label>
               <Input.Password
