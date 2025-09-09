@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, ChangeEvent, DragEvent } from "react";
+import Image from "next/image";
 import { usePredictMutation } from "../shares/hooks/mutations/use-predict.mutation";
 import { EyeDiseaseLabel } from "../shares/types/predict";
 
@@ -19,7 +20,6 @@ export default function EyeDiagnosisApp() {
     },
   });
 
-  // Xử lý khi chọn file
   const handleFile = (selectedFile: File) => {
     if (selectedFile && selectedFile.type.startsWith("image/")) {
       setFile(selectedFile);
@@ -28,7 +28,6 @@ export default function EyeDiagnosisApp() {
     }
   };
 
-  // Drag & drop
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
@@ -39,21 +38,18 @@ export default function EyeDiagnosisApp() {
     handleFile(droppedFile);
   };
 
-  // Chọn file từ input
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
   };
 
-  // Gọi API chẩn đoán
   const handleDiagnose = () => {
     if (!file) return;
     setIsButtonDisabled(true);
     mutate({ file });
   };
 
-  // Lấy kết quả top 3 từ API
   const topDiagnoses =
     data?.predictions
       ?.sort((a, b) => b.probability - a.probability)
@@ -131,10 +127,12 @@ export default function EyeDiagnosisApp() {
             />
             {previewUrl && (
               <div id="image-preview" className="mt-4 w-full h-auto">
-                <img
+                <Image
                   id="preview-img"
                   src={previewUrl}
                   alt="Image Preview"
+                  width={400}
+                  height={400}
                   className="mx-auto max-w-full h-auto rounded-lg shadow-md"
                 />
               </div>
@@ -149,7 +147,7 @@ export default function EyeDiagnosisApp() {
               )}
 
               {file && !isPending && topDiagnoses.length === 0 && (
-                <p className="text-gray-500 text-lg">Nhấn "Chẩn đoán" để xem kết quả.</p>
+                <p className="text-gray-500 text-lg">Nhấn &quot;Chẩn đoán&quot; để xem kết quả.</p>
               )}
 
               {isPending && (
@@ -234,7 +232,7 @@ export default function EyeDiagnosisApp() {
   );
 }
 
-export function convertLabelToVietnamese(label: EyeDiseaseLabel): string {
+function convertLabelToVietnamese(label: EyeDiseaseLabel): string {
   const map: Record<EyeDiseaseLabel, string> = {
     conjunctivitis: "Viêm kết mạc (Đau mắt đỏ)",
     eyelidedema: "Phù nề mí mắt",
