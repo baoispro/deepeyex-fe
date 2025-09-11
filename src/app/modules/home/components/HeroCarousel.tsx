@@ -2,28 +2,30 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/app/shares/locales/navigation";
-
-const slides = [
-  {
-    bg: "https://23july.hostlin.com/optcare/wp-content/uploads/2022/05/banner-1.jpg",
-    title: "DeepEyeX",
-    subtitle: "Eye Care & Holistic Health Center",
-    text: "We solve all your eye care needs by providing personalized and holistic eye care for you and your family!",
-    button: "Contact Now",
-    buttonLink: "https://23july.hostlin.com/optcare/contact/",
-  },
-  {
-    bg: "https://23july.hostlin.com/optcare/wp-content/uploads/2022/05/banner-2.jpg",
-    title: "DeepEyeX",
-    subtitle: "Eye Care & Holistic Health Center",
-    text: "We solve all your eye care needs by providing personalized and holistic eye care for you and your family!",
-    button: "Contact Now",
-    buttonLink: "https://23july.hostlin.com/optcare/contact/",
-  },
-];
+import { useTranslations } from "next-intl";
 
 export default function HeroCarousel() {
+  const t = useTranslations("home");
   const [current, setCurrent] = useState(0);
+
+  const slides = [
+    {
+      bg: "https://23july.hostlin.com/optcare/wp-content/uploads/2022/05/banner-1.jpg",
+      title: "DeepEyeX",
+      subtitle: t("subtitle"),
+      text: t("text"),
+      button: t("button"),
+      buttonLink: "/predict",
+    },
+    {
+      bg: "https://23july.hostlin.com/optcare/wp-content/uploads/2022/05/banner-2.jpg",
+      title: "DeepEyeX",
+      subtitle: t("subtitle1"),
+      text: t("text1"),
+      button: t("button"),
+      buttonLink: "/predict",
+    },
+  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -62,7 +64,7 @@ export default function HeroCarousel() {
                 >
                   <h1 className="text-5xl md:text-6xl font-extrabold mb-4">{slide.title}</h1>
                   <h2 className="text-2xl md:text-3xl font-semibold mb-4">{slide.subtitle}</h2>
-                  <p className="max-w-xl mb-6">{slide.text}</p>
+                  <p className="max-w-2xl mb-6">{slide.text}</p>
                   <Link
                     href={slide.buttonLink}
                     className="px-6 py-3 bg-yellow-400 text-gray-900 font-semibold rounded-lg hover:bg-yellow-300 transition"

@@ -104,7 +104,10 @@ export default function Header() {
           {/* Auth */}
           {!isLoggedIn ? (
             <>
-              <button className="px-4 py-2 text-[#03c0b4] border border-[#03c0b4] rounded-lg hover:bg-indigo-50 transition cursor-pointer">
+              <button
+                className="px-4 py-2 text-[#03c0b4] border border-[#03c0b4] rounded-lg hover:bg-indigo-50 transition cursor-pointer"
+                onClick={() => router.push("/signin")}
+              >
                 {t("login")}
               </button>
               <button
