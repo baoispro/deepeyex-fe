@@ -1,8 +1,8 @@
 "use client";
 
+import { Link } from "@/app/shares/locales/navigation";
 import { Input } from "antd";
 import Image from "next/image";
-import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { FaGoogle } from "react-icons/fa";
 

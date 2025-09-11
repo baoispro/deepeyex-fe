@@ -2,8 +2,9 @@
 
 import React, { useState, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
-import { usePredictMutation } from "../shares/hooks/mutations/use-predict.mutation";
-import { EyeDiseaseLabel } from "../shares/types/predict";
+import { usePredictMutation } from "../../shares/hooks/mutations/use-predict.mutation";
+import { EyeDiseaseLabel } from "../../shares/types/predict";
+import { Link } from "@/app/shares/locales/navigation";
 
 export default function EyeDiagnosisApp() {
   const [file, setFile] = useState<File | null>(null);
@@ -86,18 +87,18 @@ export default function EyeDiagnosisApp() {
           <h1 className="text-2xl font-bold text-gray-800">Chẩn đoán mắt</h1>
         </div>
         <nav className="flex items-center space-x-4">
-          <a
+          <Link
             href="/signin"
             className="px-4 py-2 text-cyan-600 font-semibold rounded-md border border-cyan-600 hover:bg-cyan-50 transition-colors"
           >
             Đăng nhập
-          </a>
-          <a
+          </Link>
+          <Link
             href="/signup"
             className="px-4 py-2 bg-cyan-600 text-white font-semibold rounded-md shadow-sm hover:bg-cyan-500 transition-colors"
           >
             Đăng ký
-          </a>
+          </Link>
         </nav>
       </header>
 

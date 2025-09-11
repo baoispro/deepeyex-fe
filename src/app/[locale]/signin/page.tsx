@@ -1,14 +1,16 @@
 "use client"; // cần client component để handle form
 
-import { Input } from "antd";
+import { Link } from "@/app/shares/locales/navigation";
+import { Button, Dropdown, Input, MenuProps } from "antd";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
+import { AiOutlineGlobal } from "react-icons/ai";
 import { FaGoogle } from "react-icons/fa";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [language, setLanguage] = useState("Vi");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,16 +31,36 @@ export default function LoginPage() {
     }
   };
 
+  const handleMenuClick: MenuProps["onClick"] = (e) => {
+    setLanguage(e.key);
+    console.log("Selected language:", e.key);
+  };
+
+  const items: MenuProps["items"] = [
+    { label: "Tiếng Việt", key: "Vi" },
+    { label: "English", key: "En" },
+  ];
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="flex w-full max-w-6xl h-full flex-col overflow-hidden rounded-2xl bg-white shadow-xl md:flex-row">
         {/* Left Side (Image) - Đã làm cho hình ảnh rộng hơn */}
-        <div className="hidden flex-[1] bg-[url('/login_img_deepeyex.png')] bg-cover bg-center md:block"></div>
+        <div className="hidden flex-[2] bg-[url('/login_img_deepeyex.png')] bg-cover bg-center lg:block"></div>
 
         {/* Right Side (Form) - Đã điều chỉnh để nhỏ lại tương ứng */}
         <div className="flex w-full flex-shrink-0 flex-col items-center p-6 md:w-1/2 md:flex-[1]">
-          <div className="mb-6 text-center">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-full overflow-hidden">
+          <div className="mb-3 text-center">
+            <div className="flex justify-end">
+              <Dropdown menu={{ items, onClick: handleMenuClick }} placement="bottomRight">
+                <Button
+                  icon={<AiOutlineGlobal />}
+                  style={{ display: "flex", alignItems: "center", gap: 4 }}
+                >
+                  {language}
+                </Button>
+              </Dropdown>
+            </div>
+            <div className="mx-auto mb-1 h-12 w-12 rounded-full overflow-hidden">
               <Image
                 src="/logoDeepEyeX.png"
                 alt="Logo"
@@ -47,6 +69,7 @@ export default function LoginPage() {
                 className="object-cover rounded-full"
               />
             </div>
+
             <h2 className="text-3xl font-bold text-gray-800">Welcome Back To DeepEyeX</h2>
             <p className="text-gray-500">Please sign in to continue.</p>
           </div>
