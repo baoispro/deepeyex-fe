@@ -1,34 +1,34 @@
 "use client"; // cần client component để handle form
 
-import { Link } from "@/app/shares/locales/navigation";
+import { useLoginMutation } from "@/app/modules/auth/hooks/mutations/use-login.mutation";
+import { Link, useRouter } from "@/app/shares/locales/navigation";
 import { Button, Dropdown, Input, MenuProps } from "antd";
 import Image from "next/image";
 import { useState } from "react";
 import { AiOutlineGlobal } from "react-icons/ai";
 import { FaGoogle } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [language, setLanguage] = useState("Vi");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const router = useRouter();
+
+  const loginMutation = useLoginMutation({
+    onSuccess: () => {
+      toast.success("Đăng nhập thành công!");
+      router.push("/");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Đăng nhập thất bại.");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // gọi API login
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (res.ok) {
-      alert("Login success!");
-      // redirect về home hoặc dashboard
-      window.location.href = "/";
-    } else {
-      alert("Invalid credentials");
-    }
+    loginMutation.mutate({ username, password });
   };
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {

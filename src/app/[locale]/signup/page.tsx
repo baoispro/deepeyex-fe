@@ -1,12 +1,16 @@
 "use client";
 
-import { Link } from "@/app/shares/locales/navigation";
+import { useRegisterMutation } from "@/app/modules/auth/hooks/mutations/use-register.mutation";
+import { Link, useRouter } from "@/app/shares/locales/navigation";
 import { Input } from "antd";
+import { AxiosError } from "axios";
 import Image from "next/image";
 import { useState, FormEvent } from "react";
 import { FaGoogle } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -14,9 +18,21 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [message, setMessage] = useState<string | null>(null);
 
-  const showMessage = (msg: string): void => {
-    setMessage(msg);
+  type ErrorResponse = {
+    status: number;
+    message: string;
   };
+  const registerMutation = useRegisterMutation({
+    onSuccess: () => {
+      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+      router.push("/signin");
+    },
+    onError: (error) => {
+      const axiosError = error as AxiosError<ErrorResponse>;
+      const backendMessage = axiosError.response?.data?.message;
+      toast.error(backendMessage || "Đăng ký thất bại. Vui lòng thử lại.");
+    },
+  });
 
   const clearMessage = (): void => {
     setMessage(null);
@@ -42,33 +58,14 @@ export default function RegisterPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: FormEvent): Promise<void> => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearMessage();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      if (res.ok) {
-        showMessage("Đăng ký thành công! Vui lòng đăng nhập.");
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 2000);
-      } else {
-        const errorData = await res.json();
-        showMessage(errorData.message || "Đăng ký thất bại. Vui lòng thử lại.");
-      }
-    } catch (error) {
-      showMessage("Đã xảy ra lỗi. Vui lòng kiểm tra kết nối mạng của bạn. " + error);
-    }
+    // gọi mutation
+    registerMutation.mutate({ username, email, password });
   };
 
   return (
@@ -169,9 +166,10 @@ export default function RegisterPage() {
             <div>
               <button
                 type="submit"
+                disabled={registerMutation.status === "pending"}
                 className="w-full rounded-md bg-cyan-600 p-2 font-semibold text-white shadow-sm transition-colors hover:bg-cyan-500"
               >
-                Sign Up
+                {registerMutation.status === "pending" ? "Processing..." : "Sign Up"}
               </button>
             </div>
           </form>
