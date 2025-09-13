@@ -35,7 +35,14 @@ api.interceptors.response.use(
       try {
         const res = await AuthApi.refresh();
         if (res.data?.access_token) {
-          store.dispatch(setTokens({ accessToken: res.data.access_token, refreshToken: "" }));
+          store.dispatch(
+            setTokens({
+              accessToken: res.data.access_token,
+              refreshToken: "",
+              userId: res.data.user_id ?? "",
+              role: res.data.role ?? "",
+            }),
+          );
           originalRequest.headers.Authorization = `Bearer ${res.data.access_token}`;
           return api(originalRequest);
         }
