@@ -1,11 +1,13 @@
 "use client";
 
 import { useRegisterMutation } from "@/app/modules/auth/hooks/mutations/use-register.mutation";
-import { Link, useRouter } from "@/app/shares/locales/navigation";
-import { Input } from "antd";
+import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
+import { Button, Dropdown, Input, MenuProps } from "antd";
 import { AxiosError } from "axios";
+import { useLocale } from "next-intl";
 import Image from "next/image";
 import { useState, FormEvent } from "react";
+import { AiOutlineGlobal } from "react-icons/ai";
 import { FaGoogle } from "react-icons/fa";
 import { toast } from "react-toastify";
 
@@ -17,6 +19,9 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [message, setMessage] = useState<string | null>(null);
+  const pathname = usePathname();
+  const locale = useLocale();
+  const [language, setLanguage] = useState<"vi" | "en">(locale as "vi" | "en");
 
   type ErrorResponse = {
     status: number;
@@ -68,6 +73,17 @@ export default function RegisterPage() {
     registerMutation.mutate({ username, email, password });
   };
 
+  const handleChangeLanguage: MenuProps["onClick"] = (e) => {
+    const newLocale = e.key as "vi" | "en";
+    setLanguage(newLocale);
+    router.push(pathname, { locale: newLocale });
+  };
+
+  const items: MenuProps["items"] = [
+    { label: "Tiếng Việt", key: "vi" },
+    { label: "English", key: "en" },
+  ];
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="flex w-full max-w-6xl h-full flex-col overflow-hidden rounded-2xl bg-white shadow-xl md:flex-row">
@@ -76,15 +92,27 @@ export default function RegisterPage() {
 
         {/* Right Side */}
         <div className="flex w-full flex-shrink-0 flex-col items-center p-6 md:w-1/2 md:flex-[1]">
-          <div className="mb-6 text-center">
+          <div className="mb-3 text-center w-full">
+            <div className="flex justify-end">
+              <Dropdown menu={{ items, onClick: handleChangeLanguage }} placement="bottomRight">
+                <Button
+                  icon={<AiOutlineGlobal />}
+                  style={{ display: "flex", alignItems: "center", gap: 4 }}
+                >
+                  {language}
+                </Button>
+              </Dropdown>
+            </div>
             <div className="mx-auto mb-4 h-12 w-12 rounded-full overflow-hidden">
-              <Image
-                src="/logoDeepEyeX.png"
-                alt="Logo"
-                width={100}
-                height={100}
-                className="object-cover rounded-full"
-              />
+              <Link href={"/"}>
+                <Image
+                  src="/logoDeepEyeX.png"
+                  alt="Logo"
+                  width={100}
+                  height={100}
+                  className="object-cover rounded-full"
+                />
+              </Link>
             </div>
             <h2 className="text-3xl font-bold text-gray-800">Join DeepEyeX</h2>
             <p className="text-gray-500">Create an account to get started.</p>

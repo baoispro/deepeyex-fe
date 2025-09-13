@@ -1,5 +1,7 @@
 "use client";
 import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
+import { persistor, useAppDispatch, useAppSelector } from "@/app/shares/stores";
+import { clearTokens } from "@/app/shares/stores/authSlice";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
@@ -10,7 +12,10 @@ export default function Header() {
   const pathname = usePathname();
   const locale = useLocale();
   const [language, setLanguage] = useState<"vi" | "en">(locale as "vi" | "en");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const auth = useAppSelector((state) => state.auth);
+  const image = auth.patient?.image;
+  const isLoggedIn = !!auth.accessToken;
+  const dispatch = useAppDispatch();
 
   const flags = {
     vi: {
@@ -46,7 +51,7 @@ export default function Header() {
         <ul className="hidden md:flex space-x-6 lg:space-x-8">
           <li>
             <Link
-              href="#home"
+              href="#"
               className="text-gray-600 hover:text-[#03c0b4] transition-colors duration-300"
             >
               {t("home")}
@@ -120,7 +125,7 @@ export default function Header() {
           ) : (
             <div className="relative group">
               <Image
-                src="/user-avatar.png"
+                src={image || "/default-avatar.png"}
                 alt="User Avatar"
                 width={40}
                 height={40}
@@ -134,7 +139,11 @@ export default function Header() {
                   {t("profile")}
                 </Link>
                 <button
-                  onClick={() => setIsLoggedIn(false)}
+                  onClick={() => {
+                    dispatch(clearTokens());
+                    persistor.purge();
+                    router.push("/signin"); // redirect sau logout
+                  }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 rounded-md"
                 >
                   {t("logout")}

@@ -1,0 +1,24 @@
+{
+  "login": {
+    "title": "Chào mừng bạn trở lại với DeepEyeX",
+    "subtitle": "Vui lòng đăng nhập để tiếp tục.",
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "forgot": "Quên mật khẩu?",
+    "signin": "Đăng nhập",
+    "or": "Hoặc tiếp tục với",
+    "google": "Google",
+    "noAccount": "Chưa có tài khoản?",
+    "register": "Đăng ký",
+    "enterUsername": "Nhập tên đăng nhập của bạn",
+    "enterPassword": "Nhập mật khẩu của bạn"
+  },
+  "toast": {
+    "success": "Đăng nhập thành công!",
+    "error": "Đăng nhập thất bại."
+  },
+  "language": {
+    "vi": "Tiếng Việt",
+    "en": "Tiếng Anh"
+  }
+}

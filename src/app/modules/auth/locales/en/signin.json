@@ -1,0 +1,24 @@
+{
+  "login": {
+    "title": "Welcome Back To DeepEyeX",
+    "subtitle": "Please sign in to continue.",
+    "username": "Username",
+    "password": "Password",
+    "forgot": "Forgot your password?",
+    "signin": "Sign In",
+    "or": "Or continue with",
+    "google": "Google",
+    "noAccount": "Don't have an account?",
+    "register": "Register",
+    "enterUsername": "Enter your username",
+    "enterPassword": "Enter your password"
+  },
+  "toast": {
+    "success": "Login successful!",
+    "error": "Login failed."
+  },
+  "language": {
+    "vi": "Vietnamese",
+    "en": "English"
+  }
+}

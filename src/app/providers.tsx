@@ -5,7 +5,8 @@ import { ReactNode, useState } from "react";
 import { Provider } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import { IntlProvider } from "next-intl";
-import { store } from "./shares/stores";
+import { persistor, store } from "./shares/stores";
+import { PersistGate } from "redux-persist/integration/react";
 
 interface Messages {
   [key: string]: string | Messages;
@@ -22,21 +23,23 @@ export default function Providers({ children, messages, locale }: ProvidersProps
 
   return (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <IntlProvider locale={locale} messages={messages}>
-          {children}
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            pauseOnHover
-            draggable
-            theme="colored"
-          />
-        </IntlProvider>
-      </QueryClientProvider>
+      <PersistGate loading={null} persistor={persistor}>
+        <QueryClientProvider client={queryClient}>
+          <IntlProvider locale={locale} messages={messages}>
+            {children}
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              pauseOnHover
+              draggable
+              theme="colored"
+            />
+          </IntlProvider>
+        </QueryClientProvider>
+      </PersistGate>
     </Provider>
   );
 }

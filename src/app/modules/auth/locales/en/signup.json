@@ -1,0 +1,31 @@
+{
+  "register": {
+    "title": "Join DeepEyeX",
+    "subtitle": "Create an account to get started.",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Sign Up",
+    "processing": "Processing...",
+    "or": "Or continue with",
+    "google": "Google",
+    "alreadyAccount": "Already have an account?",
+    "signin": "Sign In",
+    "errors": {
+      "username": "Username is required.",
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Invalid email address.",
+      "password": "Password is required.",
+      "confirmPassword": "Passwords do not match."
+    },
+    "toast": {
+      "success": "Registration successful! Please sign in.",
+      "error": "Registration failed. Please try again."
+    }
+  },
+  "language": {
+    "vi": "Vietnamese",
+    "en": "English"
+  }
+}

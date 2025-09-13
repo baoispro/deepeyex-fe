@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "23july.hostlin.com",
       },
+      {
+        protocol: "https",
+        hostname: "deepeyex.s3.ap-southeast-1.amazonaws.com",
+      },
     ],
   },
 };

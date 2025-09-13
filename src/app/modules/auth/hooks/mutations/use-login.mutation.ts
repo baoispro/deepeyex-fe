@@ -25,7 +25,14 @@ export function useLoginMutation(options?: LoginOptions) {
     },
     onSuccess: (res, variables, context) => {
       // lưu access token vào redux
-      dispatch(setTokens({ accessToken: res.data?.access_token || "", refreshToken: "" }));
+      dispatch(
+        setTokens({
+          accessToken: res.data?.access_token || "",
+          refreshToken: "",
+          userId: res.data?.user_id || "",
+          role: res.data?.role || "",
+        }),
+      );
       options?.onSuccess?.(res, variables, context);
     },
     onError: (err, variables, context) => {

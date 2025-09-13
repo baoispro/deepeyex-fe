@@ -1,0 +1,31 @@
+{
+  "register": {
+    "title": "Tham gia DeepEyeX",
+    "subtitle": "Tạo tài khoản để bắt đầu.",
+    "username": "Tên đăng nhập",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "confirmPassword": "Nhập lại mật khẩu",
+    "submit": "Đăng ký",
+    "processing": "Đang xử lý...",
+    "or": "Hoặc tiếp tục với",
+    "google": "Google",
+    "alreadyAccount": "Đã có tài khoản?",
+    "signin": "Đăng nhập",
+    "errors": {
+      "username": "Tên đăng nhập không được để trống.",
+      "emailRequired": "Email không được để trống.",
+      "emailInvalid": "Email không hợp lệ.",
+      "password": "Mật khẩu không được để trống.",
+      "confirmPassword": "Mật khẩu nhập lại không khớp."
+    },
+    "toast": {
+      "success": "Đăng ký thành công! Vui lòng đăng nhập.",
+      "error": "Đăng ký thất bại. Vui lòng thử lại."
+    }
+  },
+  "language": {
+    "vi": "Tiếng Việt",
+    "en": "Tiếng Anh"
+  }
+}

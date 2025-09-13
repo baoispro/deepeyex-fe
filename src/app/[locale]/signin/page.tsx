@@ -1,28 +1,53 @@
 "use client"; // cần client component để handle form
 
 import { useLoginMutation } from "@/app/modules/auth/hooks/mutations/use-login.mutation";
-import { Link, useRouter } from "@/app/shares/locales/navigation";
+import { PatientApi } from "@/app/modules/hospital/apis/patient/patientApi";
+import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
+import { setPatient } from "@/app/shares/stores/authSlice";
 import { Button, Dropdown, Input, MenuProps } from "antd";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 import { AiOutlineGlobal } from "react-icons/ai";
 import { FaGoogle } from "react-icons/fa";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 
 export default function LoginPage() {
+  const t = useTranslations("signin");
+  const dispatch = useDispatch();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [language, setLanguage] = useState("Vi");
 
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
+  const [language, setLanguage] = useState<"vi" | "en">(locale as "vi" | "en");
 
   const loginMutation = useLoginMutation({
-    onSuccess: () => {
-      toast.success("Đăng nhập thành công!");
+    onSuccess: async (data) => {
+      toast.success(t("toast.success"));
+      try {
+        const patient = await PatientApi.getByUserID(data.data?.user_id || "");
+        // Map GetPatientResponse to PatientInfo
+        const patientInfo = {
+          patientId: patient.data?.patient_id ?? null,
+          fullName: patient.data?.full_name ?? null,
+          dob: patient.data?.dob ?? null,
+          gender: patient.data?.gender ?? null,
+          phone: patient.data?.phone ?? null,
+          address: patient.data?.address ?? null,
+          email: patient.data?.email ?? null,
+          image: patient.data?.image ?? null,
+        };
+        dispatch(setPatient(patientInfo));
+      } catch (err) {
+        console.error("Failed to fetch patient:", err);
+      }
       router.push("/");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Đăng nhập thất bại.");
+      toast.error(error.response?.data?.message || t("toast.error"));
     },
   });
 
@@ -31,14 +56,15 @@ export default function LoginPage() {
     loginMutation.mutate({ username, password });
   };
 
-  const handleMenuClick: MenuProps["onClick"] = (e) => {
-    setLanguage(e.key);
-    console.log("Selected language:", e.key);
+  const handleChangeLanguage: MenuProps["onClick"] = (e) => {
+    const newLocale = e.key as "vi" | "en";
+    setLanguage(newLocale);
+    router.push(pathname, { locale: newLocale });
   };
 
   const items: MenuProps["items"] = [
-    { label: "Tiếng Việt", key: "Vi" },
-    { label: "English", key: "En" },
+    { label: t("language.vi"), key: "vi" },
+    { label: t("language.en"), key: "en" },
   ];
 
   return (
@@ -51,7 +77,7 @@ export default function LoginPage() {
         <div className="flex w-full flex-shrink-0 flex-col items-center p-6 md:w-1/2 md:flex-[1]">
           <div className="mb-3 text-center">
             <div className="flex justify-end">
-              <Dropdown menu={{ items, onClick: handleMenuClick }} placement="bottomRight">
+              <Dropdown menu={{ items, onClick: handleChangeLanguage }} placement="bottomRight">
                 <Button
                   icon={<AiOutlineGlobal />}
                   style={{ display: "flex", alignItems: "center", gap: 4 }}
@@ -61,30 +87,32 @@ export default function LoginPage() {
               </Dropdown>
             </div>
             <div className="mx-auto mb-1 h-12 w-12 rounded-full overflow-hidden">
-              <Image
-                src="/logoDeepEyeX.png"
-                alt="Logo"
-                width={100}
-                height={100}
-                className="object-cover rounded-full"
-              />
+              <Link href={"/"}>
+                <Image
+                  src="/logoDeepEyeX.png"
+                  alt="Logo"
+                  width={100}
+                  height={100}
+                  className="object-cover rounded-full"
+                />
+              </Link>
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-800">Welcome Back To DeepEyeX</h2>
-            <p className="text-gray-500">Please sign in to continue.</p>
+            <h2 className="text-3xl font-bold text-gray-800">{t("login.title")}</h2>
+            <p className="text-gray-500">{t("login.subtitle")}</p>
           </div>
 
           <form className="w-full max-w-sm space-y-4" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="username" className="mb-1 block text-sm font-medium text-gray-700">
-                Username
+                {t("login.username")}
               </label>
               <Input
                 id="username"
                 name="username"
                 type="text"
                 autoComplete="username"
-                placeholder="Enter your username"
+                placeholder={t("login.enterUsername")}
                 required
                 className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                 value={username}
@@ -94,10 +122,10 @@ export default function LoginPage() {
             </div>
             <div>
               <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
-                Password
+                {t("login.password")}
               </label>
               <Input.Password
-                placeholder="Enter your password"
+                placeholder={t("login.enterPassword")}
                 className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -112,7 +140,7 @@ export default function LoginPage() {
                 href="/forgot-password"
                 className="font-medium text-cyan-600 hover:text-cyan-500"
               >
-                Forgot your password?
+                {t("login.forgot")}
               </Link>
             </div>
 
@@ -121,7 +149,7 @@ export default function LoginPage() {
                 type="submit"
                 className="w-full rounded-md bg-cyan-600 p-2 font-semibold text-white shadow-sm transition-colors hover:bg-cyan-500"
               >
-                Sign In
+                {t("login.signin")}
               </button>
             </div>
           </form>
@@ -131,7 +159,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative inline-block bg-white px-2 text-sm text-gray-500">
-              Or continue with
+              {t("login.or")}
             </div>
           </div>
 
@@ -146,9 +174,9 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            Don&apos;t have an account?{" "}
+            {t("login.noAccount")}{" "}
             <Link href="/signup" className="font-semibold text-cyan-600 hover:text-cyan-500">
-              Register
+              {t("login.register")}
             </Link>
           </p>
         </div>
