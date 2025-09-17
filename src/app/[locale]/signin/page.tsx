@@ -21,6 +21,7 @@ export default function LoginPage() {
   const dispatch = useDispatch();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
 
   const router = useRouter();
   const pathname = usePathname();
@@ -30,6 +31,8 @@ export default function LoginPage() {
   const loginMutation = useLoginMutation({
     onSuccess: async (data) => {
       toast.success(t("toast.success"));
+      localStorage.setItem("email", email);
+      localStorage.setItem("user_id", data.data?.user_id || "");
       try {
         const patient = await PatientApi.getByUserID(data.data?.user_id || "");
         // Map GetPatientResponse to PatientInfo
@@ -44,10 +47,13 @@ export default function LoginPage() {
           image: patient.data?.image ?? null,
         };
         dispatch(setPatient(patientInfo));
+        localStorage.removeItem("email");
+        localStorage.removeItem("user_id");
+        router.push("/");
       } catch (err) {
-        console.error("Failed to fetch patient:", err);
+        toast.warning("Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
+        router.push("/create-patient");
       }
-      router.push("/");
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || t("toast.error"));
@@ -72,6 +78,7 @@ export default function LoginPage() {
 
   const loginFirebaseMutation = useLoginFirebaseMutation({
     onSuccess: async (data) => {
+      localStorage.setItem("email", email);
       toast.success("Login Google thành công!");
 
       try {
@@ -87,11 +94,12 @@ export default function LoginPage() {
           image: patient.data?.image ?? null,
         };
         dispatch(setPatient(patientInfo));
+        localStorage.removeItem("email");
+        router.push("/");
       } catch (err) {
-        console.error("Failed to fetch patient:", err);
+        toast.warning("Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
+        router.push("/create-patient");
       }
-
-      router.push("/");
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Login Google thất bại");
@@ -102,6 +110,7 @@ export default function LoginPage() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+      setEmail(user.email || "");
 
       loginFirebaseMutation.mutate({
         firebase_uid: user.uid,

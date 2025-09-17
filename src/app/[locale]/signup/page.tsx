@@ -36,9 +36,11 @@ export default function RegisterPage() {
     message: string;
   };
   const registerMutation = useRegisterMutation({
-    onSuccess: () => {
-      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
-      router.push("/signin");
+    onSuccess: (data) => {
+      localStorage.setItem("email", email);
+      localStorage.setItem("user_id", data.data?.id || "");
+      toast.success("Đăng ký thành công! Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
+      router.push("/create-patient");
     },
     onError: (error) => {
       const axiosError = error as AxiosError<ErrorResponse>;
@@ -129,6 +131,8 @@ export default function RegisterPage() {
 
   const loginFirebaseMutation = useLoginFirebaseMutation({
     onSuccess: async (data) => {
+      localStorage.setItem("email", email);
+      localStorage.setItem("user_id", data.data?.user_id || "");
       toast.success("Login Google thành công!");
 
       try {
@@ -144,11 +148,13 @@ export default function RegisterPage() {
           image: patient.data?.image ?? null,
         };
         dispatch(setPatient(patientInfo));
+        localStorage.removeItem("email");
+        localStorage.removeItem("user_id");
+        router.push("/");
       } catch (err) {
-        console.error("Failed to fetch patient:", err);
+        toast.warning("Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
+        router.push("/create-patient");
       }
-
-      router.push("/");
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Login Google thất bại");
@@ -159,6 +165,7 @@ export default function RegisterPage() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+      setEmail(user.email || "");
 
       loginFirebaseMutation.mutate({
         firebase_uid: user.uid,
