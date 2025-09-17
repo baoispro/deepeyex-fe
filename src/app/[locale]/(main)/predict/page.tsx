@@ -2,14 +2,16 @@
 
 import React, { useState, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
-import { usePredictMutation } from "../../shares/hooks/mutations/use-predict.mutation";
-import { EyeDiseaseLabel } from "../../shares/types/predict";
-import { Link } from "@/app/shares/locales/navigation";
+import { usePredictMutation } from "../../../shares/hooks/mutations/use-predict.mutation";
+import { EyeDiseaseLabel } from "../../../shares/types/predict";
+import { Modal } from "antd";
+import TreatmentPlanUI from "../../../modules/predict/components/TreatmentPlan";
 
 export default function EyeDiagnosisApp() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   const { mutate, data, isPending } = usePredictMutation({
     onSuccess: () => {
@@ -58,50 +60,11 @@ export default function EyeDiagnosisApp() {
       .map((item) => ({
         name: convertLabelToVietnamese(item.label),
         probability: item.probability,
+        label: item.label,
       })) || [];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Header */}
-      <header className="bg-white shadow-sm py-4 px-6 flex justify-between items-center rounded-b-lg">
-        <div className="flex items-center">
-          <svg
-            className="w-8 h-8 text-cyan-600 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            />
-          </svg>
-          <h1 className="text-2xl font-bold text-gray-800">Chẩn đoán mắt</h1>
-        </div>
-        <nav className="flex items-center space-x-4">
-          <Link
-            href="/signin"
-            className="px-4 py-2 text-cyan-600 font-semibold rounded-md border border-cyan-600 hover:bg-cyan-50 transition-colors"
-          >
-            Đăng nhập
-          </Link>
-          <Link
-            href="/signup"
-            className="px-4 py-2 bg-cyan-600 text-white font-semibold rounded-md shadow-sm hover:bg-cyan-500 transition-colors"
-          >
-            Đăng ký
-          </Link>
-        </nav>
-      </header>
-
+    <section className="flex flex-col">
       {/* Main */}
       <main className="flex-grow flex items-center justify-center p-6">
         <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-4xl flex flex-col md:flex-row gap-8">
@@ -229,7 +192,24 @@ export default function EyeDiagnosisApp() {
           </div>
         </div>
       </main>
-    </div>
+
+      {topDiagnoses.length > 0 && (
+        <Modal open={!!topDiagnoses[0]} onCancel={() => setShowModal(false)} footer={null}>
+          {topDiagnoses[0].name === "Mắt bình thường" ? (
+            <p className="text-center text-green-600 font-semibold">
+              Mắt của bạn bình thường ✅. Nên đi khám định kỳ mỗi 6 - 12 tháng.
+            </p>
+          ) : (
+            <div>
+              <p className="text-center text-red-600 font-semibold mb-4">
+                AI phát hiện dấu hiệu: {topDiagnoses[0].name}
+              </p>
+              <TreatmentPlanUI disease={topDiagnoses[0].label} />
+            </div>
+          )}
+        </Modal>
+      )}
+    </section>
   );
 }
 

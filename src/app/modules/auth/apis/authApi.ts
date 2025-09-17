@@ -6,6 +6,7 @@ export type RegisterRequest = {
   username: string;
   email: string;
   password: string;
+  firebase_uid?: string;
 };
 
 export type LoginRequest = {
