@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-// import { geminiApi } from "../lib/apis/chat";
-// import Markdown from "react-markdown";
+import Markdown from "react-markdown";
+import { geminiApi } from "../api/chat";
 
 export function ChatBox() {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -16,28 +16,28 @@ export function ChatBox() {
     setIsChatOpen((prev) => !prev);
   };
 
-  // const handleSendMessage = async () => {
-  //   if (inputValue.trim() === "") return;
+  const handleSendMessage = async () => {
+    if (inputValue.trim() === "") return;
 
-  //   const userMessage = inputValue;
-  //   setChatMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
-  //   setInputValue("");
+    const userMessage = inputValue;
+    setChatMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
+    setInputValue("");
 
-  //   setIsLoading(true);
+    setIsLoading(true);
 
-  //   try {
-  //     const reply = await geminiApi.sendMessage(userMessage);
-  //     setChatMessages((prev) => [...prev, { sender: "bot", text: reply }]);
-  //   } catch (error) {
-  //     console.error("Error sending message:", error);
-  //     setChatMessages((prev) => [
-  //       ...prev,
-  //       { sender: "bot", text: "Xin lỗi, đã xảy ra lỗi khi nhận phản hồi." },
-  //     ]);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+    try {
+      const reply = await geminiApi.sendMessage(userMessage);
+      setChatMessages((prev) => [...prev, { sender: "bot", text: reply }]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setChatMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: "Xin lỗi, đã xảy ra lỗi khi nhận phản hồi." },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,7 +56,7 @@ export function ChatBox() {
           }`}
           style={{ maxWidth: "75%" }}
         >
-          {/* <Markdown>{messageText}</Markdown> */}
+          <Markdown>{messageText}</Markdown>
         </div>
       </div>
     );
@@ -101,13 +101,13 @@ export function ChatBox() {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              // onKeyDown={(e) => e.key === "Enter" && !isLoading && handleSendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && !isLoading && handleSendMessage()}
               className="flex-1 px-3 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-[#1250dc]"
               placeholder={isLoading ? "Đang chờ..." : "Nhập tin nhắn..."}
               disabled={isLoading}
             />
             <button
-              // onClick={handleSendMessage}
+              onClick={handleSendMessage}
               className={`px-3 py-1 rounded-2xl transition-colors ${
                 isLoading
                   ? "bg-gray-400 cursor-not-allowed"

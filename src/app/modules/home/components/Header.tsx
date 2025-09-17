@@ -5,6 +5,8 @@ import { clearTokens } from "@/app/shares/stores/authSlice";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
+import { Dropdown, MenuProps, Badge } from "antd";
+import { FaShoppingCart } from "react-icons/fa";
 
 export default function Header() {
   const t = useTranslations("home");
@@ -17,25 +19,46 @@ export default function Header() {
   const isLoggedIn = !!auth.accessToken;
   const dispatch = useAppDispatch();
 
+  // Flags
   const flags = {
     vi: {
       src: "https://flagcdn.com/36x27/vn.png",
-      srcSet: "https://flagcdn.com/72x54/vn.png 2x, https://flagcdn.com/108x81/vn.png 3x",
       alt: "Vietnam",
     },
     en: {
       src: "https://flagcdn.com/36x27/gb.png",
-      srcSet: "https://flagcdn.com/72x54/gb.png 2x, https://flagcdn.com/108x81/gb.png 3x",
       alt: "United Kingdom",
     },
   };
+
   const handleChangeLanguage = (locale: "vi" | "en") => {
     router.push(pathname, { locale });
   };
 
+  // Sub menu Services
+  const serviceItems: MenuProps["items"] = [
+    {
+      key: "shop",
+      label: <Link href="/shop">{t("shop")}</Link>,
+    },
+    {
+      key: "booking",
+      label: <Link href="/booking">{t("booking")}</Link>,
+    },
+    {
+      key: "diagnosis",
+      label: <Link href="/predict">{t("diagnosis")}</Link>,
+    },
+    {
+      key: "consultation",
+      label: <Link href="/consultation">{t("consultation")}</Link>,
+    },
+  ];
+
   return (
     <header className="bg-white shadow-md py-4 px-6 md:px-12 fixed top-0 w-full z-50">
       <nav className="flex justify-between items-center max-w-7xl mx-auto">
+        {/* Logo */}
         <div className="flex-shrink-0 flex items-center space-x-2">
           <Link href="/" className="text-2xl font-bold text-[#03c0b4] flex items-center">
             <Image
@@ -48,31 +71,27 @@ export default function Header() {
             <span className="ml-2 hidden sm:inline">DeepEyeX</span>
           </Link>
         </div>
+
+        {/* Menu */}
         <ul className="hidden md:flex space-x-6 lg:space-x-8">
           <li>
             <Link
-              href="#"
+              href="/"
               className="text-gray-600 hover:text-[#03c0b4] transition-colors duration-300"
             >
               {t("home")}
             </Link>
           </li>
+
+          {/* Services dropdown */}
           <li>
-            <Link
-              href="#about"
-              className="text-gray-600 hover:text-[#03c0b4] transition-colors duration-300"
-            >
-              {t("about")}
-            </Link>
+            <Dropdown menu={{ items: serviceItems }} trigger={["hover"]}>
+              <span className="cursor-pointer text-gray-600 hover:text-[#03c0b4] transition-colors duration-300">
+                {t("services")}
+              </span>
+            </Dropdown>
           </li>
-          <li>
-            <Link
-              href="#services"
-              className="text-gray-600 hover:text-[#03c0b4] transition-colors duration-300"
-            >
-              {t("services")}
-            </Link>
-          </li>
+
           <li>
             <Link
               href="#contact"
@@ -82,6 +101,8 @@ export default function Header() {
             </Link>
           </li>
         </ul>
+
+        {/* Right section */}
         <div className="flex items-center space-x-4">
           {/* Language Selector */}
           <div className="relative group">
@@ -106,6 +127,7 @@ export default function Header() {
               </button>
             </div>
           </div>
+
           {/* Auth */}
           {!isLoggedIn ? (
             <>
@@ -133,7 +155,7 @@ export default function Header() {
               />
               <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition p-2">
                 <Link
-                  href="#profile"
+                  href="/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 rounded-md"
                 >
                   {t("profile")}
@@ -142,7 +164,7 @@ export default function Header() {
                   onClick={() => {
                     dispatch(clearTokens());
                     persistor.purge();
-                    router.push("/signin"); // redirect sau logout
+                    router.push("/signin");
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 rounded-md"
                 >
@@ -151,6 +173,15 @@ export default function Header() {
               </div>
             </div>
           )}
+          {/* Cart */}
+          <button
+            onClick={() => router.push("/cart")}
+            className="relative text-gray-600 hover:text-[#03c0b4] transition cursor-pointer pt-1"
+          >
+            <Badge count={2} size="small" offset={[0, 6]}>
+              <FaShoppingCart size={22} />
+            </Badge>
+          </button>
         </div>
       </nav>
     </header>

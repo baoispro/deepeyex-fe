@@ -1,8 +1,8 @@
 import axios, { AxiosInstance } from "axios";
 import { store } from "../stores";
-import { AuthApi } from "@/app/modules/auth/apis/authApi";
 import { setTokens, clearTokens } from "../stores/authSlice";
 import { redirect } from "../locales/navigation";
+import { refreshToken } from "../api/refreshToken";
 
 const api: AxiosInstance = axios.create({
   baseURL: "http://localhost:8000",
@@ -33,7 +33,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const res = await AuthApi.refresh();
+        const res = await refreshToken();
         if (res.data?.access_token) {
           store.dispatch(
             setTokens({

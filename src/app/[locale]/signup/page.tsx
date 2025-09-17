@@ -1,9 +1,11 @@
 "use client";
 
 import { useRegisterMutation } from "@/app/modules/auth/hooks/mutations/use-register.mutation";
+import { auth } from "@/app/shares/configs/firebase";
 import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
 import { Button, Dropdown, Input, MenuProps } from "antd";
 import { AxiosError } from "axios";
+import { createUserWithEmailAndPassword, deleteUser, User } from "firebase/auth";
 import { useLocale } from "next-intl";
 import Image from "next/image";
 import { useState, FormEvent } from "react";
@@ -64,13 +66,31 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async (e: FormEvent) => {
+    let firebaseUser: User | null = null;
     e.preventDefault();
     clearMessage();
 
     if (!validateForm()) return;
 
-    // gọi mutation
-    registerMutation.mutate({ username, email, password });
+    try {
+      // Tạo user Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      firebaseUser = userCredential.user;
+
+      // Gọi backend mutation
+      await registerMutation.mutateAsync({ username, email, password });
+    } catch (error) {
+      console.error(error);
+
+      // Nếu backend lỗi sau khi Firebase tạo user → rollback Firebase
+      if (firebaseUser) {
+        try {
+          await deleteUser(firebaseUser);
+        } catch (delError) {
+          console.error("Failed to delete Firebase user:", delError);
+        }
+      }
+    }
   };
 
   const handleChangeLanguage: MenuProps["onClick"] = (e) => {
