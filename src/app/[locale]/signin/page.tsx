@@ -1,10 +1,13 @@
-"use client"; // cần client component để handle form
+"use client";
 
+import { useLoginFirebaseMutation } from "@/app/modules/auth/hooks/mutations/use-login-by-google.mutation";
 import { useLoginMutation } from "@/app/modules/auth/hooks/mutations/use-login.mutation";
 import { PatientApi } from "@/app/modules/hospital/apis/patient/patientApi";
+import { auth, googleProvider } from "@/app/shares/configs/firebase";
 import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
 import { setPatient } from "@/app/shares/stores/authSlice";
 import { Button, Dropdown, Input, MenuProps } from "antd";
+import { signInWithPopup } from "firebase/auth";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
@@ -66,6 +69,49 @@ export default function LoginPage() {
     { label: t("language.vi"), key: "vi" },
     { label: t("language.en"), key: "en" },
   ];
+
+  const loginFirebaseMutation = useLoginFirebaseMutation({
+    onSuccess: async (data) => {
+      toast.success("Login Google thành công!");
+
+      try {
+        const patient = await PatientApi.getByUserID(data.data?.user_id || "");
+        const patientInfo = {
+          patientId: patient.data?.patient_id ?? null,
+          fullName: patient.data?.full_name ?? null,
+          dob: patient.data?.dob ?? null,
+          gender: patient.data?.gender ?? null,
+          phone: patient.data?.phone ?? null,
+          address: patient.data?.address ?? null,
+          email: patient.data?.email ?? null,
+          image: patient.data?.image ?? null,
+        };
+        dispatch(setPatient(patientInfo));
+      } catch (err) {
+        console.error("Failed to fetch patient:", err);
+      }
+
+      router.push("/");
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Login Google thất bại");
+    },
+  });
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      loginFirebaseMutation.mutate({
+        firebase_uid: user.uid,
+        email: user.email || "",
+      });
+    } catch (error: unknown) {
+      console.error("Google login error:", error);
+      toast.error("Login Google thất bại");
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
@@ -147,7 +193,7 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                className="w-full rounded-md bg-cyan-600 p-2 font-semibold text-white shadow-sm transition-colors hover:bg-cyan-500"
+                className="w-full rounded-md bg-cyan-600 p-2 font-semibold text-white shadow-sm transition-colors hover:bg-cyan-500 cursor-pointer"
               >
                 {t("login.signin")}
               </button>
@@ -166,7 +212,8 @@ export default function LoginPage() {
           <div className="flex w-full max-w-sm items-center justify-center">
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-red-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:bg-red-600 focus:ring-2 focus:ring-red-400 focus:ring-offset-1"
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-red-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:bg-red-600 focus:ring-2 focus:ring-red-400 focus:ring-offset-1 cursor-pointer"
+              onClick={handleGoogleLogin}
             >
               <FaGoogle className="text-white" />
               Google
