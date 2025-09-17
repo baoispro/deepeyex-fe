@@ -10,7 +10,7 @@ import { Gender } from "@/app/modules/hospital/enums/gender";
 import { useAppSelector } from "@/app/shares/stores";
 import { useRouter } from "@/app/shares/locales/navigation";
 
-export default function PatientForm({ onSuccess }: { onSuccess?: () => void }) {
+export default function PatientPage() {
   const dispatch = useDispatch();
   const [fullName, setFullName] = useState("");
   const [dob, setDob] = useState("");
@@ -46,7 +46,6 @@ export default function PatientForm({ onSuccess }: { onSuccess?: () => void }) {
       } else {
         router.push("/");
       }
-      onSuccess?.();
     },
     onError: () => {
       toast.error("Tạo thông tin bệnh nhân thất bại.");
