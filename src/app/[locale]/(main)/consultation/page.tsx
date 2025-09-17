@@ -51,7 +51,7 @@ const ConsultationRoom = () => {
               icon={isMicOn ? <AiOutlineAudio /> : <AiOutlineAudioMuted />}
               onClick={() => setIsMicOn(!isMicOn)}
             />
-            <Button type="danger" shape="circle" icon={<AiOutlinePhone />} />
+            <Button type="primary" danger shape="circle" icon={<AiOutlinePhone />} />
           </div>
         </div>
       </div>

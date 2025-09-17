@@ -1,11 +1,12 @@
 "use client";
-import { useSearchParams, useRouter } from "next/navigation";
-import { confirmPasswordReset } from "firebase/auth";
+import { useSearchParams } from "next/navigation";
+import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { auth } from "@/app/shares/configs/firebase";
-import { useState } from "react";
 import { toast } from "react-toastify";
-import { Input, Button, Card, Typography } from "antd";
-import { Link } from "@/app/shares/locales/navigation";
+import { Input, Button, Card, Typography, Form } from "antd";
+import { Link, useRouter } from "@/app/shares/locales/navigation";
+import { useResetPasswordMutation } from "@/app/modules/auth/hooks/mutations/use-update-password.mutation";
+import { isValidPassword } from "@/app/shares/utils/password";
 
 const { Title, Text } = Typography;
 
@@ -15,29 +16,32 @@ export default function ResetPasswordPage() {
   const mode = searchParams.get("mode");
   const router = useRouter();
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { mutate: resetPassword, isPending } = useResetPasswordMutation({
+    onSuccess: () => {
+      toast.success("Password reset successfully! Please login.");
+      setTimeout(() => router.push("/signin"), 2000);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to reset password");
+    },
+  });
 
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleReset = async (values: { newPassword: string; confirmPassword: string }) => {
     if (!oobCode || mode !== "resetPassword") {
       toast.error("Invalid or expired reset link.");
       return;
     }
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
+
     try {
-      setLoading(true);
-      await confirmPasswordReset(auth, oobCode, newPassword);
-      toast.success("Password reset successfully! Please login.");
-      setTimeout(() => router.push("/signin"), 2000); // redirect sau 2s
-    } catch (error: any) {
-      toast.error(error.message || "Failed to reset password");
-    } finally {
-      setLoading(false);
+      const email = await verifyPasswordResetCode(auth, oobCode);
+      await confirmPasswordReset(auth, oobCode, values.newPassword);
+      resetPassword({ email, password: values.newPassword });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to reset password");
+      } else {
+        toast.error("Failed to reset password");
+      }
     }
   };
 
@@ -48,24 +52,49 @@ export default function ResetPasswordPage() {
           Reset Password
         </Title>
 
-        <form onSubmit={handleReset}>
-          <Input.Password
-            placeholder="Enter new password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="mb-4"
-          />
-          <Input.Password
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="mb-4"
-          />
+        <Form onFinish={handleReset} layout="vertical">
+          <Form.Item
+            name="newPassword"
+            label="New Password"
+            rules={[
+              { required: true, message: "Please enter your new password" },
+              { min: 8, message: "Password must be at least 8 characters long" },
+              {
+                validator: (_, value) =>
+                  value && !isValidPassword(value)
+                    ? Promise.reject(
+                        "Must contain uppercase, lowercase, number, and special character",
+                      )
+                    : Promise.resolve(),
+              },
+            ]}
+          >
+            <Input.Password placeholder="Enter new password" />
+          </Form.Item>
 
-          <Button type="primary" htmlType="submit" block loading={loading} className="mb-3">
+          <Form.Item
+            name="confirmPassword"
+            label="Confirm Password"
+            dependencies={["newPassword"]}
+            rules={[
+              { required: true, message: "Please confirm your password" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("newPassword") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error("Passwords do not match"));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="Confirm new password" />
+          </Form.Item>
+
+          <Button type="primary" htmlType="submit" block loading={isPending} className="mb-3">
             Reset Password
           </Button>
-        </form>
+        </Form>
 
         <Text type="secondary">
           Remember password?{" "}

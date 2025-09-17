@@ -14,17 +14,11 @@ import {
   Input,
   DatePicker,
   Radio,
-  List,
   Avatar,
 } from "antd";
-import {
-  FaUser,
-  FaMapMarkerAlt,
-  FaRegCalendarAlt,
-  FaClinicMedical,
-  FaChevronLeft,
-  FaChevronRight,
-} from "react-icons/fa";
+import { FaMapMarkerAlt, FaClinicMedical, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 
 const { Title, Paragraph, Text } = Typography;
 const { Option } = Select;
@@ -36,7 +30,7 @@ const mockDoctor = {
   name: "Dr. Darren Elder",
   specialty: "Cardiologist",
   location: "Scottsdale, Arizona, United States, Arizona, United States, 20005",
-  avatar: "/doctor-avatar.jpg", // Bạn có thể sử dụng ảnh placeholder
+  avatar: "/doctor-avatar.jpg",
 };
 
 const mockClinics = [
@@ -72,8 +66,7 @@ const mockTimeSlots = [
   "8:40 pm",
 ];
 
-// Component các bước
-// Bước 1: Chọn phòng khám
+// Bước 1
 const SelectClinicStep = ({ onNext }: { onNext: () => void }) => {
   const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
 
@@ -116,14 +109,14 @@ const SelectClinicStep = ({ onNext }: { onNext: () => void }) => {
   );
 };
 
-// Bước 2: Chọn chuyên khoa & dịch vụ
+// Bước 2
 const SelectSpecialtyStep = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => {
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const total = selectedServices.reduce((sum, service) => {
     const servicePrice = mockServices.find((s) => s.name === service)?.price || 0;
     return sum + servicePrice;
-  }, 150); // Phí tư vấn cố định
+  }, 150);
 
   return (
     <Card>
@@ -202,9 +195,9 @@ const SelectSpecialtyStep = ({ onNext, onBack }: { onNext: () => void; onBack: (
   );
 };
 
-// Bước 3: Chọn ngày và giờ
+// Bước 3
 const SelectDateTimeStep = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => {
-  const [selectedDate, setSelectedDate] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   return (
@@ -221,24 +214,17 @@ const SelectDateTimeStep = ({ onNext, onBack }: { onNext: () => void; onBack: ()
         <Col xs={24} md={12}>
           <Title level={5}>Select a date</Title>
           <DatePicker
-            onChange={setSelectedDate}
+            onChange={(date) => setSelectedDate(date)}
             picker="date"
             style={{ width: "100%" }}
-            // Thêm các thuộc tính để hiển thị lịch như hình
             cellRender={(current) => (
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontWeight: "bold" }}>
-                  {typeof current === "object" &&
-                  current !== null &&
-                  "format" in current &&
-                  typeof (current as any).format === "function"
-                    ? (current as any).format("D")
-                    : ""}
+                  {dayjs.isDayjs(current) ? current.format("D") : current}
                 </div>
-                {/* Bạn có thể thêm logic để hiển thị slot trống */}
-                <div
-                  style={{ fontSize: "12px", color: "#888" }}
-                >{`Slots: ${Math.floor(Math.random() * 5) + 1}`}</div>
+                <div style={{ fontSize: "12px", color: "#888" }}>
+                  {`Slots: ${Math.floor(Math.random() * 5) + 1}`}
+                </div>
               </div>
             )}
           />
@@ -276,7 +262,7 @@ const SelectDateTimeStep = ({ onNext, onBack }: { onNext: () => void; onBack: ()
   );
 };
 
-// Bước 4: Nhập thông tin cơ bản
+// Bước 4
 const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
   const [patientInfo, setPatientInfo] = useState({
     patientType: "Myself",
@@ -372,7 +358,6 @@ export default function BookAppointmentPage() {
         Home &gt; Book Appointment
       </Paragraph>
 
-      {/* Steps bar */}
       <Steps current={currentStep - 1} style={{ marginBottom: "32px" }}>
         <Step title="Appointment Type" />
         <Step title="Specialty" />
@@ -380,7 +365,6 @@ export default function BookAppointmentPage() {
         <Step title="Basic Information" />
       </Steps>
 
-      {/* Doctor Info Card */}
       <Card style={{ marginBottom: "24px" }}>
         <Row align="middle" gutter={16}>
           <Col>
@@ -403,7 +387,6 @@ export default function BookAppointmentPage() {
         </Row>
       </Card>
 
-      {/* Render current step content */}
       {renderStep()}
     </div>
   );

@@ -3,6 +3,7 @@
 import { useRegisterMutation } from "@/app/modules/auth/hooks/mutations/use-register.mutation";
 import { auth } from "@/app/shares/configs/firebase";
 import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
+import { isValidPassword } from "@/app/shares/utils/password";
 import { Button, Dropdown, Input, MenuProps } from "antd";
 import { AxiosError } from "axios";
 import { createUserWithEmailAndPassword, deleteUser, User } from "firebase/auth";
@@ -58,6 +59,12 @@ export default function RegisterPage() {
     if (!password) {
       newErrors.password = "Mật khẩu không được để trống.";
     }
+    if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long.";
+    } else if (!isValidPassword(password)) {
+      newErrors.password =
+        "Password must contain at least 1 uppercase, 1 lowercase, 1 digit, and 1 special character.";
+    }
     if (password !== confirmPassword) {
       newErrors.confirmPassword = "Mật khẩu nhập lại không khớp.";
     }
@@ -78,11 +85,22 @@ export default function RegisterPage() {
       firebaseUser = userCredential.user;
 
       // Gọi backend mutation
-      await registerMutation.mutateAsync({ username, email, password });
+      await registerMutation.mutateAsync({
+        username,
+        email,
+        password,
+        firebase_uid: firebaseUser.uid,
+      });
     } catch (error) {
-      console.error(error);
-
-      // Nếu backend lỗi sau khi Firebase tạo user → rollback Firebase
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "auth/email-already-in-use"
+      ) {
+        toast.error("Email is already in use.");
+        return;
+      }
       if (firebaseUser) {
         try {
           await deleteUser(firebaseUser);

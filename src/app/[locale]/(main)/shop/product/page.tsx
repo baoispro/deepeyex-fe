@@ -48,8 +48,7 @@ const ProductPage: NextPage = () => {
       "Nguyên cung cấp Vitamin C chất lượng cao cho cơ thể mỗi ngày. KUDOS Vitamin C 1000mg bổ sung vitamin C cho cơ thể giúp tăng cường sức đề kháng và giảm các triệu chứng cảm cúm. Với mỗi một viên sủi Kudos Vitamin C 1000mg có vị chanh tươi, dễ uống, rất thích hợp cho trẻ trên 14 tuổi và người lớn có nhu cầu bổ sung vitamin C. Sản phẩm đạt tiêu chuẩn GMP.",
     disclaimer:
       "Thực phẩm bảo vệ sức khoẻ, không phải là thuốc, không có tác dụng thay thế thuốc chữa bệnh.",
-    attentionNote:
-      "*Sản phẩm đang được chú ý, có 8 người thêm vào giỏ hàng & 3 người đang xem",
+    attentionNote: "*Sản phẩm đang được chú ý, có 8 người thêm vào giỏ hàng & 3 người đang xem",
   };
 
   return (
