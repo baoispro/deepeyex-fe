@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Dropdown, MenuProps, Badge } from "antd";
 import { FaShoppingCart } from "react-icons/fa";
+import Avatar from "react-avatar";
 
 export default function Header() {
   const t = useTranslations("home");
@@ -146,13 +147,7 @@ export default function Header() {
             </>
           ) : (
             <div className="relative group">
-              <Image
-                src={image || "/default-avatar.png"}
-                alt="User Avatar"
-                width={40}
-                height={40}
-                className="rounded-full cursor-pointer border-2 border-[#03c0b4]"
-              />
+              <Avatar name="Alice Nguyen" src={image || ""} size="40" round={true} />
               <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition p-2">
                 <Link
                   href="/profile"
