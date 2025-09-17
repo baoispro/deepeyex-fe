@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Markdown from "react-markdown";
 import { geminiApi } from "../api/chat";
+import { FaFacebookMessenger } from "react-icons/fa";
 
 export function ChatBox() {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -66,10 +67,11 @@ export function ChatBox() {
     <div>
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 right-6 z-50 bg-[#1250dc] hover:bg-[#0e3eb7] text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition-all"
+        className="fixed bottom-6 right-6 z-50 bg-gradient-to-br from-[#1250dc] to-[#03c0b4] 
+             hover:from-[#0e3eb7] hover:to-[#03a0b0]  text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition-all"
         aria-label="Toggle Chat"
       >
-        💬
+        <FaFacebookMessenger />
       </button>
 
       {isChatOpen && (
