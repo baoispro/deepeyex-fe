@@ -45,8 +45,12 @@ class AuthClient {
   }
 
   // ---------------- Register ----------------
-  async register(form: RegisterRequest): Promise<SuccessResponse> {
-    const response = await this.client.post<SuccessResponse>("/public/register", form);
+  async register(
+    form: RegisterRequest,
+  ): Promise<SuccessResponse<{ id: string; username: string; email: string }>> {
+    const response = await this.client.post<
+      SuccessResponse<{ id: string; username: string; email: string }>
+    >("/public/register", form);
     return response.data;
   }
 

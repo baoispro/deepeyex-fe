@@ -1,24 +1,14 @@
 import { AxiosInstance } from "axios";
 import api from "../../../../shares/configs/axios";
 import { GetPatientResponse } from "../../types/response";
-
-export type Patient = {
-  patient_id: string;
-  user_id: string;
-  full_name: string;
-  dob: string; // ISO date string
-  gender: string; // male | female | other
-  address?: string;
-  phone?: string;
-  email?: string;
-  image?: string;
-};
+import { Gender } from "../../enums/gender";
+import { Patient } from "../../types/patient";
 
 export type CreatePatientRequest = {
   user_id: string;
   full_name: string;
   dob: string; // YYYY-MM-DD
-  gender: string;
+  gender: Gender;
   address?: string;
   phone?: string;
   email?: string;
