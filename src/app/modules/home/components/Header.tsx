@@ -19,6 +19,7 @@ export default function Header() {
   const image = auth.patient?.image;
   const isLoggedIn = !!auth.accessToken;
   const dispatch = useAppDispatch();
+  const name = auth.patient?.fullName;
 
   // Flags
   const flags = {
@@ -147,7 +148,7 @@ export default function Header() {
             </>
           ) : (
             <div className="relative group">
-              <Avatar name="Alice Nguyen" src={image || ""} size="40" round={true} />
+              <Avatar name={name || ""} src={image || ""} size="40" round={true} />
               <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition p-2">
                 <Link
                   href="/profile"
