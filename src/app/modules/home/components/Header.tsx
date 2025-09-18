@@ -6,8 +6,8 @@ import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 import { Dropdown, MenuProps, Badge } from "antd";
-import { FaShoppingCart } from "react-icons/fa";
 import Avatar from "react-avatar";
+import CartPopover from "@/app/shares/components/CartPopover";
 
 export default function Header() {
   const t = useTranslations("home");
@@ -170,14 +170,8 @@ export default function Header() {
             </div>
           )}
           {/* Cart */}
-          <button
-            onClick={() => router.push("/cart")}
-            className="relative text-gray-600 hover:text-[#03c0b4] transition cursor-pointer pt-1"
-          >
-            <Badge count={2} size="small" offset={[0, 6]}>
-              <FaShoppingCart size={22} />
-            </Badge>
-          </button>
+
+          <CartPopover />
         </div>
       </nav>
     </header>
