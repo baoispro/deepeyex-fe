@@ -6,15 +6,17 @@ import { DeleteOutlined } from "@ant-design/icons";
 import { FaShoppingCart } from "react-icons/fa";
 import { useCart } from "../hooks/carts/useCart";
 import { useRouter } from "../locales/navigation";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
 export default function CartPopover() {
-  const { cartItems: hookCartItems, removeFromCart, updateQuantity } = useCart();
-
+  const { cartItems: hookCartItems, removeFromCart } = useCart();
   const [cartItems, setCartItems] = useState(hookCartItems);
   const [count, setCount] = useState(0);
   const router = useRouter();
+
+  const t = useTranslations("cart.popover");
 
   useEffect(() => {
     setCartItems(hookCartItems);
@@ -29,13 +31,11 @@ export default function CartPopover() {
   const content = (
     <div style={{ width: 320, maxHeight: 400, overflowY: "auto" }}>
       <Typography.Title level={5} style={{ margin: "8px 12px" }}>
-        Giỏ hàng
+        {t("viewCart")}
       </Typography.Title>
 
       {cartItems.length === 0 ? (
-        <div style={{ padding: "0 12px 12px", color: "#888", fontSize: 14 }}>
-          Không có sản phẩm nào.
-        </div>
+        <div style={{ padding: "0 12px 12px", color: "#888", fontSize: 14 }}>{t("empty")}</div>
       ) : (
         <>
           <List
@@ -99,7 +99,9 @@ export default function CartPopover() {
               fontSize: 14,
             }}
           >
-            <span>{cartItems.length} sản phẩm</span>
+            <span>
+              {cartItems.length} {t("products")}
+            </span>
 
             <Button
               onClick={() => {
@@ -109,7 +111,7 @@ export default function CartPopover() {
               size="small"
               className="!p-2 !bg-[#03c0b4]"
             >
-              Xem giỏ hàng
+              {t("viewCart")}
             </Button>
           </div>
         </>

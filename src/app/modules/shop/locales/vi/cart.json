@@ -1,0 +1,21 @@
+{
+  "cart": "Giỏ hàng",
+  "emptyCart": "Giỏ hàng của bạn đang trống",
+  "product": "Sản phẩm",
+  "price": "Đơn giá",
+  "quantity": "Số lượng",
+  "unit": "Đơn vị",
+  "delete": "Xóa",
+  "applyDiscount": "Áp dụng ưu đãi để được giảm giá",
+  "totalPrice": "Tổng tiền",
+  "directDiscount": "Giảm giá trực tiếp",
+  "voucherDiscount": "Giảm giá voucher",
+  "finalAmount": "Thành tiền",
+  "buyNow": "Mua hàng",
+  "agreeTerms": "Bằng việc tiến hành đặt mua hàng, bạn đồng ý với Điều khoản dịch vụ và Chính sách xử lý dữ liệu cá nhân.",
+  "popover": {
+    "empty": "Không có sản phẩm nào.",
+    "products": "sản phẩm",
+    "viewCart": "Xem giỏ hàng"
+  }
+}

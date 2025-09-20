@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Card,
@@ -16,6 +16,8 @@ import {
 } from "antd";
 import { DeleteOutlined, RightOutlined } from "@ant-design/icons";
 import { useCart } from "@/app/shares/hooks/carts/useCart";
+import { useTranslations } from "next-intl";
+
 const { Title, Text } = Typography;
 
 interface CartItemWithKey {
@@ -31,33 +33,27 @@ interface CartItemWithKey {
 }
 
 export default function CartInfo() {
+  const t = useTranslations("cart");
   const { cartItems: cartFromHook, removeFromCart, updateQuantity } = useCart();
 
-  // map hook cart items sang state với key + selected
-  const [cartItems, setCartItems] = useState<CartItemWithKey[]>(
-    cartFromHook.map((item) => ({
+  const [cartItems, setCartItems] = useState<CartItemWithKey[]>([]);
+  const [selectAll, setSelectAll] = useState(true);
+
+  // Đồng bộ dữ liệu từ hook vào state
+  useEffect(() => {
+    const initialCart = cartFromHook.map((item) => ({
       ...item,
       key: `${item.product_id}-${item.variant_unit}`,
       selected: true,
-    })),
-  );
-
-  const [selectAll, setSelectAll] = useState(true);
-
-  // đồng bộ cartItems khi hook thay đổi
-  React.useEffect(() => {
-    setCartItems(
-      cartFromHook.map((item) => ({
-        ...item,
-        key: `${item.product_id}-${item.variant_unit}`,
-        selected: true,
-      })),
-    );
+    }));
+    setCartItems(initialCart);
+    setSelectAll(initialCart.length > 0);
   }, [cartFromHook]);
 
   const handleQuantityChange = (value: number | null, record: CartItemWithKey) => {
     if (!value) return;
     updateQuantity(record.product_id, record.variant_unit, value);
+
     setCartItems((prev) =>
       prev.map((item) => (item.key === record.key ? { ...item, quantity: value } : item)),
     );
@@ -69,10 +65,13 @@ export default function CartInfo() {
   };
 
   const handleSelectItem = (checked: boolean, record: CartItemWithKey) => {
-    setCartItems((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, selected: checked } : item)),
+    const updatedItems = cartItems.map((item) =>
+      item.key === record.key ? { ...item, selected: checked } : item,
     );
-    setSelectAll(cartItems.every((item) => (item.key === record.key ? checked : item.selected)));
+    setCartItems(updatedItems);
+
+    // Cập nhật lại trạng thái Select All dựa trên state mới
+    setSelectAll(updatedItems.every((item) => item.selected));
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -81,15 +80,18 @@ export default function CartInfo() {
   };
 
   const selectedItems = cartItems.filter((item) => item.selected);
+
   const totalOriginal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const totalFinal = selectedItems.reduce(
-    (sum, item) =>
-      sum +
-      (item.sale_price && item.sale_price < item.price ? item.sale_price : item.price) *
-        item.quantity,
-    0,
-  );
+
+  const totalFinal = selectedItems.reduce((sum, item) => {
+    const priceToUse =
+      item.sale_price && item.sale_price < item.price ? item.sale_price : item.price;
+    return sum + priceToUse * item.quantity;
+  }, 0);
+
   const discount = totalOriginal - totalFinal;
+
+  const formatCurrency = (value: number) => new Intl.NumberFormat("vi-VN").format(value) + "đ";
 
   const columns = [
     {
@@ -99,15 +101,12 @@ export default function CartInfo() {
         <Checkbox
           checked={record.selected}
           onChange={(e) => handleSelectItem(e.target.checked, record)}
-          style={{
-            color: record.selected ? "#03c0b4" : undefined,
-          }}
         />
       ),
       width: 50,
     },
     {
-      title: "Sản phẩm",
+      title: t("product"),
       dataIndex: "name",
       render: (_: string, record: CartItemWithKey) => (
         <Space align="start">
@@ -117,29 +116,27 @@ export default function CartInfo() {
       ),
     },
     {
-      title: "Đơn giá",
+      title: t("price"),
       dataIndex: "price",
       align: "center" as const,
-      render: (_: number, record: CartItemWithKey) => (
-        <div>
-          {record.sale_price && record.sale_price < record.price ? (
-            <div>
-              <Text type="danger">
-                {(record.sale_price * record.quantity).toLocaleString("vi-VN")}đ
-              </Text>
-              <br />
-              <Text delete type="secondary">
-                {(record.price * record.quantity).toLocaleString("vi-VN")}đ
-              </Text>
-            </div>
-          ) : (
-            <Text strong>{(record.price * record.quantity).toLocaleString("vi-VN")}đ</Text>
-          )}
-        </div>
-      ),
+      render: (_: number, record: CartItemWithKey) => {
+        const hasDiscount = record.sale_price && record.sale_price < record.price;
+
+        return hasDiscount ? (
+          <div>
+            <Text type="danger">{formatCurrency(record.sale_price! * record.quantity)}</Text>
+            <br />
+            <Text delete type="secondary">
+              {formatCurrency(record.price * record.quantity)}
+            </Text>
+          </div>
+        ) : (
+          <Text strong>{formatCurrency(record.price * record.quantity)}</Text>
+        );
+      },
     },
     {
-      title: "Số lượng",
+      title: t("quantity"),
       dataIndex: "quantity",
       align: "center" as const,
       render: (_: number, record: CartItemWithKey) => (
@@ -152,12 +149,12 @@ export default function CartInfo() {
       ),
     },
     {
-      title: "Đơn vị",
+      title: t("unit"),
       dataIndex: "variant_unit",
       align: "center" as const,
     },
     {
-      title: "Xóa",
+      title: t("delete"),
       dataIndex: "actions",
       align: "center" as const,
       render: (record: CartItemWithKey) => (
@@ -169,7 +166,7 @@ export default function CartInfo() {
   return cartItems.length > 0 ? (
     <Row gutter={24} className="p-10">
       <Col xs={24} lg={16}>
-        <Card title={`Giỏ hàng (${cartItems.length} sản phẩm)`}>
+        <Card title={`${t("cart")} (${cartItems.length} ${t("product")})`}>
           <Table
             dataSource={cartItems}
             columns={columns}
@@ -181,29 +178,29 @@ export default function CartInfo() {
       </Col>
 
       <Col xs={24} lg={8}>
-        <Card bordered>
+        <Card>
           <Button block type="default" className="mb-3 flex justify-between items-center">
-            <span>Áp dụng ưu đãi để được giảm giá</span>
+            <span>{t("applyDiscount")}</span>
             <RightOutlined />
           </Button>
 
           <div className="flex flex-col gap-4 mt-4">
             <Row justify="space-between">
-              <Text className="text-base">Tổng tiền</Text>
+              <Text className="text-base">{t("totalPrice")}</Text>
               <Text className="text-base" strong>
-                {totalOriginal.toLocaleString("vi-VN")}đ
+                {formatCurrency(totalOriginal)}
               </Text>
             </Row>
 
             <Row justify="space-between">
-              <Text className="text-base">Giảm giá trực tiếp</Text>
+              <Text className="text-base">{t("directDiscount")}</Text>
               <Text className="text-base" type="danger">
-                {discount > 0 ? `-${discount.toLocaleString("vi-VN")}đ` : "0đ"}
+                {discount > 0 ? `-${formatCurrency(discount)}` : "0đ"}
               </Text>
             </Row>
 
             <Row justify="space-between">
-              <Text className="text-base">Giảm giá voucher</Text>
+              <Text className="text-base">{t("voucherDiscount")}</Text>
               <Text className="text-base" type="danger">
                 0đ
               </Text>
@@ -212,15 +209,15 @@ export default function CartInfo() {
             <Divider style={{ margin: "12px 0" }} />
 
             <Row justify="space-between" align="middle">
-              <Title level={5}>Thành tiền</Title>
+              <Title level={5}>{t("finalAmount")}</Title>
               <div style={{ textAlign: "right" }}>
                 {discount > 0 && (
                   <Text delete type="secondary" style={{ display: "block" }}>
-                    {totalOriginal.toLocaleString("vi-VN")}đ
+                    {formatCurrency(totalOriginal)}
                   </Text>
                 )}
                 <Text strong style={{ fontSize: 18, color: "#03c0b4" }}>
-                  {totalFinal.toLocaleString("vi-VN")}đ
+                  {formatCurrency(totalFinal)}
                 </Text>
               </div>
             </Row>
@@ -232,21 +229,25 @@ export default function CartInfo() {
             className="mt-4 !bg-[#03c0b4]"
             onClick={() => console.log("Mua hàng")}
           >
-            Mua hàng
+            {t("buyNow")}
           </Button>
 
           <Text
-            style={{ display: "block", textAlign: "center" as const, marginTop: 12, fontSize: 12 }}
+            style={{
+              display: "block",
+              textAlign: "center",
+              marginTop: 12,
+              fontSize: 12,
+            }}
           >
-            Bằng việc tiến hành đặt mua hàng, bạn đồng ý với Điều khoản dịch vụ và Chính sách xử lý
-            dữ liệu cá nhân.
+            {t("agreeTerms")}
           </Text>
         </Card>
       </Col>
     </Row>
   ) : (
     <Card>
-      <Text>Giỏ hàng của bạn đang trống</Text>
+      <Text>{t("emptyCart")}</Text>
     </Card>
   );
 }
