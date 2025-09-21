@@ -6,7 +6,6 @@ import {
   Card,
   Checkbox,
   Col,
-  Divider,
   Image,
   InputNumber,
   Row,
@@ -14,11 +13,14 @@ import {
   Table,
   Typography,
 } from "antd";
-import { DeleteOutlined, RightOutlined } from "@ant-design/icons";
+import { RightOutlined } from "@ant-design/icons";
 import { useCart } from "@/app/shares/hooks/carts/useCart";
 import { useTranslations } from "next-intl";
+import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
+import { Link } from "@/app/shares/locales/navigation";
+import { FaTrashCan } from "react-icons/fa6";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface CartItemWithKey {
   key: string;
@@ -95,7 +97,12 @@ export default function CartInfo() {
 
   const columns = [
     {
-      title: <Checkbox checked={selectAll} onChange={(e) => handleSelectAll(e.target.checked)} />,
+      title: (
+        <Space>
+          <Checkbox checked={selectAll} onChange={(e) => handleSelectAll(e.target.checked)} />
+          <Text>Chọn tất cả ({cartItems.filter((item) => item.selected).length})</Text>
+        </Space>
+      ),
       dataIndex: "selected",
       render: (_: boolean, record: CartItemWithKey) => (
         <Checkbox
@@ -103,15 +110,24 @@ export default function CartInfo() {
           onChange={(e) => handleSelectItem(e.target.checked, record)}
         />
       ),
-      width: 50,
+      width: 180, // cho rộng hơn chút để chứa chữ
     },
     {
       title: t("product"),
       dataIndex: "name",
       render: (_: string, record: CartItemWithKey) => (
         <Space align="start">
-          <Image src={record.image} width={50} height={50} preview={false} />
-          <Text strong>{record.name}</Text>
+          <Image
+            src={record.image}
+            width={48}
+            height={48}
+            preview={false}
+            alt="product"
+            className="border border-[#e4e8ed] p-1 rounded-xl"
+          />
+          <Text strong className="text-sm text-[#020b27]">
+            {record.name}
+          </Text>
         </Space>
       ),
     },
@@ -124,7 +140,9 @@ export default function CartInfo() {
 
         return hasDiscount ? (
           <div>
-            <Text type="danger">{formatCurrency(record.sale_price! * record.quantity)}</Text>
+            <Text className="!text-sm !text-[#1250dc] !font-semibold">
+              {formatCurrency(record.sale_price! * record.quantity)}
+            </Text>
             <br />
             <Text delete type="secondary">
               {formatCurrency(record.price * record.quantity)}
@@ -158,93 +176,108 @@ export default function CartInfo() {
       dataIndex: "actions",
       align: "center" as const,
       render: (record: CartItemWithKey) => (
-        <Button type="text" icon={<DeleteOutlined />} danger onClick={() => handleRemove(record)} />
+        <Button
+          type="text"
+          icon={<FaTrashCan />}
+          onClick={() => handleRemove(record)}
+          className="!text-[#657384]"
+        />
       ),
     },
   ];
 
   return cartItems.length > 0 ? (
-    <Row gutter={24} className="p-10">
-      <Col xs={24} lg={16}>
-        <Card title={`${t("cart")} (${cartItems.length} ${t("product")})`}>
+    <>
+      <Link
+        href={"/shop"}
+        className="px-10 flex gap-1 items-center text-[#1250dc] font-medium hover:text-[#5979c4]"
+      >
+        <MdOutlineKeyboardArrowLeft size={20} /> <p>Tiếp tục mua sắm</p>
+      </Link>
+      <Row gutter={24} className="px-10 pb-10 pt-2">
+        <Col xs={24} lg={16}>
           <Table
             dataSource={cartItems}
             columns={columns}
             pagination={false}
             rowKey="key"
             scroll={{ x: true }}
+            className="rounded-2xl overflow-hidden border border-gray-200"
           />
-        </Card>
-      </Col>
+        </Col>
 
-      <Col xs={24} lg={8}>
-        <Card>
-          <Button block type="default" className="mb-3 flex justify-between items-center">
-            <span>{t("applyDiscount")}</span>
-            <RightOutlined />
-          </Button>
+        <Col xs={24} lg={8}>
+          <Card className="!rounded-2xl">
+            <Button
+              block
+              className="mb-3 !flex !justify-between items-center !bg-[#eaeffa] !text-[#1250dc] !border-none p-1 !font-semibold"
+            >
+              <span>{t("applyDiscount")}</span>
+              <RightOutlined />
+            </Button>
 
-          <div className="flex flex-col gap-4 mt-4">
-            <Row justify="space-between">
-              <Text className="text-base">{t("totalPrice")}</Text>
-              <Text className="text-base" strong>
-                {formatCurrency(totalOriginal)}
-              </Text>
-            </Row>
-
-            <Row justify="space-between">
-              <Text className="text-base">{t("directDiscount")}</Text>
-              <Text className="text-base" type="danger">
-                {discount > 0 ? `-${formatCurrency(discount)}` : "0đ"}
-              </Text>
-            </Row>
-
-            <Row justify="space-between">
-              <Text className="text-base">{t("voucherDiscount")}</Text>
-              <Text className="text-base" type="danger">
-                0đ
-              </Text>
-            </Row>
-
-            <Divider style={{ margin: "12px 0" }} />
-
-            <Row justify="space-between" align="middle">
-              <Title level={5}>{t("finalAmount")}</Title>
-              <div style={{ textAlign: "right" }}>
-                {discount > 0 && (
-                  <Text delete type="secondary" style={{ display: "block" }}>
-                    {formatCurrency(totalOriginal)}
-                  </Text>
-                )}
-                <Text strong style={{ fontSize: 18, color: "#03c0b4" }}>
-                  {formatCurrency(totalFinal)}
+            <div className="flex flex-col gap-4 mt-4">
+              <Row justify="space-between">
+                <Text className="!text-base !text-[#4a4f63]">{t("totalPrice")}</Text>
+                <Text className="!text-base" strong>
+                  {formatCurrency(totalOriginal)}
                 </Text>
-              </div>
-            </Row>
-          </div>
+              </Row>
 
-          <Button
-            type="primary"
-            block
-            className="mt-4 !bg-[#03c0b4]"
-            onClick={() => console.log("Mua hàng")}
-          >
-            {t("buyNow")}
-          </Button>
+              <Row justify="space-between">
+                <Text className="!text-base !text-[#4a4f63]">{t("directDiscount")}</Text>
+                <Text className="!text-base !text-[#f79009] !font-semibold">
+                  {discount > 0 ? `-${formatCurrency(discount)}` : "0đ"}
+                </Text>
+              </Row>
 
-          <Text
-            style={{
-              display: "block",
-              textAlign: "center",
-              marginTop: 12,
-              fontSize: 12,
-            }}
-          >
-            {t("agreeTerms")}
-          </Text>
-        </Card>
-      </Col>
-    </Row>
+              <Row justify="space-between">
+                <Text className="!text-base !text-[#4a4f63]">{t("voucherDiscount")}</Text>
+                <Text className="!text-base !text-[#f79009] !font-semibold">0đ</Text>
+              </Row>
+
+              <Row
+                justify="space-between"
+                align="middle"
+                className="!flex !justify-between !items-center"
+              >
+                <p className="!text-xl font-semibold">{t("finalAmount")}</p>
+                <div style={{ textAlign: "right" }} className="flex items-center gap-1">
+                  {discount > 0 && (
+                    <Text delete type="secondary" style={{ display: "block" }}>
+                      {formatCurrency(totalOriginal)}
+                    </Text>
+                  )}
+                  <Text strong style={{ fontSize: 20, color: "#1250dc" }}>
+                    {formatCurrency(totalFinal)}
+                  </Text>
+                </div>
+              </Row>
+            </div>
+
+            <Button
+              type="primary"
+              block
+              className="mt-4 !bg-gradient-to-tr from-[#1250dc] to-[#306de4] transition duration-300 ease-in-out hover:brightness-110 hover:shadow-lg cursor-pointer"
+              onClick={() => console.log("Mua hàng")}
+            >
+              {t("buyNow")}
+            </Button>
+
+            <Text
+              style={{
+                display: "block",
+                textAlign: "center",
+                marginTop: 12,
+                fontSize: 12,
+              }}
+            >
+              {t("agreeTerms")}
+            </Text>
+          </Card>
+        </Col>
+      </Row>
+    </>
   ) : (
     <Card>
       <Text>{t("emptyCart")}</Text>

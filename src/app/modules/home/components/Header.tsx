@@ -150,7 +150,7 @@ export default function Header() {
                 {t("login")}
               </button>
               <button
-                className="px-4 py-2 bg-[#1250dc] text-white rounded-4xl hover:bg-[#5483ef] transition cursor-pointer"
+                className="px-4 py-2 bg-gradient-to-br from-[#1250dc] to-[#306de4] text-white rounded-4xl transition duration-300 ease-in-out hover:brightness-110 hover:shadow-lg cursor-pointer"
                 onClick={() => router.push("/signup")}
               >
                 {t("signup")}
@@ -170,7 +170,6 @@ export default function Header() {
                   onClick={() => {
                     dispatch(clearTokens());
                     persistor.purge();
-                    router.push("/signin");
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 rounded-md"
                 >

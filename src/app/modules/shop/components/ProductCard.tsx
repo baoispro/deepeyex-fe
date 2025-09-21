@@ -1,10 +1,7 @@
 "use client";
 import { Button } from "antd";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import { Product } from "../types/product";
 // import { useCart } from "../hook/useCart";
 // import { productApi } from "../lib/apis/product";
@@ -45,7 +42,7 @@ const ProductCard = ({ data }: Props) => {
   //   router.push(`${lv1.slug}/${lv2.slug}/${slugLV3}/${slugProduct}`);
   // }
   return (
-    <div className="bg-white rounded-2xl flex flex-col relative p-4 hover:border hover:border-[#03c0b4] cursor-pointer">
+    <div className="bg-white rounded-2xl flex flex-col relative p-4 hover:border hover:border-[#1250dc] cursor-pointer">
       {data.discount_percentage > 0 && (
         <div className="bg-[linear-gradient(295deg,#CD1A0C_0%,#FF5246_98.45%)] absolute rounded-tl-xl rounded-br-xl p-1 top-0 left-0">
           <p className="text-white text-sm font-bold">-{data.discount_percentage}%</p>
@@ -84,8 +81,8 @@ const ProductCard = ({ data }: Props) => {
                     onClick={() => setActive(variant)}
                     className={`flex-1 text-center p-1 rounded-xl cursor-pointer transition-all duration-100 ${
                       variant === active
-                        ? "bg-white text-[#03c0b4] border border-[#03c0b4]"
-                        : "hover:bg-[#eaeffa] hover:text-[#03c0b4]"
+                        ? "bg-white text-[#1250DC] border border-[#1250DC]"
+                        : "hover:bg-[#eaeffa] hover:text-[#1250DC]"
                     }`}
                   >
                     <p>{variant.unit}</p>
@@ -95,7 +92,7 @@ const ProductCard = ({ data }: Props) => {
             )}
           </div>
         )}
-        <p className="font-bold text-[#03c0b4]">
+        <p className="font-bold text-[#1250DC]">
           {(active.price - (active.price * data.discount_percentage) / 100).toLocaleString("vi-VN")}
           đ/ {active.unit}
         </p>
@@ -108,7 +105,7 @@ const ProductCard = ({ data }: Props) => {
           <p className="bg-[#f6f7f9] p-2 rounded-xl text-center">{active.unit}</p>
         </div>
         <Button
-          className="!bg-gradient-to-tr !bg-[#03c0b4] !border-[#03c0b4] !text-white !font-medium !text-sm !w-full !rounded-2xl !mt-2"
+          className="!bg-gradient-to-tr from-[#1250dc] to-[#306de4] !text-white !font-medium !text-sm !w-full !rounded-2xl !mt-2"
           // onClick={() => {
           //   addToCart({
           //     product_id: data.product_id,
