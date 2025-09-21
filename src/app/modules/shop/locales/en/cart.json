@@ -13,9 +13,7 @@
   "finalAmount": "Final amount",
   "buyNow": "Buy Now",
   "agreeTerms": "By placing this order, you agree to our Terms of Service and Privacy Policy.",
-  "popover": {
-    "empty": "No items in the cart.",
-    "products": "products",
-    "viewCart": "View cart"
-  }
+  "empty": "No items in the cart.",
+  "products": "products",
+  "viewCart": "View cart"
 }

@@ -13,9 +13,7 @@
   "finalAmount": "Thành tiền",
   "buyNow": "Mua hàng",
   "agreeTerms": "Bằng việc tiến hành đặt mua hàng, bạn đồng ý với Điều khoản dịch vụ và Chính sách xử lý dữ liệu cá nhân.",
-  "popover": {
-    "empty": "Không có sản phẩm nào.",
-    "products": "sản phẩm",
-    "viewCart": "Xem giỏ hàng"
-  }
+  "empty": "Không có sản phẩm nào.",
+  "products": "sản phẩm",
+  "viewCart": "Xem giỏ hàng"
 }
