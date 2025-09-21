@@ -1,0 +1,19 @@
+{
+  "cart": "Cart",
+  "emptyCart": "Your cart is empty",
+  "product": "Product",
+  "price": "Price",
+  "quantity": "Quantity",
+  "unit": "Unit",
+  "delete": "Delete",
+  "applyDiscount": "Apply discount for a better price",
+  "totalPrice": "Total price",
+  "directDiscount": "Direct discount",
+  "voucherDiscount": "Voucher discount",
+  "finalAmount": "Final amount",
+  "buyNow": "Buy Now",
+  "agreeTerms": "By placing this order, you agree to our Terms of Service and Privacy Policy.",
+  "empty": "No items in the cart.",
+  "products": "products",
+  "viewCart": "View cart"
+}

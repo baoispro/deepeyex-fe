@@ -5,9 +5,9 @@ import { clearTokens } from "@/app/shares/stores/authSlice";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
-import { Dropdown, MenuProps, Badge } from "antd";
-import { FaShoppingCart } from "react-icons/fa";
+import { Dropdown, MenuProps } from "antd";
 import Avatar from "react-avatar";
+import CartPopover from "@/app/shares/components/CartPopover";
 
 export default function Header() {
   const t = useTranslations("home");
@@ -40,10 +40,6 @@ export default function Header() {
   // Sub menu Services
   const serviceItems: MenuProps["items"] = [
     {
-      key: "shop",
-      label: <Link href="/shop">{t("shop")}</Link>,
-    },
-    {
       key: "booking",
       label: <Link href="/booking">{t("booking")}</Link>,
     },
@@ -61,54 +57,68 @@ export default function Header() {
     <header className="bg-white shadow-md py-4 px-6 md:px-12 fixed top-0 w-full z-50">
       <nav className="flex justify-between items-center max-w-7xl mx-auto">
         {/* Logo */}
-        <div className="flex-shrink-0 flex items-center space-x-2">
-          <Link href="/" className="text-2xl font-bold text-[#03c0b4] flex items-center">
-            <Image
-              src={"/logoDeepEyeX.png"}
-              alt="Logo"
-              width={40}
-              height={40}
-              className="rounded-md"
-            />
-            <span className="ml-2 hidden sm:inline">DeepEyeX</span>
-          </Link>
-        </div>
-
-        {/* Menu */}
-        <ul className="hidden md:flex space-x-6 lg:space-x-8">
-          <li>
+        <div className="flex items-center gap-5">
+          <div className="flex-shrink-0 flex items-center space-x-2">
             <Link
               href="/"
-              className="text-gray-600 hover:text-[#03c0b4] transition-colors duration-300"
+              className="text-2xl font-bold bg-gradient-to-r from-[#03c0b4] to-[#1250dc] bg-clip-text text-transparent flex items-center"
             >
-              {t("home")}
+              <Image
+                src={"/logoDeepEyeX.png"}
+                alt="Logo"
+                width={40}
+                height={40}
+                className="rounded-md"
+              />
+              <span className="ml-2 hidden sm:inline">DeepEyeX</span>
             </Link>
-          </li>
+          </div>
 
-          {/* Services dropdown */}
-          <li>
-            <Dropdown menu={{ items: serviceItems }} trigger={["hover"]}>
-              <span className="cursor-pointer text-gray-600 hover:text-[#03c0b4] transition-colors duration-300">
-                {t("services")}
-              </span>
-            </Dropdown>
-          </li>
+          {/* Menu */}
+          <ul className="hidden md:flex space-x-6 lg:space-x-8">
+            <li>
+              <Link
+                href="/"
+                className="text-gray-600 hover:text-[#1250dc] transition-colors duration-300"
+              >
+                {t("home")}
+              </Link>
+            </li>
 
-          <li>
-            <Link
-              href="#contact"
-              className="text-gray-600 hover:text-[#03c0b4] transition-colors duration-300"
-            >
-              {t("contact")}
-            </Link>
-          </li>
-        </ul>
+            {/* Services dropdown */}
+            <li>
+              <Dropdown menu={{ items: serviceItems }} trigger={["hover"]}>
+                <span className="cursor-pointer text-gray-600 hover:text-[#1250dc] transition-colors duration-300">
+                  {t("services")}
+                </span>
+              </Dropdown>
+            </li>
+
+            <li>
+              <Link
+                href="/shop"
+                className="text-gray-600 hover:text-[#1250dc] transition-colors duration-300"
+              >
+                {t("shop")}
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="#contact"
+                className="text-gray-600 hover:text-[#1250dc] transition-colors duration-300"
+              >
+                {t("contact")}
+              </Link>
+            </li>
+          </ul>
+        </div>
 
         {/* Right section */}
         <div className="flex items-center space-x-4">
           {/* Language Selector */}
           <div className="relative group">
-            <button className="flex items-center space-x-2 px-3 py-2 border rounded-lg text-gray-700 hover:bg-gray-50 transition cursor-pointer">
+            <button className="flex items-center space-x-2 px-3 py-2 border rounded-4xl text-gray-700 hover:bg-gray-50 transition cursor-pointer">
               <Image src={flags[language].src} width={24} height={18} alt={flags[language].alt} />
               <span>{language.toUpperCase()}</span>
             </button>
@@ -134,13 +144,13 @@ export default function Header() {
           {!isLoggedIn ? (
             <>
               <button
-                className="px-4 py-2 text-[#03c0b4] border border-[#03c0b4] rounded-lg hover:bg-indigo-50 transition cursor-pointer"
+                className="px-4 py-2 text-[#1250dc] border border-[#1250dc] rounded-4xl hover:bg-indigo-50 transition cursor-pointer"
                 onClick={() => router.push("/signin")}
               >
                 {t("login")}
               </button>
               <button
-                className="px-4 py-2 bg-[#03c0b4] text-white rounded-lg hover:bg-[#029d91] transition cursor-pointer"
+                className="px-4 py-2 bg-gradient-to-br from-[#1250dc] to-[#306de4] text-white rounded-4xl transition duration-300 ease-in-out hover:brightness-110 hover:shadow-lg cursor-pointer"
                 onClick={() => router.push("/signup")}
               >
                 {t("signup")}
@@ -160,7 +170,6 @@ export default function Header() {
                   onClick={() => {
                     dispatch(clearTokens());
                     persistor.purge();
-                    router.push("/signin");
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 rounded-md"
                 >
@@ -170,14 +179,8 @@ export default function Header() {
             </div>
           )}
           {/* Cart */}
-          <button
-            onClick={() => router.push("/cart")}
-            className="relative text-gray-600 hover:text-[#03c0b4] transition cursor-pointer pt-1"
-          >
-            <Badge count={2} size="small" offset={[0, 6]}>
-              <FaShoppingCart size={22} />
-            </Badge>
-          </button>
+
+          <CartPopover />
         </div>
       </nav>
     </header>

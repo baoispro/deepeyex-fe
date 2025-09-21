@@ -1,10 +1,7 @@
 "use client";
 import { Button } from "antd";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import { Product } from "../types/product";
 // import { useCart } from "../hook/useCart";
 // import { productApi } from "../lib/apis/product";
