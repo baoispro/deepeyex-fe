@@ -1,15 +1,15 @@
 {
-    "registrationNumber": "Registration Number",
-    "category": "Category",
-    "form": "Dosage Form",
-    "origin": "Brand Origin",
-    "manufacturer": "Manufacturer",
-    "ingredient": "Ingredient",
-    "quantity": "Quantity",
-    "outOfStock": "Out of stock",
-    "addToCart": "Add to cart",
-    "findStore": "Find pharmacy",
-    "description": "Product Description",
-    "successAdd": "Product added to cart successfully",
-    "notFound": "Product not found"
+  "registrationNumber": "Registration Number",
+  "category": "Category",
+  "form": "Dosage Form",
+  "origin": "Brand Origin",
+  "manufacturer": "Manufacturer",
+  "ingredient": "Ingredient",
+  "quantity": "Quantity",
+  "outOfStock": "Out of stock",
+  "addToCart": "Add to cart",
+  "findStore": "Find pharmacy",
+  "description": "Product Description",
+  "successAdd": "Product added to cart successfully",
+  "notFound": "Product not found"
 }

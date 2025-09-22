@@ -1,15 +1,15 @@
 {
-    "registrationNumber": "Mã số đăng ký",
-    "category": "Danh mục",
-    "form": "Dạng bào chế",
-    "origin": "Xuất xứ thương hiệu",
-    "manufacturer": "Nhà sản xuất",
-    "ingredient": "Thành phần",
-    "quantity": "Số lượng",
-    "outOfStock": "Hết hàng",
-    "addToCart": "Chọn mua",
-    "findStore": "Tìm nhà thuốc",
-    "description": "Mô tả sản phẩm",
-    "successAdd": "Đã thêm sản phẩm vào giỏ hàng",
-    "notFound": "Không tìm thấy sản phẩm"
+  "registrationNumber": "Mã số đăng ký",
+  "category": "Danh mục",
+  "form": "Dạng bào chế",
+  "origin": "Xuất xứ thương hiệu",
+  "manufacturer": "Nhà sản xuất",
+  "ingredient": "Thành phần",
+  "quantity": "Số lượng",
+  "outOfStock": "Hết hàng",
+  "addToCart": "Chọn mua",
+  "findStore": "Tìm nhà thuốc",
+  "description": "Mô tả sản phẩm",
+  "successAdd": "Đã thêm sản phẩm vào giỏ hàng",
+  "notFound": "Không tìm thấy sản phẩm"
 }

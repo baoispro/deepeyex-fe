@@ -1,7 +1,7 @@
 import { QueryKey, useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { QueryKeyEnum } from "../../../../shares/enums/queryKey";
-import { PatientApi } from "../../apis/patient/patientApi";
-import { GetPatientResponse } from "../../types/response";
+import { QueryKeyEnum } from "../../../../../shares/enums/queryKey";
+import { PatientApi } from "../../../apis/patient/patientApi";
+import { GetPatientResponse } from "../../../types/response";
 
 type Options = Omit<
   UseQueryOptions<GetPatientResponse, Error, GetPatientResponse, QueryKey>,

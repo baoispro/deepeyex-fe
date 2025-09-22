@@ -1,108 +1,103 @@
 "use client";
 
+import { useGetHospitalsbyWardAndCityQuery } from "@/app/modules/hospital/hooks/queries/hospitals/use-get-hospitals-by-ward-and-city.query";
+import { useGetAllCitiesQuery } from "@/app/modules/hospital/hooks/queries/hospitals/use-get-list-cities.query";
+import { useGetAllHospitalsQuery } from "@/app/modules/hospital/hooks/queries/hospitals/use-get-list-hospital.query";
+import { useGetWardsbyCityQuery } from "@/app/modules/hospital/hooks/queries/hospitals/use-get-list-wards-by-city.query";
 import { useRouter } from "@/app/shares/locales/navigation";
-import { Button, GetProps, Input, Radio, RadioChangeEvent, Select, Tabs, TabsProps } from "antd";
+import {
+  Button,
+  GetProps,
+  Input,
+  Radio,
+  RadioChangeEvent,
+  Select,
+  Skeleton,
+  Tabs,
+  TabsProps,
+} from "antd";
 import Search from "antd/es/input/Search";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-
-interface District {
-  name: string;
-  code: number;
-}
-
-interface Province {
-  name: string;
-  code: number;
-  wards: District[];
-}
-
-interface Hospital {
-  hospital_id: number;
-  name: string;
-  address_street: string;
-  ward: string;
-  district: string;
-  city: string;
-  slug: string;
-  phone: string;
-  email: string;
-}
+import { useState } from "react";
+import type { Hospital } from "@/app/modules/hospital/types/hospital";
+import { useGetHospitalbyAddressQuery } from "@/app/modules/hospital/hooks/queries/hospitals/use-get-hospital-by address.query";
+import { useFindHospitalByNearbyMutation } from "@/app/modules/hospital/hooks/mutations/hospitals/use-find-nearby.mutation";
 
 const NhaThuocPage = () => {
   const router = useRouter();
   type SearchProps = GetProps<typeof Input.Search>;
-  const onSearch: SearchProps["onSearch"] = (value, _e, info) => console.log(info?.source, value);
+  const onSearch: SearchProps["onSearch"] = (value) => setSearchKeyword(value);
 
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [selectedProvinceCode, setSelectedProvinceCode] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(5);
+  const [selectedHospital, setSelectedHospital] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string | undefined>();
+  const [selectedWard, setSelectedWard] = useState<string | undefined>();
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [nearbyHospitals, setNearbyHospitals] = useState<Hospital[]>([]);
+  const [findingNearby, setFindingNearby] = useState(false);
 
-  const [hospitalOptions, setHospitalOptions] = useState<Hospital[]>([]);
-  const [selectedHospital, setSelectedHospital] = useState<number | null>(null);
+  const onRadioChange = (e: RadioChangeEvent) => setSelectedHospital(e.target.value);
 
-  const onRadioChange = (e: RadioChangeEvent) => {
-    setSelectedHospital(e.target.value);
-  };
+  // Queries
+  const { data: hospitalData, isLoading } = useGetAllHospitalsQuery();
+  const { data: citiesData } = useGetAllCitiesQuery();
+  console.log(JSON.stringify(citiesData?.data));
+  const { data: wardsData } = useGetWardsbyCityQuery(selectedCity ?? "", {
+    enabled: !!selectedCity,
+  });
+  const { data: hospitalsByAddress } = useGetHospitalbyAddressQuery(searchKeyword, {
+    enabled: !!searchKeyword,
+  });
+  const { data: hospitalsByCityAndWard } = useGetHospitalsbyWardAndCityQuery(
+    selectedCity,
+    selectedWard,
+    { enabled: !!selectedCity || !!selectedWard },
+  );
 
-  // Mock hospital data
-  useEffect(() => {
-    const mockData: Hospital[] = [
-      {
-        hospital_id: 1,
-        name: "Bệnh viện Quân Y 175",
-        address_street: "786 Nguyễn Kiệm",
-        ward: "Phường 3",
-        district: "Gò Vấp",
-        city: "TP. HCM",
-        slug: "benh-vien-quan-y-175",
-        phone: "18006928",
-        email: "banctxhbenhvienquany175@gmail.com",
+  // Hook mutation: nhận dữ liệu khi mutate
+  const findNearbyMutation = useFindHospitalByNearbyMutation({
+    onSuccess: (res) => {
+      setNearbyHospitals(res.data || []);
+      setFindingNearby(false);
+    },
+    onError: () => setFindingNearby(false),
+  });
+
+  const handleFindNearby = () => {
+    if (!navigator.geolocation) {
+      alert("Trình duyệt không hỗ trợ định vị GPS!");
+      return;
+    }
+
+    setFindingNearby(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        findNearbyMutation.mutate({ lat: latitude, lng: longitude, radiusKm: 5 });
+      },
+      () => {
+        alert("Không thể lấy vị trí của bạn!");
+        setFindingNearby(false);
       },
       {
-        hospital_id: 2,
-        name: "Bệnh viện Mắt TP.HCM",
-        address_street: "280 Điện Biên Phủ",
-        ward: "Phường 7",
-        district: "Quận 3",
-        city: "TP. HCM",
-        slug: "benh-vien-mat-tphcm",
-        phone: "02839326732",
-        email: "info@mat-hcm.vn",
+        enableHighAccuracy: true, // ✅ Ưu tiên GPS chính xác
+        timeout: 10000, // ⏱ thời gian chờ (10s)
+        maximumAge: 0, // ❌ không dùng cache
       },
-      {
-        hospital_id: 3,
-        name: "Bệnh viện Chợ Rẫy",
-        address_street: "201B Nguyễn Chí Thanh",
-        ward: "Phường 12",
-        district: "Quận 5",
-        city: "TP. HCM",
-        slug: "benh-vien-cho-ray",
-        phone: "02838554137",
-        email: "contact@choray.vn",
-      },
-    ];
-    setHospitalOptions(mockData);
-  }, []);
-
-  useEffect(() => {
-    fetch("https://provinces.open-api.vn/api/v2/?depth=2")
-      .then((res) => res.json())
-      .then((data) => {
-        setProvinces(data);
-      });
-  }, []);
-
-  const handleProvinceChange = (provinceCode: number) => {
-    setSelectedProvinceCode(provinceCode);
-    const selectedProvince = provinces.find((p) => p.code === provinceCode);
-    setDistricts(selectedProvince?.wards || []);
+    );
   };
 
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + 5);
-  };
+  // Filter logic
+  let filteredHospitals: Hospital[] = [];
+  if (searchKeyword && hospitalsByAddress?.data) {
+    filteredHospitals = hospitalsByAddress.data;
+  } else if ((selectedCity || selectedWard) && hospitalsByCityAndWard?.data) {
+    filteredHospitals = hospitalsByCityAndWard.data;
+  } else {
+    filteredHospitals = hospitalData?.data || [];
+  }
+
+  const handleLoadMore = () => setVisibleCount((prev) => prev + 5);
 
   const tabItems: TabsProps["items"] = [
     {
@@ -118,38 +113,50 @@ const NhaThuocPage = () => {
           </div>
           <Select
             placeholder="Chọn Tỉnh/Thành"
-            onChange={handleProvinceChange}
-            options={provinces.map((province) => ({ label: province.name, value: province.code }))}
+            onChange={(value) => {
+              setSelectedCity(value);
+              setSelectedWard(undefined); // reset ward khi chọn city mới
+            }}
+            options={citiesData?.data?.map((city: string) => ({
+              label: city,
+              value: city,
+            }))}
           />
           <Select
             placeholder="Chọn Phường/Xã"
-            disabled={!selectedProvinceCode}
-            options={districts.map((ward) => ({ label: ward.name, value: ward.code }))}
+            disabled={!selectedCity}
+            onChange={(value) => setSelectedWard(value)}
+            options={wardsData?.data?.map((ward: string) => ({
+              label: ward,
+              value: ward,
+            }))}
           />
           <div>
             <p>Bệnh viện gợi ý</p>
-            <Radio.Group
-              onChange={onRadioChange}
-              value={selectedHospital}
-              style={{ display: "flex", flexDirection: "column", gap: 8 }}
-            >
-              {hospitalOptions.slice(0, visibleCount).map((hospital) => (
-                <Radio key={hospital.hospital_id} value={hospital.hospital_id}>
-                  <div className="flex flex-col mt-1">
-                    <span className="font-semibold">{hospital.name}</span>
-                    <span>
-                      {hospital.address_street}, {hospital.ward}, {hospital.district},{" "}
-                      {hospital.city}
-                    </span>
-                  </div>
-                </Radio>
-              ))}
-              {visibleCount < hospitalOptions.length && (
-                <Button type="link" onClick={handleLoadMore} style={{ padding: 0 }}>
-                  Xem thêm bệnh viện
-                </Button>
-              )}
-            </Radio.Group>
+            <Skeleton active loading={isLoading}>
+              <Radio.Group
+                onChange={onRadioChange}
+                value={selectedHospital}
+                style={{ display: "flex", flexDirection: "column", gap: 8 }}
+              >
+                {filteredHospitals.slice(0, visibleCount).map((hospital) => (
+                  <Radio key={hospital.hospital_id} value={hospital.hospital_id}>
+                    <div className="flex flex-col mt-1">
+                      <span className="font-semibold">{hospital.name}</span>
+                      <span>
+                        {hospital.address}, {hospital.ward}, {hospital.city}
+                      </span>
+                    </div>
+                  </Radio>
+                ))}
+
+                {visibleCount < filteredHospitals.length && (
+                  <Button type="link" onClick={handleLoadMore} style={{ padding: 0 }}>
+                    Xem thêm bệnh viện
+                  </Button>
+                )}
+              </Radio.Group>
+            </Skeleton>
           </div>
         </div>
       ),
@@ -158,15 +165,39 @@ const NhaThuocPage = () => {
       key: "2",
       label: "Bệnh viện gần bạn",
       children: (
-        <div>
-          <p>Hiển thị bệnh viện gần vị trí của bạn (sắp tới có thể tích hợp GPS)</p>
+        <div className="flex flex-col gap-2">
+          <Button type="primary" onClick={handleFindNearby} loading={findingNearby}>
+            Tìm bệnh viện gần bạn
+          </Button>
+
+          <div>
+            {nearbyHospitals.length === 0 && !findingNearby && <p>Chưa có kết quả</p>}
+            {nearbyHospitals.length > 0 && (
+              <Radio.Group
+                onChange={onRadioChange}
+                value={selectedHospital}
+                style={{ display: "flex", flexDirection: "column", gap: 8 }}
+              >
+                {nearbyHospitals.map((hospital) => (
+                  <Radio key={hospital.hospital_id} value={hospital.hospital_id}>
+                    <div className="flex flex-col mt-1">
+                      <span className="font-semibold">{hospital.name}</span>
+                      <span>
+                        {hospital.address}, {hospital.ward}, {hospital.city}
+                      </span>
+                    </div>
+                  </Radio>
+                ))}
+              </Radio.Group>
+            )}
+          </div>
         </div>
       ),
     },
   ];
 
   const hospitalDetail =
-    hospitalOptions.find((h) => h.hospital_id === selectedHospital) || hospitalOptions[0];
+    filteredHospitals.find((h) => h.hospital_id === selectedHospital) || filteredHospitals[0];
 
   return (
     <div className="p-10">
@@ -177,75 +208,78 @@ const NhaThuocPage = () => {
             Thời gian hoạt động: 6:00 - 23:00 hằng ngày (Thay đổi tùy theo từng bệnh viện)
           </p>
         </div>
+
         <div className="flex gap-5">
           <div className="bg-white w-1/3 p-5 rounded-2xl">
             <Tabs defaultActiveKey="1" items={tabItems} />
           </div>
+
           <div className="bg-white w-2/3 p-5 rounded-2xl">
-            <h2 className="font-semibold">Bệnh viện Quân Y 175</h2>
-            <div className="flex gap-5">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.918941142445!2d106.67808657326465!3d10.817515158438107!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317528e2324759b7%3A0x6c91974ff86f05e3!2zQuG7h25oIHZp4buHbiBRdcOibiBZIDE3NQ!5e0!3m2!1svi!2s!4v1757917057537!5m2!1svi!2s"
-                width="300"
-                height="150"
-                style={{ border: 0 }}
-                allowFullScreen={true}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-              <div className="flex flex-col gap-2">
-                <p>
-                  <span className="font-semibold">Địa chỉ:</span> 786 Nguyễn Kiệm, Gò Vấp, TP. HCM
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="text-green-600 font-medium">Đang mở</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-600">Đóng cửa lúc 21:00</span>
-                </p>
-                <p>
-                  <span className="font-semibold">Điện thoại:</span>{" "}
-                  <a href="tel:18006928" className="text-blue-600 hover:underline">
-                    1800 6928
-                  </a>
-                </p>
-                <p>
-                  <span className="font-semibold">Email:</span>{" "}
-                  <a
-                    href="mailto:banctxhbenhvienquany175@gmail.com"
-                    className="text-blue-600 hover:underline"
-                  >
-                    banctxhbenhvienquany175@gmail.com
-                  </a>
-                </p>
-                <div className="flex gap-5 items-center">
-                  <Button
-                    shape="round"
-                    size="large"
-                    className="!bg-gradient-to-tr from-[#1250dc] to-[#306de4]"
-                    onClick={() => {
-                      const hospital = hospitalOptions.find(
-                        (h) => h.hospital_id === (selectedHospital ?? 1),
-                      );
-                      if (hospital) {
-                        router.push(`/booking/${hospital.slug}`);
-                      }
-                    }}
-                  >
-                    <p className="text-white text-base font-medium">Chọn bệnh viện</p>
-                  </Button>
-                  <Button shape="round" size="large" className="!bg-[#eaeffa]">
-                    <p className="text-[#1250dc]">Gọi để tư vấn</p>
-                  </Button>
+            {hospitalDetail ? (
+              <>
+                <h2 className="font-semibold">{hospitalDetail.name}</h2>
+                <div className="flex gap-5">
+                  <iframe
+                    src={hospitalDetail.url_map}
+                    width="300"
+                    height="150"
+                    style={{ border: 0 }}
+                    allowFullScreen={true}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                  <div className="flex flex-col gap-2">
+                    <p>
+                      <span className="font-semibold">Địa chỉ:</span> {hospitalDetail.address},{" "}
+                      {hospitalDetail.ward}, {hospitalDetail.city}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Điện thoại:</span>{" "}
+                      <a
+                        href={`tel:${hospitalDetail.phone}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {hospitalDetail.phone}
+                      </a>
+                    </p>
+                    <p>
+                      <span className="font-semibold">Email:</span>{" "}
+                      <a
+                        href={`mailto:${hospitalDetail.email}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {hospitalDetail.email}
+                      </a>
+                    </p>
+                    <div className="flex gap-5 items-center">
+                      <Button
+                        shape="round"
+                        size="large"
+                        className="!bg-gradient-to-tr from-[#1250dc] to-[#306de4]"
+                        onClick={() => {
+                          if (hospitalDetail) {
+                            router.push(`/booking/${hospitalDetail.slug}`);
+                          }
+                        }}
+                      >
+                        <p className="text-white text-base font-medium">Chọn bệnh viện</p>
+                      </Button>
+                      <Button shape="round" size="large" className="!bg-[#eaeffa]">
+                        <p className="text-[#1250dc]">Gọi để tư vấn</p>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <h3>Hình ảnh bệnh viện:</h3>
-            <Image
-              src="https://acihome.vn/uploads/15/thiet-ke-benh-vien-quan-y-175-rong-66000m2-tai-sai-gon-quy-mo-500-giuong-1.jpg"
-              alt="Ảnh bệnh viện"
-              width={156}
-              height={88}
-            />
+                {hospitalDetail.image && (
+                  <>
+                    <h3>Hình ảnh bệnh viện:</h3>
+                    <Image src={hospitalDetail.image} alt="Ảnh bệnh viện" width={156} height={88} />
+                  </>
+                )}
+              </>
+            ) : (
+              <p>Vui lòng chọn bệnh viện để xem chi tiết</p>
+            )}
           </div>
         </div>
       </div>
