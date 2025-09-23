@@ -1,6 +1,6 @@
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 import { ListNearbyHospitalsResponse } from "../../../types/response";
-import { HospitalApi } from "../../../apis/patient/hospitalApi";
+import { HospitalApi } from "../../../apis/hospital/hospitalApi";
 
 type Params = {
   lat: number;

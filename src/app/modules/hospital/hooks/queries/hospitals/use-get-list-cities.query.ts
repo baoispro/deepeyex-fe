@@ -1,5 +1,5 @@
 import { QueryKey, useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { HospitalApi } from "../../../apis/patient/hospitalApi";
+import { HospitalApi } from "../../../apis/hospital/hospitalApi";
 import { QueryKeyEnum } from "@/app/shares/enums/queryKey";
 import { ListCitiesResponse } from "../../../types/response";
 

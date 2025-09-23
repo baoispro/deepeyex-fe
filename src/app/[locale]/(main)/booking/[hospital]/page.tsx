@@ -1,4 +1,5 @@
 "use client";
+
 import { useRouter } from "@/app/shares/locales/navigation";
 import {
   Avatar,
@@ -16,123 +17,64 @@ import {
   Typography,
 } from "antd";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaUser, FaSearch, FaMapMarkerAlt, FaEye } from "react-icons/fa";
-
-type Doctor = {
-  id: number;
-  name: string;
-  specialty: string;
-  position: string;
-  experience: string;
-  gender: string;
-  avatarUrl: string;
-  slug: string;
-};
+import { useGetHospitalbySlugQuery } from "@/app/modules/hospital/hooks/queries/hospitals/use-get-hospital-by-slug.query";
+import { Doctor } from "@/app/modules/hospital/types/doctor";
 
 export default function BookingDoctorPage() {
   const router = useRouter();
   const params = useParams();
-  const hospitalSlug = params.hospital;
+  const hospitalSlug = params.hospital as string;
   const { Title, Paragraph, Text } = Typography;
   const { Option } = Select;
 
-  // Danh sách bác sĩ chuyên khoa mắt
-  const mockDoctors: Doctor[] = [
-    {
-      id: 1,
-      name: "BS. Nguyễn Văn An",
-      specialty: "Nhãn khoa",
-      position: "Giáo sư",
-      experience: "20 năm kinh nghiệm điều trị bệnh mắt",
-      gender: "Nam",
-      avatarUrl: "https://via.placeholder.com/150/0000FF/FFFFFF?text=BS+An",
-      slug: "bs-nguyen-van-an",
-    },
-    {
-      id: 2,
-      name: "BS. Trần Thị Bình",
-      specialty: "Phẫu thuật mắt",
-      position: "Tiến sĩ",
-      experience: "12 năm kinh nghiệm phẫu thuật đục thủy tinh thể",
-      gender: "Nữ",
-      avatarUrl: "https://via.placeholder.com/150/FF0000/FFFFFF?text=BS+Binh",
-      slug: "bs-tran-thi-binh",
-    },
-    {
-      id: 3,
-      name: "BS. Lê Văn Cường",
-      specialty: "Tư vấn mắt & khúc xạ",
-      position: "Thạc sĩ",
-      experience: "10 năm kinh nghiệm khám và điều trị tật khúc xạ",
-      gender: "Nam",
-      avatarUrl: "https://via.placeholder.com/150/008000/FFFFFF?text=BS+Cuong",
-      slug: "bs-le-van-cuong",
-    },
-    {
-      id: 4,
-      name: "BS. Phạm Thị Dung",
-      specialty: "Phẫu thuật mắt",
-      position: "Phó giáo sư",
-      experience: "15 năm kinh nghiệm phẫu thuật giác mạc",
-      gender: "Nữ",
-      avatarUrl: "https://via.placeholder.com/150/800080/FFFFFF?text=BS+Dung",
-      slug: "bs-pham-thi-dung",
-    },
-  ];
+  // Gọi API hospital + doctors
+  const { data, isLoading } = useGetHospitalbySlugQuery(hospitalSlug, {
+    enabled: !!hospitalSlug,
+  });
 
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const hospital = data?.data;
+  const doctors: Doctor[] = hospital?.Doctors || [];
+  console.log(JSON.stringify(doctors));
+
+  // State lọc
   const [nameFilter, setNameFilter] = useState("");
   const [specialtyFilter, setSpecialtyFilter] = useState("");
-  const [positionFilter, setPositionFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
 
-  useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      let filteredDoctors = mockDoctors;
-
-      if (nameFilter) {
-        filteredDoctors = filteredDoctors.filter((doc) =>
-          doc.name.toLowerCase().includes(nameFilter.toLowerCase()),
-        );
-      }
-
-      if (specialtyFilter) {
-        filteredDoctors = filteredDoctors.filter((doc) => doc.specialty === specialtyFilter);
-      }
-
-      if (positionFilter) {
-        filteredDoctors = filteredDoctors.filter((doc) => doc.position === positionFilter);
-      }
-
-      if (genderFilter) {
-        filteredDoctors = filteredDoctors.filter((doc) => doc.gender === genderFilter);
-      }
-
-      setDoctors(filteredDoctors);
-      setLoading(false);
-    }, 500);
-  }, [nameFilter, specialtyFilter, positionFilter, genderFilter]);
+  // Lọc theo input
+  const filteredDoctors = doctors.filter((doc) => {
+    let match = true;
+    if (nameFilter && !doc.full_name.toLowerCase().includes(nameFilter.toLowerCase())) {
+      match = false;
+    }
+    if (specialtyFilter && doc.specialty !== specialtyFilter) {
+      match = false;
+    }
+    if (genderFilter && doc.image !== "" && genderFilter) {
+      // giả sử backend sau có giới tính thì check, còn giờ bỏ qua
+    }
+    return match;
+  });
 
   return (
     <section>
       <div style={{ padding: "24px" }}>
         <Title level={3} style={{ textAlign: "center" }}>
-          Chọn Bác Sĩ Chuyên Khoa Mắt
+          Chọn Bác Sĩ {hospital?.name}
         </Title>
         <Paragraph style={{ textAlign: "center" }} className="flex justify-center items-center">
           <FaMapMarkerAlt />
           <Text strong style={{ marginLeft: "8px" }}>
-            Bệnh viện Mắt TP. HCM – 280 Điện Biên Phủ, Quận 3
+            {hospital?.address}, {hospital?.ward}, {hospital?.city}
           </Text>
         </Paragraph>
 
         <Row gutter={[16, 16]}>
           {/* Bộ lọc */}
           <Col xs={24} lg={6}>
-            <Card title="Bộ lọc bác sĩ mắt">
+            <Card title="Bộ lọc bác sĩ">
               <Space direction="vertical" style={{ width: "100%" }}>
                 <Input
                   placeholder="Tìm theo tên bác sĩ"
@@ -142,28 +84,15 @@ export default function BookingDoctorPage() {
                 <div>
                   <Text strong>Chuyên khoa:</Text>
                   <Select
-                    placeholder="Chọn chuyên khoa mắt"
+                    placeholder="Chọn chuyên khoa"
                     style={{ width: "100%" }}
                     onChange={(value) => setSpecialtyFilter(value)}
                     allowClear
                   >
-                    <Option value="Nhãn khoa">Nhãn khoa</Option>
-                    <Option value="Phẫu thuật mắt">Phẫu thuật mắt</Option>
-                    <Option value="Tư vấn mắt & khúc xạ">Tư vấn mắt & khúc xạ</Option>
+                    <Option value="NHAN_KHOA">Nhãn khoa</Option>
+                    <Option value="PHAU_THUAT">Phẫu thuật</Option>
+                    <Option value="KHUC_XA">Khúc xạ</Option>
                   </Select>
-                </div>
-                <div>
-                  <Text strong>Chức vụ:</Text>
-                  <Radio.Group
-                    onChange={(e) => setPositionFilter(e.target.value)}
-                    value={positionFilter}
-                  >
-                    <Radio value="">Tất cả</Radio>
-                    <Radio value="Giáo sư">Giáo sư</Radio>
-                    <Radio value="Phó giáo sư">Phó giáo sư</Radio>
-                    <Radio value="Tiến sĩ">Tiến sĩ</Radio>
-                    <Radio value="Thạc sĩ">Thạc sĩ</Radio>
-                  </Radio.Group>
                 </div>
                 <div>
                   <Text strong>Giới tính:</Text>
@@ -182,7 +111,7 @@ export default function BookingDoctorPage() {
 
           {/* Danh sách bác sĩ */}
           <Col xs={24} lg={18}>
-            <Spin spinning={loading} tip="Đang tải danh sách bác sĩ...">
+            <Spin spinning={isLoading} tip="Đang tải danh sách bác sĩ...">
               <List
                 grid={{
                   gutter: 16,
@@ -192,39 +121,39 @@ export default function BookingDoctorPage() {
                   lg: 3,
                   xl: 3,
                 }}
-                dataSource={doctors}
-                locale={{ emptyText: "Không tìm thấy bác sĩ mắt nào." }}
+                dataSource={filteredDoctors}
+                locale={{ emptyText: "Không tìm thấy bác sĩ nào." }}
                 renderItem={(item) => (
                   <List.Item>
                     <Card
                       hoverable
                       actions={[
                         <Button
-                          key={`book-appointment-${item.id}`}
+                          key={`book-appointment-${item.doctor_id}`}
                           type="primary"
                           style={{ width: "90%" }}
-                          onClick={() => router.push(`${hospitalSlug}/${item.slug}/`)}
+                          onClick={() => router.push(`${hospitalSlug}/${item.slug}`)}
                         >
                           Đặt lịch khám
                         </Button>,
                       ]}
                     >
                       <Card.Meta
-                        avatar={<Avatar size={64} src={item.avatarUrl} icon={<FaUser />} />}
+                        avatar={<Avatar size={64} src={item.image} icon={<FaUser />} />}
                         title={
                           <Space>
                             <FaEye className="text-blue-500" />
-                            {item.name}
+                            {item.full_name}
                           </Space>
                         }
                         description={
                           <Space direction="vertical">
                             <Tag color="blue">{item.specialty}</Tag>
                             <Paragraph style={{ margin: 0 }}>
-                              <Text strong>Chức vụ:</Text> {item.position}
+                              <Text strong>SĐT:</Text> {item.phone}
                             </Paragraph>
                             <Paragraph style={{ margin: 0 }}>
-                              <Text strong>Kinh nghiệm:</Text> {item.experience}
+                              <Text strong>Email:</Text> {item.email}
                             </Paragraph>
                           </Space>
                         }

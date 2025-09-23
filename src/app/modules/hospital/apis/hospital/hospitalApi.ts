@@ -102,6 +102,11 @@ class HospitalClient {
     });
     return response.data;
   }
+
+  async getBySlug(slug: string): Promise<GetHospitalByIdResponse> {
+    const response = await this.client.get<GetHospitalByIdResponse>(`${endpoint}/slug/${slug}`);
+    return response.data;
+  }
 }
 
 const HospitalApi = new HospitalClient();

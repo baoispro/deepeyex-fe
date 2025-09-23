@@ -9,7 +9,7 @@ export type Hospital = {
   image: string;
   created_at: string;
   updated_at: string;
-  doctors?: Doctor[];
+  Doctors?: Doctor[];
   slug: string;
   url_map: string;
   ward: string;

@@ -1,6 +1,7 @@
 import { ApiResponse } from "@/app/shares/types/response";
 import { Patient } from "./patient";
 import { Hospital } from "./hospital";
+import { Doctor } from "./doctor";
 
 type GetPatientResponse = ApiResponse<Patient>;
 
@@ -16,6 +17,12 @@ type SearchByAddressResponse = ApiResponse<Hospital[]>;
 type ListByCityAndWardResponse = ApiResponse<Hospital[]>;
 type ListNearbyHospitalsResponse = ApiResponse<Hospital[]>;
 
+// Doctor
+type GetDoctorByIdResponse = ApiResponse<Doctor>;
+type GetDoctorByUserIdResponse = ApiResponse<Doctor>;
+type ListDoctorsResponse = ApiResponse<Doctor[]>;
+type ListDoctorsByHospitalResponse = ApiResponse<Doctor[]>;
+
 export type {
   GetPatientResponse,
   CreateHospitalResponse,
@@ -28,4 +35,8 @@ export type {
   SearchByAddressResponse,
   ListByCityAndWardResponse,
   ListNearbyHospitalsResponse,
+  GetDoctorByIdResponse,
+  GetDoctorByUserIdResponse,
+  ListDoctorsResponse,
+  ListDoctorsByHospitalResponse,
 };
