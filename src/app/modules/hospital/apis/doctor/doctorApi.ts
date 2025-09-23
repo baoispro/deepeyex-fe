@@ -7,7 +7,7 @@ import {
   GetDoctorByUserIdResponse,
 } from "../../types/response";
 
-const endpoint = "/doctor/doctors";
+const endpoint = "/hospital/doctors";
 
 class DoctorClient {
   private readonly client: AxiosInstance;
@@ -31,6 +31,12 @@ class DoctorClient {
   // ---------------- Get Doctor By UserID ----------------
   async getByUserId(userId: string): Promise<GetDoctorByUserIdResponse> {
     const response = await this.client.get<GetDoctorByUserIdResponse>(`${endpoint}/user/${userId}`);
+    return response.data;
+  }
+
+  // ---------------- Get Doctor By UserID ----------------
+  async getBySlug(slug: string): Promise<GetDoctorByUserIdResponse> {
+    const response = await this.client.get<GetDoctorByUserIdResponse>(`${endpoint}/slug/${slug}`);
     return response.data;
   }
 

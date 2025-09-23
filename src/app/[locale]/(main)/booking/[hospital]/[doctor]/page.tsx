@@ -9,136 +9,69 @@ import {
   Space,
   Steps,
   Typography,
-  Select,
   Checkbox,
   Input,
   DatePicker,
   Radio,
   Avatar,
+  Select,
+  Spin,
 } from "antd";
-import { FaMapMarkerAlt, FaClinicMedical, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/app/shares/locales/navigation";
+import { Doctor } from "@/app/modules/hospital/types/doctor";
+import { useGetDoctorBySlugQuery } from "@/app/modules/hospital/hooks/queries/doctors/use-get-doctor-by slug.query";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/shares/stores";
 
 const { Title, Paragraph, Text } = Typography;
-const { Option } = Select;
 const { Step } = Steps;
-const { RangePicker } = DatePicker;
 
-// Dữ liệu giả định
-const mockDoctor = {
-  name: "Dr. Darren Elder",
-  specialty: "Cardiologist",
-  location: "Scottsdale, Arizona, United States, Arizona, United States, 20005",
-  avatar: "/doctor-avatar.jpg",
+// ---------------- MAP SERVICES ----------------
+const specialtyServices: Record<string, { name: string; price: number }[]> = {
+  ophthalmology: [
+    { name: "Eye Exam", price: 100 },
+    { name: "Laser Surgery", price: 250 },
+  ],
+  internal_medicine: [
+    { name: "General Consultation", price: 80 },
+    { name: "ECG Test", price: 120 },
+  ],
+  neurology: [
+    { name: "EEG Test", price: 150 },
+    { name: "Brain MRI", price: 300 },
+  ],
+  endocrinology: [
+    { name: "Diabetes Checkup", price: 110 },
+    { name: "Hormone Test", price: 140 },
+  ],
+  pediatrics: [
+    { name: "Child Consultation", price: 90 },
+    { name: "Vaccination", price: 70 },
+  ],
 };
 
-const mockClinics = [
-  {
-    name: "The Family Dentistry Clinic",
-    address: "213 Old Trafford UK, New York",
-    icon: <FaClinicMedical />,
-  },
-  {
-    name: "Apollo Hospital",
-    address: "456 Healthcare Blvd, Los Angeles",
-    icon: <FaClinicMedical />,
-  },
-];
-
-const mockServices = [
-  { name: "Aerospace medicine", price: 100 },
-  { name: "Oncology", price: 120 },
-  { name: "Neurology", price: 150 },
-];
-
-const mockTimeSlots = [
-  "9:00 am",
-  "10:10 am",
-  "11:20 am",
-  "12:30 pm",
-  "1:40 pm",
-  "2:50 pm",
-  "4:00 pm",
-  "5:10 pm",
-  "6:20 pm",
-  "7:30 pm",
-  "8:40 pm",
-];
-
-// Bước 1
-const SelectClinicStep = ({ onNext }: { onNext: () => void }) => {
-  const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
-
-  return (
-    <Card>
-      <Title level={4}>Select Clinics</Title>
-      <Radio.Group
-        onChange={(e) => setSelectedClinic(e.target.value)}
-        value={selectedClinic}
-        style={{ width: "100%" }}
-      >
-        <Space direction="vertical" style={{ width: "100%" }}>
-          {mockClinics.map((clinic) => (
-            <Card
-              key={clinic.name}
-              style={{
-                cursor: "pointer",
-                borderColor: selectedClinic === clinic.name ? "#1890ff" : "#f0f0f0",
-              }}
-            >
-              <Radio value={clinic.name} style={{ marginRight: "8px" }} />
-              <div style={{ display: "inline-block" }}>
-                <Paragraph style={{ marginBottom: 0 }}>
-                  <Text strong>{clinic.name}</Text>
-                </Paragraph>
-                <Paragraph style={{ marginBottom: 0 }}>{clinic.address}</Paragraph>
-              </div>
-            </Card>
-          ))}
-        </Space>
-      </Radio.Group>
-      <Row justify="end" style={{ marginTop: "24px" }}>
-        <Col>
-          <Button type="primary" onClick={onNext} disabled={!selectedClinic}>
-            Select Specialty & Services <FaChevronRight style={{ marginLeft: "8px" }} />
-          </Button>
-        </Col>
-      </Row>
-    </Card>
-  );
-};
-
-// Bước 2
-const SelectSpecialtyStep = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => {
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
+// ---------------- STEP 1: Specialty & Services ----------------
+const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () => void }) => {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const specialty = doctor.specialty;
+  const services = specialtyServices[specialty] || [];
+  const baseFee = 150;
+
   const total = selectedServices.reduce((sum, service) => {
-    const servicePrice = mockServices.find((s) => s.name === service)?.price || 0;
-    return sum + servicePrice;
-  }, 150);
+    const price = services.find((s) => s.name === service)?.price || 0;
+    return sum + price;
+  }, baseFee);
 
   return (
     <Card>
       <Title level={4}>Booking Info.</Title>
       <Paragraph>
-        <Text strong>Clinic Name:</Text> The Family Dentistry Clinic
+        <Text strong>Specialty:</Text> {specialty}
       </Paragraph>
-
-      <div style={{ marginBottom: "24px" }}>
-        <Paragraph>
-          <Text strong>Select Speciality</Text>
-        </Paragraph>
-        <Select
-          placeholder="Cardiologist"
-          style={{ width: "100%" }}
-          onChange={(value) => setSelectedSpecialty(value)}
-          defaultValue="Cardiologist"
-          disabled
-        >
-          <Option value="Cardiologist">Cardiologist</Option>
-        </Select>
-      </div>
 
       <div style={{ marginBottom: "24px" }}>
         <Paragraph>
@@ -149,11 +82,8 @@ const SelectSpecialtyStep = ({ onNext, onBack }: { onNext: () => void; onBack: (
           style={{ width: "100%" }}
         >
           <Space direction="vertical" style={{ width: "100%" }}>
-            {mockServices.map((service) => (
-              <div
-                key={service.name}
-                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-              >
+            {services.map((service) => (
+              <div key={service.name} style={{ display: "flex", justifyContent: "space-between" }}>
                 <Checkbox value={service.name}>{service.name}</Checkbox>
                 <Text>${service.price.toFixed(2)}</Text>
               </div>
@@ -162,32 +92,17 @@ const SelectSpecialtyStep = ({ onNext, onBack }: { onNext: () => void; onBack: (
         </Checkbox.Group>
       </div>
 
-      <div style={{ marginBottom: "24px" }}>
-        <Paragraph>
-          <Text strong>Payment Info</Text>
-        </Paragraph>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <Text>Consultation fee</Text>
-          <Text>$150.00</Text>
-        </div>
-      </div>
-
       <Button type="primary" size="large" style={{ width: "100%", marginBottom: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
           <Text style={{ color: "#fff" }}>Total</Text>
           <Text style={{ color: "#fff" }}>${total.toFixed(2)}</Text>
         </div>
       </Button>
 
-      <Row justify="space-between">
-        <Col>
-          <Button onClick={onBack}>
-            <FaChevronLeft style={{ marginRight: "8px" }} /> Back
-          </Button>
-        </Col>
+      <Row justify="end">
         <Col>
           <Button type="primary" onClick={onNext}>
-            Select Date & Time <FaChevronRight style={{ marginLeft: "8px" }} />
+            Select Date & Time <FaChevronRight />
           </Button>
         </Col>
       </Row>
@@ -195,19 +110,35 @@ const SelectSpecialtyStep = ({ onNext, onBack }: { onNext: () => void; onBack: (
   );
 };
 
-// Bước 3
-const SelectDateTimeStep = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => {
+// ---------------- STEP 2: Date & Time ----------------
+const SelectDateTimeStep = ({
+  doctor,
+  onNext,
+  onBack,
+}: {
+  doctor: Doctor;
+  onNext: () => void;
+  onBack: () => void;
+}) => {
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+
+  const mockTimeSlots = [
+    "9:00 am",
+    "10:10 am",
+    "11:20 am",
+    "12:30 pm",
+    "1:40 pm",
+    "2:50 pm",
+    "4:00 pm",
+    "5:10 pm",
+  ];
 
   return (
     <Card>
       <Title level={4}>Booking Info.</Title>
       <Paragraph>
-        <Text strong>Clinic Name:</Text> The Family Dentistry Clinic
-      </Paragraph>
-      <Paragraph>
-        <Text strong>Speciality:</Text> Cardiologist
+        <Text strong>Specialty:</Text> {doctor.specialty}
       </Paragraph>
 
       <Row gutter={[16, 16]}>
@@ -234,7 +165,7 @@ const SelectDateTimeStep = ({ onNext, onBack }: { onNext: () => void; onBack: ()
           <Radio.Group onChange={(e) => setSelectedSlot(e.target.value)} value={selectedSlot}>
             <Row gutter={[8, 8]}>
               {mockTimeSlots.map((slot) => (
-                <Col key={slot} xs={8}>
+                <Col key={slot} xs={12}>
                   <Radio.Button value={slot} style={{ width: "100%" }}>
                     {slot}
                     <div style={{ fontSize: "12px", color: "#888" }}>Slots: 1</div>
@@ -249,12 +180,12 @@ const SelectDateTimeStep = ({ onNext, onBack }: { onNext: () => void; onBack: ()
       <Row justify="space-between" style={{ marginTop: "24px" }}>
         <Col>
           <Button onClick={onBack}>
-            <FaChevronLeft style={{ marginRight: "8px" }} /> Back
+            <FaChevronLeft /> Back
           </Button>
         </Col>
         <Col>
           <Button type="primary" onClick={onNext} disabled={!selectedDate || !selectedSlot}>
-            Add Basic Information <FaChevronRight style={{ marginLeft: "8px" }} />
+            Add Basic Information <FaChevronRight />
           </Button>
         </Col>
       </Row>
@@ -262,14 +193,21 @@ const SelectDateTimeStep = ({ onNext, onBack }: { onNext: () => void; onBack: ()
   );
 };
 
-// Bước 4
+// ---------------- STEP 3: Basic Info ----------------
 const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
+  const patient = useSelector((state: RootState) => state.auth.patient);
+
   const [patientInfo, setPatientInfo] = useState({
     patientType: "Myself",
-    firstName: "Emily Rival",
-    phoneNumber: "454545435",
-    email: "patient@example.com",
+    fullName: patient?.fullName || "",
+    phoneNumber: patient?.phone || "",
+    email: patient?.email || "",
+    dob: patient?.dob || "",
+    gender: patient?.gender || "",
+    address: patient?.address || "",
   });
+
+  const router = useRouter();
 
   return (
     <Card>
@@ -279,47 +217,82 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
           <Select
             placeholder="Myself"
             style={{ width: "100%" }}
+            value={patientInfo.patientType}
             onChange={(value) => setPatientInfo({ ...patientInfo, patientType: value })}
-            defaultValue="Myself"
           >
-            <Option value="Myself">Myself</Option>
-            <Option value="SomeoneElse">Someone else</Option>
+            <Select.Option value="Myself">Myself</Select.Option>
+            <Select.Option value="SomeoneElse">Someone else</Select.Option>
           </Select>
         </Col>
+
         <Col xs={24} md={12}>
-          <Text strong>First Name</Text>
+          <Text strong>Full Name</Text>
           <Input
-            placeholder="First Name"
-            defaultValue={patientInfo.firstName}
-            onChange={(e) => setPatientInfo({ ...patientInfo, firstName: e.target.value })}
+            placeholder="Full Name"
+            value={patientInfo.fullName}
+            onChange={(e) => setPatientInfo({ ...patientInfo, fullName: e.target.value })}
           />
         </Col>
+
         <Col xs={24} md={12}>
           <Text strong>Phone Number</Text>
           <Input
             placeholder="Phone Number"
-            defaultValue={patientInfo.phoneNumber}
+            value={patientInfo.phoneNumber}
             onChange={(e) => setPatientInfo({ ...patientInfo, phoneNumber: e.target.value })}
           />
         </Col>
+
         <Col xs={24} md={12}>
           <Text strong>Email Address</Text>
           <Input
             placeholder="Email Address"
-            defaultValue={patientInfo.email}
+            value={patientInfo.email}
             onChange={(e) => setPatientInfo({ ...patientInfo, email: e.target.value })}
           />
         </Col>
+
+        <Col xs={24} md={12}>
+          <Text strong>Date of Birth</Text>
+          <Input
+            type="date"
+            value={patientInfo.dob?.split("T")[0] || ""}
+            onChange={(e) => setPatientInfo({ ...patientInfo, dob: e.target.value })}
+          />
+        </Col>
+
+        <Col xs={24} md={12}>
+          <Text strong>Gender</Text>
+          <Select
+            value={patientInfo.gender}
+            style={{ width: "100%" }}
+            onChange={(value) => setPatientInfo({ ...patientInfo, gender: value })}
+          >
+            <Select.Option value="male">Male</Select.Option>
+            <Select.Option value="female">Female</Select.Option>
+            <Select.Option value="other">Other</Select.Option>
+          </Select>
+        </Col>
+
+        <Col xs={24}>
+          <Text strong>Address</Text>
+          <Input
+            placeholder="Address"
+            value={patientInfo.address}
+            onChange={(e) => setPatientInfo({ ...patientInfo, address: e.target.value })}
+          />
+        </Col>
       </Row>
+
       <Row justify="space-between" style={{ marginTop: "24px" }}>
         <Col>
           <Button onClick={onBack}>
-            <FaChevronLeft style={{ marginRight: "8px" }} /> Back
+            <FaChevronLeft /> Back
           </Button>
         </Col>
         <Col>
-          <Button type="primary">
-            Select Payment <FaChevronRight style={{ marginLeft: "8px" }} />
+          <Button type="primary" onClick={() => router.push("/payment")}>
+            Select Payment <FaChevronRight />
           </Button>
         </Col>
       </Row>
@@ -327,27 +300,19 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
-// Component chính
+// ---------------- MAIN COMPONENT ----------------
 export default function BookAppointmentPage() {
+  const params = useParams();
+  const slug = params.doctor as string;
+
+  const { data, isLoading } = useGetDoctorBySlugQuery(slug, { enabled: !!slug });
+  const doctor = data?.data;
+
   const [currentStep, setCurrentStep] = useState(1);
 
-  const nextStep = () => setCurrentStep(currentStep + 1);
-  const prevStep = () => setCurrentStep(currentStep - 1);
+  if (isLoading) return <Spin tip="Loading doctor..." />;
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <SelectClinicStep onNext={nextStep} />;
-      case 2:
-        return <SelectSpecialtyStep onNext={nextStep} onBack={prevStep} />;
-      case 3:
-        return <SelectDateTimeStep onNext={nextStep} onBack={prevStep} />;
-      case 4:
-        return <BasicInfoStep onBack={prevStep} />;
-      default:
-        return null;
-    }
-  };
+  if (!doctor) return <Paragraph>Doctor not found</Paragraph>;
 
   return (
     <div style={{ padding: "24px", maxWidth: "900px", margin: "auto" }}>
@@ -358,36 +323,41 @@ export default function BookAppointmentPage() {
         Home &gt; Book Appointment
       </Paragraph>
 
-      <Steps current={currentStep - 1} style={{ marginBottom: "32px" }}>
-        <Step title="Appointment Type" />
-        <Step title="Specialty" />
-        <Step title="Date & Time" />
-        <Step title="Basic Information" />
-      </Steps>
-
+      {/* Doctor Info */}
       <Card style={{ marginBottom: "24px" }}>
         <Row align="middle" gutter={16}>
           <Col>
-            <Avatar size={72} src={mockDoctor.avatar} />
+            <Avatar size={72} src={doctor.image} />
           </Col>
           <Col>
             <Title level={4} style={{ marginBottom: 0 }}>
-              {mockDoctor.name}
+              {doctor.full_name}
             </Title>
             <Paragraph style={{ marginBottom: 0, color: "#1890ff" }}>
-              <Text type="secondary">{mockDoctor.specialty}</Text>
+              <Text type="secondary">{doctor.specialty}</Text>
             </Paragraph>
-            <Space align="center" style={{ marginTop: "4px" }}>
-              <FaMapMarkerAlt style={{ color: "#888" }} />
-              <Paragraph style={{ marginBottom: 0, color: "#888" }}>
-                {mockDoctor.location}
-              </Paragraph>
-            </Space>
           </Col>
         </Row>
       </Card>
 
-      {renderStep()}
+      {/* Steps */}
+      <Steps current={currentStep - 1} style={{ marginBottom: "32px" }}>
+        <Step title="Specialty & Services" />
+        <Step title="Date & Time" />
+        <Step title="Basic Information" />
+      </Steps>
+
+      {currentStep === 1 && (
+        <SelectSpecialtyStep doctor={doctor} onNext={() => setCurrentStep(2)} />
+      )}
+      {currentStep === 2 && (
+        <SelectDateTimeStep
+          doctor={doctor}
+          onNext={() => setCurrentStep(3)}
+          onBack={() => setCurrentStep(1)}
+        />
+      )}
+      {currentStep === 3 && <BasicInfoStep onBack={() => setCurrentStep(2)} />}
     </div>
   );
 }
