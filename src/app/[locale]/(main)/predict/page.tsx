@@ -6,6 +6,7 @@ import { usePredictMutation } from "../../../shares/hooks/mutations/use-predict.
 import { EyeDiseaseLabel } from "../../../shares/types/predict";
 import { Modal } from "antd";
 import TreatmentPlanUI from "../../../modules/predict/components/TreatmentPlan";
+import { convertLabelToVietnamese } from "@/app/shares/utils/helper";
 
 export default function EyeDiagnosisApp() {
   const [file, setFile] = useState<File | null>(null);
@@ -211,17 +212,4 @@ export default function EyeDiagnosisApp() {
       )}
     </section>
   );
-}
-
-function convertLabelToVietnamese(label: EyeDiseaseLabel): string {
-  const map: Record<EyeDiseaseLabel, string> = {
-    conjunctivitis: "Viêm kết mạc (Đau mắt đỏ)",
-    eyelidedema: "Phù nề mí mắt",
-    healthy_eye: "Mắt bình thường",
-    hordeolum: "Chắp / Lẹo",
-    keratitiswithulcer: "Viêm giác mạc có loét",
-    subconjunctival_hemorrhage: "Xuất huyết dưới kết mạc",
-  };
-
-  return map[label] || label;
 }
