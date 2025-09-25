@@ -1,7 +1,7 @@
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
-import { UserApi } from "../../apis/userApi";
-import { SuccessResponse } from "../../apis/authApi";
-import { UpdatePasswordByEmailBody } from "../../types/body";
+import { UserApi } from "@/app/modules/auth/apis/userApi";
+import { SuccessResponse } from "@/app/modules/auth/apis/authApi";
+import { UpdatePasswordByEmailBody } from "@/app/modules/auth/types/body";
 
 type ResetPasswordOptions = Omit<
   UseMutationOptions<SuccessResponse, Error, UpdatePasswordByEmailBody>,

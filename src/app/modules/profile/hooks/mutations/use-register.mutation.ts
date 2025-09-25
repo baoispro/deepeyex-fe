@@ -1,5 +1,5 @@
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
-import { AuthApi, RegisterRequest, SuccessResponse } from "../../apis/authApi";
+import { AuthApi, RegisterRequest, SuccessResponse } from "@/app/modules/auth/apis/authApi";
 
 type RegisterOptions = Omit<
   UseMutationOptions<

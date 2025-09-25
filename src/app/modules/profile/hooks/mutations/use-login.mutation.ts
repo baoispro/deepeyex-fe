@@ -1,15 +1,14 @@
-// src/hooks/auth/useLoginMutation.ts
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { useDispatch } from "react-redux";
+import { setTokens } from "@/app/shares/stores/authSlice";
 import {
   AuthApi,
   LoginRequest,
   SuccessResponse,
   TokenResponse,
   ErrorResponse,
-} from "../../apis/authApi";
-import { AxiosError } from "axios";
-import { useDispatch } from "react-redux";
-import { setTokens } from "@/app/shares/stores/authSlice";
+} from "@/app/modules/auth/apis/authApi";
 
 type LoginOptions = Omit<
   UseMutationOptions<SuccessResponse<TokenResponse>, AxiosError<ErrorResponse>, LoginRequest>,
