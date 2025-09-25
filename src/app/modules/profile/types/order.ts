@@ -1,3 +1,5 @@
+import { Patient } from "./patient";
+
 export type Drug = {
   drug_id: string;
   name: string;
@@ -8,12 +10,6 @@ export type OrderItem = {
   drug: Drug;
   quantity: number;
   price: number;
-};
-
-export type Patient = {
-  full_name: string;
-  phone: string;
-  address: string;
 };
 
 export enum OrderStatus {

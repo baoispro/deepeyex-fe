@@ -6,14 +6,16 @@ import { Patient } from "../../hospital/types/patient";
 import { useAppSelector } from "@/app/shares/stores";
 import Avatar from "react-avatar";
 import dayjs from "dayjs";
+import { useUpdatePatientMutation } from "../../hospital/hooks/mutations/patients/use-update-patient.mutation";
+import { useDispatch } from "react-redux";
+import { setPatient } from "@/app/shares/stores/authSlice";
 
 export default function PatientInfoForm() {
   const [form] = Form.useForm<Patient>();
   const auth = useAppSelector((state) => state.auth);
-  const image = auth.patient?.image;
-  const name = auth.patient?.fullName;
   const patient = auth.patient;
-  console.log("Patient from store:", patient);
+  const dispatch = useDispatch();
+
   const [fileList, setFileList] = useState<UploadFile[]>(
     patient?.image
       ? [
@@ -27,6 +29,15 @@ export default function PatientInfoForm() {
       : [],
   );
 
+  const updatePatientMutation = useUpdatePatientMutation({
+    onSuccess: (data) => {
+      message.success("Cập nhật thông tin bệnh nhân thành công!");
+    },
+    onError: (error) => {
+      message.error(error.message || "Cập nhật thất bại!");
+    },
+  });
+
   const beforeUpload = (file: File) => {
     const isImage = file.type.startsWith("image/");
     if (!isImage) message.error("Bạn chỉ có thể tải lên file hình ảnh!");
@@ -35,14 +46,41 @@ export default function PatientInfoForm() {
 
   const handleUploadChange = ({ fileList }: { fileList: UploadFile[] }) => {
     setFileList(fileList);
-    form.setFieldsValue({ image: fileList.length > 0 ? fileList[0].url : undefined });
+    form.setFieldsValue({
+      image: fileList.length > 0 ? fileList[0].url : undefined,
+    });
   };
 
   const handleFinish = (values: Patient) => {
-    console.log("Form values:", values);
-    if (values.image) {
-      console.log("Ảnh mới:", values.image);
+    if (!patient?.patientId) {
+      message.error("Không tìm thấy thông tin bệnh nhân để cập nhật.");
+      return;
     }
+
+    const payload = {
+      patientId: patient.patientId,
+      fullName: values.full_name ?? "",
+      dob: values.dob ? dayjs(values.dob).format("YYYY-MM-DD") : undefined,
+      gender: values.gender,
+      address: values.address ?? "",
+      phone: values.phone ?? "",
+      email: values.email ?? "",
+      image: fileList.length > 0 ? fileList[0].url : undefined,
+    };
+
+    updatePatientMutation.mutate(payload);
+    dispatch(
+      setPatient({
+        patientId: patient.patientId,
+        fullName: payload.fullName || null,
+        address: payload.address || null,
+        dob: payload.dob || null,
+        email: payload.email || null,
+        gender: payload.gender || null,
+        phone: payload.phone || null,
+        image: payload.image || null,
+      }),
+    );
   };
 
   return (
@@ -53,7 +91,7 @@ export default function PatientInfoForm() {
         onFinish={handleFinish}
         initialValues={{
           full_name: patient?.fullName || "",
-          dob: dayjs(new Date(patient?.dob ?? "")),
+          dob: patient?.dob ? dayjs(patient.dob) : null,
           gender: patient?.gender || "male",
           address: patient?.address || "",
           phone: patient?.phone || "",
@@ -62,10 +100,14 @@ export default function PatientInfoForm() {
         }}
         className="flex flex-col md:flex-row gap-8 p-6 bg-white "
       >
-        {/* Avatar upload */}
         <Form.Item name="image" className="w-1/2">
           <div className="flex flex-col items-center">
-            <Avatar name={name || ""} src={image || ""} size="200" round={true} />
+            <Avatar
+              name={patient?.fullName || ""}
+              src={patient?.image || ""}
+              size="200"
+              round={true}
+            />
 
             <Upload
               fileList={fileList}
@@ -80,6 +122,7 @@ export default function PatientInfoForm() {
           </div>
         </Form.Item>
 
+        {/* Patient Info */}
         <div className="w-full md:w-2/3">
           <Form.Item
             label="Họ và tên"
@@ -96,6 +139,7 @@ export default function PatientInfoForm() {
           >
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
+
           <Form.Item
             label="Giới tính"
             name="gender"
@@ -121,8 +165,8 @@ export default function PatientInfoForm() {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Lưu thông tin
+            <Button type="primary" htmlType="submit" loading={updatePatientMutation.isPending}>
+              {updatePatientMutation.isPending ? "Đang lưu..." : "Lưu thông tin"}
             </Button>
           </Form.Item>
         </div>
