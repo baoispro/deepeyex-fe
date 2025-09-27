@@ -16,6 +16,7 @@ import {
   Spin,
   Breadcrumb,
   Calendar,
+  Form,
 } from "antd";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import type { Dayjs } from "dayjs";
@@ -29,6 +30,16 @@ import { RootState } from "@/app/shares/stores";
 import { HomeOutlined } from "@ant-design/icons";
 import { useGetTimeSlotsByDoctorAndMonthQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-month.query";
 import { useGetTimeSlotsByDoctorAndDateQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-date.query";
+
+interface PatientFormValues {
+  patientType: "Bản thân" | "Người khác";
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  dob: string;
+  gender: "male" | "female" | "";
+  address: string;
+}
 
 const { Title, Paragraph, Text } = Typography;
 const { Step } = Steps;
@@ -196,13 +207,18 @@ const SelectDateTimeStep = ({
                 style={{ width: "100%" }}
               >
                 <Row gutter={[8, 8]}>
-                  {timeSlots.map((slot) => (
-                    <Col key={slot} xs={12}>
-                      <Radio.Button value={slot} style={{ width: "100%" }}>
-                        {slot}
-                      </Radio.Button>
-                    </Col>
-                  ))}
+                  {timeSlots.map((slot) => {
+                    const slotTime = dayjs(`${selectedDate.format("YYYY-MM-DD")} ${slot}`);
+                    const isPast = slotTime.isBefore(dayjs());
+
+                    return (
+                      <Col key={slot} xs={12}>
+                        <Radio.Button value={slot} disabled={isPast} style={{ width: "100%" }}>
+                          {slot}
+                        </Radio.Button>
+                      </Col>
+                    );
+                  })}
                 </Row>
               </Radio.Group>
             ) : (
@@ -233,130 +249,158 @@ const SelectDateTimeStep = ({
 // ---------------- BƯỚC 3: THÔNG TIN BỆNH NHÂN ----------------
 const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
   const patient = useSelector((state: RootState) => state.auth.patient);
-
-  const [patientInfo, setPatientInfo] = useState({
-    patientType: "Bản thân",
-    fullName: patient?.fullName || "",
-    phoneNumber: patient?.phone || "",
-    email: patient?.email || "",
-    dob: patient?.dob || "",
-    gender: patient?.gender || "",
-    address: patient?.address || "",
-  });
-
+  const [form] = Form.useForm();
   const router = useRouter();
 
-  const handleChangePatientType = (value: string) => {
-    if (value === "Người khác") {
-      setPatientInfo({
-        patientType: value,
-        fullName: "",
-        phoneNumber: "",
-        email: "",
-        dob: "",
-        gender: "",
-        address: "",
-      });
-    } else {
-      setPatientInfo({
-        patientType: value,
-        fullName: patient?.fullName || "",
-        phoneNumber: patient?.phone || "",
-        email: patient?.email || "",
-        dob: patient?.dob || "",
-        gender: patient?.gender || "",
-        address: patient?.address || "",
-      });
-    }
+  const handleFinish = (values: PatientFormValues) => {
+    console.log("✅ Patient info:", values);
+    router.push("/payment");
   };
 
   return (
     <Card>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={12}>
-          <Text strong>Chọn bệnh nhân</Text>
-          <Select
-            placeholder="Bản thân"
-            style={{ width: "100%" }}
-            value={patientInfo.patientType}
-            onChange={handleChangePatientType}
-          >
-            <Select.Option value="Bản thân">Bản thân</Select.Option>
-            <Select.Option value="Người khác">Người khác</Select.Option>
-          </Select>
-        </Col>
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{
+          patientType: "Bản thân",
+          fullName: patient?.fullName || "",
+          phoneNumber: patient?.phone || "",
+          email: patient?.email || "",
+          dob: patient?.dob ? patient.dob.split("T")[0] : "",
+          gender: patient?.gender || "",
+          address: patient?.address || "",
+        }}
+        onValuesChange={(changed, all) => {
+          if (changed.patientType === "Người khác") {
+            form.setFieldsValue({
+              fullName: "",
+              phoneNumber: "",
+              email: "",
+              dob: "",
+              gender: "",
+              address: "",
+            });
+          } else if (changed.patientType === "Bản thân") {
+            form.setFieldsValue({
+              fullName: patient?.fullName || "",
+              phoneNumber: patient?.phone || "",
+              email: patient?.email || "",
+              dob: patient?.dob ? patient.dob.split("T")[0] : "",
+              gender: patient?.gender || "",
+              address: patient?.address || "",
+            });
+          }
+        }}
+        onFinish={handleFinish}
+      >
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={12}>
+            <Form.Item label="Chọn bệnh nhân" name="patientType">
+              <Select>
+                <Select.Option value="Bản thân">Bản thân</Select.Option>
+                <Select.Option value="Người khác">Người khác</Select.Option>
+              </Select>
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} md={12}>
-          <Text strong>Họ và tên</Text>
-          <Input
-            placeholder="Nhập họ và tên"
-            value={patientInfo.fullName}
-            onChange={(e) => setPatientInfo({ ...patientInfo, fullName: e.target.value })}
-          />
-        </Col>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Họ và tên"
+              name="fullName"
+              rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
+            >
+              <Input placeholder="Nhập họ và tên" />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} md={12}>
-          <Text strong>Số điện thoại</Text>
-          <Input
-            placeholder="Nhập số điện thoại"
-            value={patientInfo.phoneNumber}
-            onChange={(e) => setPatientInfo({ ...patientInfo, phoneNumber: e.target.value })}
-          />
-        </Col>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Số điện thoại"
+              name="phoneNumber"
+              rules={[
+                { required: true, message: "Vui lòng nhập số điện thoại" },
+                {
+                  pattern: /^(0|\+84)(\d{9})$/,
+                  message: "Số điện thoại không hợp lệ (VD: 0912345678)",
+                },
+              ]}
+            >
+              <Input placeholder="Nhập số điện thoại" />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} md={12}>
-          <Text strong>Email</Text>
-          <Input
-            placeholder="Nhập email"
-            value={patientInfo.email}
-            onChange={(e) => setPatientInfo({ ...patientInfo, email: e.target.value })}
-          />
-        </Col>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[
+                { required: true, message: "Vui lòng nhập email" },
+                { type: "email", message: "Email không hợp lệ" },
+              ]}
+            >
+              <Input placeholder="Nhập email" />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} md={12}>
-          <Text strong>Ngày sinh</Text>
-          <Input
-            type="date"
-            value={patientInfo.dob?.split("T")[0] || ""}
-            onChange={(e) => setPatientInfo({ ...patientInfo, dob: e.target.value })}
-          />
-        </Col>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Ngày sinh"
+              name="dob"
+              rules={[
+                { required: true, message: "Vui lòng chọn ngày sinh" },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const age = dayjs().diff(dayjs(value), "year");
+                    return age > 0 && age <= 100
+                      ? Promise.resolve()
+                      : Promise.reject("Tuổi phải từ 1 đến 100");
+                  },
+                },
+              ]}
+            >
+              <Input type="date" />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} md={12}>
-          <Text strong>Giới tính</Text>
-          <Select
-            value={patientInfo.gender}
-            style={{ width: "100%" }}
-            onChange={(value) => setPatientInfo({ ...patientInfo, gender: value })}
-          >
-            <Select.Option value="male">Nam</Select.Option>
-            <Select.Option value="female">Nữ</Select.Option>
-            <Select.Option value="other">Khác</Select.Option>
-          </Select>
-        </Col>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Giới tính"
+              name="gender"
+              rules={[{ required: true, message: "Vui lòng chọn giới tính" }]}
+            >
+              <Select>
+                <Select.Option value="male">Nam</Select.Option>
+                <Select.Option value="female">Nữ</Select.Option>
+              </Select>
+            </Form.Item>
+          </Col>
 
-        <Col xs={24}>
-          <Text strong>Địa chỉ</Text>
-          <Input
-            placeholder="Nhập địa chỉ"
-            value={patientInfo.address}
-            onChange={(e) => setPatientInfo({ ...patientInfo, address: e.target.value })}
-          />
-        </Col>
-      </Row>
+          <Col xs={24}>
+            <Form.Item
+              label="Địa chỉ"
+              name="address"
+              rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
+            >
+              <Input placeholder="Nhập địa chỉ" />
+            </Form.Item>
+          </Col>
+        </Row>
 
-      <Row justify="space-between" style={{ marginTop: "24px" }}>
-        <Col>
-          <Button onClick={onBack}>
-            <FaChevronLeft /> Quay lại
-          </Button>
-        </Col>
-        <Col>
-          <Button type="primary" onClick={() => router.push("/payment")}>
-            Chọn hình thức thanh toán <FaChevronRight />
-          </Button>
-        </Col>
-      </Row>
+        <Row justify="space-between" style={{ marginTop: "24px" }}>
+          <Col>
+            <Button onClick={onBack}>
+              <FaChevronLeft /> Quay lại
+            </Button>
+          </Col>
+          <Col>
+            <Button type="primary" htmlType="submit">
+              Chọn hình thức thanh toán <FaChevronRight />
+            </Button>
+          </Col>
+        </Row>
+      </Form>
     </Card>
   );
 };
