@@ -1,4 +1,4 @@
-import { Patient } from "./patient";
+import { Patient } from "../../hospital/types/patient";
 
 export type Drug = {
   drug_id: string;

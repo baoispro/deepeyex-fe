@@ -6,8 +6,6 @@ export const mockOrder: Order[] = [
     order_id: "INV-20230922",
     patient: {
       patient_id: "p-001",
-      updatedAt: "2023-09-20T10:00:00Z",
-      createdAt: "2023-09-15T09:00:00Z",
       dob: "1990-01-01",
       user_id: "u-001",
       gender: Gender.Male,
@@ -41,8 +39,6 @@ export const mockOrder: Order[] = [
     order_id: "INV-20230923",
     patient: {
       patient_id: "p-001",
-      updatedAt: "2023-09-20T10:00:00Z",
-      createdAt: "2023-09-15T09:00:00Z",
       dob: "1990-01-01",
       user_id: "u-001",
       gender: Gender.Male,
@@ -76,8 +72,6 @@ export const mockOrder: Order[] = [
     order_id: "INV-20230924",
     patient: {
       patient_id: "p-001",
-      updatedAt: "2023-09-20T10:00:00Z",
-      createdAt: "2023-09-15T09:00:00Z",
       dob: "1990-01-01",
       user_id: "u-001",
       gender: Gender.Male,
@@ -111,8 +105,6 @@ export const mockOrder: Order[] = [
     order_id: "INV-20230925",
     patient: {
       patient_id: "p-001",
-      updatedAt: "2023-09-20T10:00:00Z",
-      createdAt: "2023-09-15T09:00:00Z",
       dob: "1990-01-01",
       user_id: "u-001",
       gender: Gender.Male,

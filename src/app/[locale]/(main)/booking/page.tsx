@@ -258,6 +258,8 @@ const NhaThuocPage = () => {
                         className="!bg-gradient-to-tr from-[#1250dc] to-[#306de4]"
                         onClick={() => {
                           if (hospitalDetail) {
+                            localStorage.setItem("hospital_id", hospitalDetail.hospital_id);
+                            localStorage.setItem("hospital_name", hospitalDetail.name);
                             router.push(`/booking/${hospitalDetail.slug}`);
                           }
                         }}

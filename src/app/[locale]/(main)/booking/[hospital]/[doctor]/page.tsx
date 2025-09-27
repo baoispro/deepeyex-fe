@@ -30,6 +30,7 @@ import { RootState } from "@/app/shares/stores";
 import { HomeOutlined } from "@ant-design/icons";
 import { useGetTimeSlotsByDoctorAndMonthQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-month.query";
 import { useGetTimeSlotsByDoctorAndDateQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-date.query";
+import { s } from "framer-motion/client";
 
 interface PatientFormValues {
   patientType: "Bản thân" | "Người khác";
@@ -77,6 +78,16 @@ const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () =>
 
   const total = services.find((s) => s.name === selectedService)?.price || baseFee;
 
+  const handleNext = () => {
+    if (!selectedService) return;
+    // Lưu service đã chọn vào localStorage
+    localStorage.setItem(
+      "bookingService",
+      JSON.stringify(services.find((s) => s.name === selectedService)),
+    );
+    onNext();
+  };
+
   return (
     <Card>
       <Title level={4}>Thông tin đặt khám</Title>
@@ -122,7 +133,7 @@ const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () =>
         <Col>
           <Button
             type="primary"
-            onClick={onNext}
+            onClick={handleNext}
             disabled={!selectedService} // 🔒 Không chọn thì disable
           >
             Chọn ngày & giờ <FaChevronRight />
@@ -165,13 +176,38 @@ const SelectDateTimeStep = ({
   );
 
   const timeSlots =
-    dayData?.data?.map(
-      (slot) => dayjs(slot.start_time).format("HH:mm"), // hiển thị giờ phút
-    ) || [];
+    dayData?.data?.map((slot) => {
+      const start = dayjs(slot.start_time).format("HH:mm");
+      const end = dayjs(slot.end_time).format("HH:mm");
+      return `${start} - ${end}`;
+    }) || [];
 
   const handleSelectDate = (date: Dayjs) => {
     setSelectedDate(date);
     setSelectedSlot(null);
+  };
+
+  const handleNext = () => {
+    if (!selectedDate || !selectedSlot) return;
+
+    const slotData = dayData?.data?.find((s) => {
+      const start = dayjs(s.start_time).format("HH:mm");
+      const end = dayjs(s.end_time).format("HH:mm");
+      return `${start} - ${end}` === selectedSlot;
+    });
+
+    if (slotData) {
+      localStorage.setItem(
+        "bookingSlot",
+        JSON.stringify({
+          slot_id: slotData.id,
+          start_time: slotData.start_time,
+          end_time: slotData.end_time,
+        }),
+      );
+    }
+
+    onNext();
   };
 
   return (
@@ -237,7 +273,7 @@ const SelectDateTimeStep = ({
           </Button>
         </Col>
         <Col>
-          <Button type="primary" onClick={onNext} disabled={!selectedDate || !selectedSlot}>
+          <Button type="primary" onClick={handleNext} disabled={!selectedDate || !selectedSlot}>
             Thêm thông tin bệnh nhân <FaChevronRight />
           </Button>
         </Col>
@@ -253,7 +289,8 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
   const router = useRouter();
 
   const handleFinish = (values: PatientFormValues) => {
-    console.log("✅ Patient info:", values);
+    localStorage.setItem("bookingPatient", JSON.stringify(values));
+    localStorage.setItem("type", "booking");
     router.push("/payment");
   };
 
@@ -271,7 +308,7 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
           gender: patient?.gender || "",
           address: patient?.address || "",
         }}
-        onValuesChange={(changed, all) => {
+        onValuesChange={(changed) => {
           if (changed.patientType === "Người khác") {
             form.setFieldsValue({
               fullName: "",

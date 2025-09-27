@@ -132,7 +132,11 @@ export default function BookingDoctorPage() {
                           key={`book-appointment-${item.doctor_id}`}
                           type="primary"
                           style={{ width: "90%" }}
-                          onClick={() => router.push(`${hospitalSlug}/${item.slug}`)}
+                          onClick={() => {
+                            localStorage.setItem("doctor_id", item.doctor_id);
+                            localStorage.setItem("doctor_name", item.full_name);
+                            router.push(`${hospitalSlug}/${item.slug}`);
+                          }}
                         >
                           Đặt lịch khám
                         </Button>,
