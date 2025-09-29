@@ -3,7 +3,7 @@
 import { useRouter } from "@/app/shares/locales/navigation";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
-import { FaArrowLeft, FaRegCreditCard, FaMoneyBill, FaMobileAlt, FaBarcode } from "react-icons/fa";
+import { FaArrowLeft, FaRegCreditCard, FaMoneyBill } from "react-icons/fa";
 import dayjs from "dayjs";
 
 interface BookingService {
@@ -50,27 +50,10 @@ const mockPaymentMethods = [
     name: "Thanh toán tiền mặt khi nhận hàng",
   },
   {
-    key: "bankTransfer",
-    icon: <FaBarcode className="text-blue-500" />,
-    name: "Thanh toán bằng chuyển khoản (QR Code)",
-  },
-  {
     key: "atm",
     icon: <FaRegCreditCard className="text-blue-500" />,
     name: "Thanh toán bằng thẻ ATM nội địa và tài khoản ngân hàng",
   },
-  {
-    key: "creditCard",
-    icon: <FaRegCreditCard className="text-blue-500" />,
-    name: "Thanh toán bằng thẻ quốc tế Visa, Master, JCB, AMEX (GooglePay, ApplePay)",
-  },
-  {
-    key: "zalopay",
-    icon: <FaMobileAlt className="text-blue-500" />,
-    name: "Thanh toán bằng ví ZaloPay",
-  },
-  { key: "momo", icon: <FaMobileAlt className="text-blue-500" />, name: "Thanh toán bằng ví MoMo" },
-  { key: "vnpay", icon: <FaMobileAlt className="text-blue-500" />, name: "Thanh toán bằng VNPay" },
 ];
 
 const OrderPage = () => {
@@ -163,17 +146,32 @@ const OrderPage = () => {
                     />
                   )}
                   <div className="flex-1">
-                    <p className="font-bold">{item.name}</p>
-                    {type === "thuoc" && (
-                      <p>
-                        <span className="line-through text-gray-500 mr-2">
+                    <div className="flex justify-between items-center">
+                      <p className="font-bold">{item.name}</p>
+                      {type === "thuoc" && (
+                        <p>
+                          <span className="line-through text-gray-500 mr-2">
+                            {item.oldPrice?.toLocaleString()}₫
+                          </span>
+                          <span className="text-red-500 font-bold">
+                            {item.price.toLocaleString()}₫
+                          </span>
+                        </p>
+                      )}
+                      {type === "booking" && (
+                        <p>
+                          {/* <span className="line-through text-gray-500 mr-2">
                           {item.oldPrice?.toLocaleString()}₫
-                        </span>
-                        <span className="text-red-500 font-bold">
-                          {item.price.toLocaleString()}₫
-                        </span>
+                        </span> */}
+                          <span className="text-red-500 font-bold">
+                            {item.price.toLocaleString()}₫
+                          </span>
+                        </p>
+                      )}
+                      <p className="text-gray-600">
+                        x{item.quantity} {type === "thuoc" ? "Chai" : "dịch vụ"}
                       </p>
-                    )}
+                    </div>
                     {type === "booking" && bookingInfo && bookingInfo.slot && (
                       <p>
                         <span>Bác sĩ: {bookingInfo.doctor.name}</span> <br />
@@ -185,9 +183,6 @@ const OrderPage = () => {
                       </p>
                     )}
                   </div>
-                  <p className="text-gray-600">
-                    x{item.quantity} {type === "thuoc" ? "Chai" : "dịch vụ"}
-                  </p>
                 </div>
               ))}
             </div>
