@@ -24,10 +24,3 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
-.custom-splide .splide__slide.is-active {
-  border-color: #38c0b3 !important; 
-  border-radius: .75rem !important;
-  border-width: 0.5px !important;
-}
-
