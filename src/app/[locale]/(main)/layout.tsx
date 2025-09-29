@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="flex flex-col min-h-screen bg-gray-100 font-sans text-gray-800">
       <Header />
       <main className="flex-grow pt-24 relative">{children}</main>
       <Footer />

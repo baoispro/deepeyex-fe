@@ -109,7 +109,7 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="max-w-[1360px] mx-auto">
+    <div className="mx-auto p-6">
       <Breadcrumb
         className="!pb-2"
         items={[
@@ -129,7 +129,7 @@ export default function ProductDetailPage() {
           },
         ]}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white min-h-[800px] rounded-2xl p-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white min-h-[500px] rounded-2xl p-5">
         <div className="pt-10">
           <div className="relative h-[443px] w-full">
             <Image
@@ -164,8 +164,6 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <Divider className="!my-0" />
-
           <div className="space-y-3">
             <div className="flex items-start">
               <Text strong className="w-32">
@@ -176,8 +174,6 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
-
-          <Divider className="!my-0" />
 
           <div className="mt-2 flex items-center gap-3">
             <Text strong>{t("quantity")}:</Text>
