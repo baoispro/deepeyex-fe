@@ -30,7 +30,6 @@ import { RootState } from "@/app/shares/stores";
 import { HomeOutlined } from "@ant-design/icons";
 import { useGetTimeSlotsByDoctorAndMonthQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-month.query";
 import { useGetTimeSlotsByDoctorAndDateQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-date.query";
-import { s } from "framer-motion/client";
 
 interface PatientFormValues {
   patientType: "Bản thân" | "Người khác";
@@ -200,7 +199,7 @@ const SelectDateTimeStep = ({
       localStorage.setItem(
         "bookingSlot",
         JSON.stringify({
-          slot_id: slotData.id,
+          slot_id: slotData.slot_id,
           start_time: slotData.start_time,
           end_time: slotData.end_time,
         }),

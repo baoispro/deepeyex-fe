@@ -5,6 +5,12 @@ import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaRegCreditCard, FaMoneyBill } from "react-icons/fa";
 import dayjs from "dayjs";
+import { toast } from "react-toastify";
+import { useCreateBookingMutation } from "@/app/modules/booking/hooks/mutations/use-create-booking.mutation";
+import { BookingRequest } from "@/app/modules/booking/apis/bookingApi";
+import { Patient } from "@/app/modules/hospital/types/patient";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/shares/stores";
 
 interface BookingService {
   name: string;
@@ -17,17 +23,8 @@ interface BookingSlot {
   end_time: string;
 }
 
-interface BookingPatient {
-  fullName: string;
-  phoneNumber: string;
-  email: string;
-  dob?: string;
-  gender?: string;
-  address?: string;
-}
-
 interface BookingInfo {
-  patient: BookingPatient | null;
+  patient: Patient | null;
   service: BookingService | null;
   slot: BookingSlot | null;
   doctor: { name: string | null; id: string | null };
@@ -62,8 +59,23 @@ const OrderPage = () => {
   const [hoadon, setHoadon] = useState(false);
   const [bookingInfo, setBookingInfo] = useState<BookingInfo | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const auth = useSelector((state: RootState) => state.auth);
+  const patient_id = auth.patient?.patientId;
+  const user_id = auth.userId;
 
   const router = useRouter();
+
+  const { mutate: createBooking, isPending } = useCreateBookingMutation({
+    onSuccess: (res) => {
+      toast.success("Booking created successfully!");
+      console.log("Booking response:", res);
+      // Sau khi tạo booking xong có thể chuyển tới trang thanh toán hoặc confirmation
+      router.push("/booking/success");
+    },
+    onError: (err) => {
+      toast.error("Booking failed: " + err.message);
+    },
+  });
 
   useEffect(() => {
     const localType = localStorage.getItem("type");
@@ -114,6 +126,72 @@ const OrderPage = () => {
   const shippingFee = type === "thuoc" ? 0 : 0;
   const total = subtotal - voucherDiscount - shippingFee;
 
+  const handleCompleteOrder = async () => {
+    if (!bookingInfo?.patient) {
+      alert("Không tìm thấy thông tin bệnh nhân.");
+      return;
+    }
+
+    if (!paymentMethod) {
+      alert("Vui lòng chọn phương thức thanh toán.");
+      return;
+    }
+
+    // Map cartItems sang order_items backend yêu cầu
+    const order_items = cartItems.map((item) => ({
+      drug_id: item.key.startsWith("drug_") ? item.key : undefined,
+      service_id: item.key.startsWith("service_") ? item.key : undefined,
+      item_name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+    }));
+
+    const req: BookingRequest = {
+      patient_id: patient_id || "",
+      doctor_id: bookingInfo.doctor.id || "",
+      hospital_id: bookingInfo.hospital.id || "",
+      slot_ids: bookingInfo.slot ? [bookingInfo.slot.slot_id] : [],
+      book_user_id: user_id || "",
+      notes: "",
+      order_items,
+      payment_status: paymentMethod === "cash" ? "PENDING" : "PAID",
+    };
+
+    // Gọi mutation
+    createBooking(req);
+
+    // --- Gửi hóa đơn điện tử ---
+    try {
+      const invoice = {
+        id: Date.now().toString(),
+        type,
+        shippingAddress: { customerEmail: bookingInfo.patient.email },
+        items: cartItems,
+        totalAmount: total,
+        patient: bookingInfo.patient,
+        doctor: bookingInfo.doctor,
+        hospital: bookingInfo.hospital,
+        slot: bookingInfo.slot,
+      };
+
+      const res = await fetch("/api/send-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(invoice),
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        toast.success("Hóa đơn đã được gửi tới email của bạn!");
+      } else {
+        alert("Gửi hóa đơn thất bại: " + (result.error || "unknown error"));
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Có lỗi xảy ra khi gửi hóa đơn.");
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -148,26 +226,23 @@ const OrderPage = () => {
                   <div className="flex-1">
                     <div className="flex justify-between items-center">
                       <p className="font-bold">{item.name}</p>
-                      {type === "thuoc" && (
-                        <p>
-                          <span className="line-through text-gray-500 mr-2">
-                            {item.oldPrice?.toLocaleString()}₫
-                          </span>
+                      <p>
+                        {type === "thuoc" && (
+                          <>
+                            <span className="line-through text-gray-500 mr-2">
+                              {item.oldPrice?.toLocaleString()}₫
+                            </span>
+                            <span className="text-red-500 font-bold">
+                              {item.price.toLocaleString()}₫
+                            </span>
+                          </>
+                        )}
+                        {type === "booking" && (
                           <span className="text-red-500 font-bold">
                             {item.price.toLocaleString()}₫
                           </span>
-                        </p>
-                      )}
-                      {type === "booking" && (
-                        <p>
-                          {/* <span className="line-through text-gray-500 mr-2">
-                          {item.oldPrice?.toLocaleString()}₫
-                        </span> */}
-                          <span className="text-red-500 font-bold">
-                            {item.price.toLocaleString()}₫
-                          </span>
-                        </p>
-                      )}
+                        )}
+                      </p>
                       <p className="text-gray-600">
                         x{item.quantity} {type === "thuoc" ? "Chai" : "dịch vụ"}
                       </p>
@@ -190,8 +265,8 @@ const OrderPage = () => {
             {type === "booking" && bookingInfo?.patient && (
               <div className="mt-6 p-4 border rounded-md bg-gray-50">
                 <h3 className="font-semibold mb-2">Thông tin người đặt</h3>
-                <p>Họ và tên: {bookingInfo.patient.fullName}</p>
-                <p>Số điện thoại: {bookingInfo.patient.phoneNumber}</p>
+                <p>Họ và tên: {bookingInfo.patient.full_name}</p>
+                <p>Số điện thoại: {bookingInfo.patient.phone}</p>
                 <p>Email: {bookingInfo.patient.email}</p>
               </div>
             )}
@@ -199,13 +274,12 @@ const OrderPage = () => {
 
           {type === "thuoc" && (
             <div className="bg-white p-6 rounded-lg shadow-md">
-              {/* Chọn hình thức nhận hàng */}
               <h2 className="text-xl font-semibold mb-4">Chọn hình thức nhận hàng</h2>
-              {/* ... giữ nguyên UI nhận hàng */}
+              {/* Giữ nguyên UI nhận hàng */}
             </div>
           )}
 
-          {/* Phương thức thanh toán */}
+          {/* Phương thức thanh toán + hóa đơn */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Yêu cầu xuất hóa đơn điện tử</h3>
@@ -264,8 +338,11 @@ const OrderPage = () => {
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md text-center">
-            <button className="bg-blue-500 text-white text-lg font-bold py-3 px-6 rounded-full w-full">
-              Hoàn tất
+            <button
+              className="bg-blue-500 text-white text-lg font-bold py-3 px-6 rounded-full w-full"
+              onClick={handleCompleteOrder}
+            >
+              {isPending ? "Đang xử lý..." : "Hoàn tất"}
             </button>
           </div>
         </div>
