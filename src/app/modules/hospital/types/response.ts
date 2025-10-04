@@ -4,6 +4,7 @@ import { Hospital } from "./hospital";
 import { Doctor } from "./doctor";
 import { TimeSlot } from "./timeslot";
 import { Drug } from "./drug";
+import { Service } from "./service";
 
 type GetPatientResponse = ApiResponse<Patient>;
 
@@ -33,6 +34,9 @@ type ListTimeSlotsByMonthResponse = ApiResponse<TimeSlot[]>;
 type ListDrugsResponse = ApiResponse<Drug[]>;
 type GetDrugByIdResponse = ApiResponse<Drug>;
 
+//Service
+type ListServicesResponse = ApiResponse<Service[]>;
+
 export type {
   GetPatientResponse,
   CreateHospitalResponse,
@@ -53,4 +57,5 @@ export type {
   ListTimeSlotsByMonthResponse,
   ListDrugsResponse,
   GetDrugByIdResponse,
+  ListServicesResponse,
 };

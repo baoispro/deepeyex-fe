@@ -49,7 +49,7 @@ export default function CartInfo() {
     }));
     setLocalItems(mapped);
     setSelectAll(mapped.length > 0);
-  }, []);
+  }, [getCart]);
 
   const handleQuantityChange = (value: number | null, record: CartItemWithKey) => {
     if (!value) return;

@@ -6,4 +6,5 @@ export enum QueryKeyEnum {
   Predict = "predict",
   TimeSlot = "timeSlot",
   Drug = "drugs",
+  Service = "services",
 }
