@@ -24,83 +24,74 @@ const { Text } = Typography;
 
 interface CartItemWithKey {
   key: string;
+  selected: boolean;
+  drug_id: string;
   name: string;
   image: string;
   price: number;
   sale_price?: number;
   quantity: number;
-  variant_unit: string;
-  selected: boolean;
-  product_id: number;
 }
 
 export default function CartInfo() {
   const t = useTranslations("cart");
-  const { cartItems: cartFromHook, removeFromCart, updateQuantity } = useCart();
+  const { getCart, removeFromCart, updateQuantity } = useCart();
 
-  const [cartItems, setCartItems] = useState<CartItemWithKey[]>([]);
+  const [localItems, setLocalItems] = useState<CartItemWithKey[]>([]);
   const [selectAll, setSelectAll] = useState(true);
 
-  // Đồng bộ dữ liệu từ hook vào state
+  // đồng bộ cart từ hook + thêm field `selected`
   useEffect(() => {
-    const initialCart = cartFromHook.map((item) => ({
+    const mapped = getCart().map((item) => ({
       ...item,
-      key: `${item.product_id}-${item.variant_unit}`,
+      key: `${item.drug_id}`,
       selected: true,
     }));
-    setCartItems(initialCart);
-    setSelectAll(initialCart.length > 0);
-  }, [cartFromHook]);
+    setLocalItems(mapped);
+    setSelectAll(mapped.length > 0);
+  }, []);
 
   const handleQuantityChange = (value: number | null, record: CartItemWithKey) => {
     if (!value) return;
-    updateQuantity(record.product_id, record.variant_unit, value);
-
-    setCartItems((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, quantity: value } : item)),
+    updateQuantity(record.drug_id, value);
+    setLocalItems((prev) =>
+      prev.map((i) => (i.key === record.key ? { ...i, quantity: value } : i)),
     );
   };
 
   const handleRemove = (record: CartItemWithKey) => {
-    removeFromCart(record.product_id, record.variant_unit);
-    setCartItems((prev) => prev.filter((item) => item.key !== record.key));
+    removeFromCart(record.drug_id);
   };
 
   const handleSelectItem = (checked: boolean, record: CartItemWithKey) => {
-    const updatedItems = cartItems.map((item) =>
-      item.key === record.key ? { ...item, selected: checked } : item,
-    );
-    setCartItems(updatedItems);
-
-    // Cập nhật lại trạng thái Select All dựa trên state mới
-    setSelectAll(updatedItems.every((item) => item.selected));
+    const updated = localItems.map((i) => (i.key === record.key ? { ...i, selected: checked } : i));
+    setLocalItems(updated);
+    setSelectAll(updated.every((i) => i.selected));
   };
 
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
-    setCartItems((prev) => prev.map((item) => ({ ...item, selected: checked })));
+    setLocalItems((prev) => prev.map((i) => ({ ...i, selected: checked })));
   };
 
-  const selectedItems = cartItems.filter((item) => item.selected);
+  const selectedItems = localItems.filter((i) => i.selected);
 
-  const totalOriginal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalOriginal = selectedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  const totalFinal = selectedItems.reduce((sum, item) => {
-    const priceToUse =
-      item.sale_price && item.sale_price < item.price ? item.sale_price : item.price;
-    return sum + priceToUse * item.quantity;
+  const totalFinal = selectedItems.reduce((sum, i) => {
+    const price = i.sale_price && i.sale_price < i.price ? i.sale_price : i.price;
+    return sum + price * i.quantity;
   }, 0);
 
   const discount = totalOriginal - totalFinal;
-
-  const formatCurrency = (value: number) => new Intl.NumberFormat("vi-VN").format(value) + "đ";
+  const formatCurrency = (v: number) => new Intl.NumberFormat("vi-VN").format(v) + "đ";
 
   const columns = [
     {
       title: (
         <Space>
           <Checkbox checked={selectAll} onChange={(e) => handleSelectAll(e.target.checked)} />
-          <Text>Chọn tất cả ({cartItems.filter((item) => item.selected).length})</Text>
+          <Text>Chọn tất cả ({selectedItems.length})</Text>
         </Space>
       ),
       dataIndex: "selected",
@@ -110,7 +101,7 @@ export default function CartInfo() {
           onChange={(e) => handleSelectItem(e.target.checked, record)}
         />
       ),
-      width: 180, // cho rộng hơn chút để chứa chữ
+      width: 180,
     },
     {
       title: t("product"),
@@ -137,7 +128,6 @@ export default function CartInfo() {
       align: "center" as const,
       render: (_: number, record: CartItemWithKey) => {
         const hasDiscount = record.sale_price && record.sale_price < record.price;
-
         return hasDiscount ? (
           <div>
             <Text className="!text-sm !text-[#1250dc] !font-semibold">
@@ -160,9 +150,9 @@ export default function CartInfo() {
       render: (_: number, record: CartItemWithKey) => (
         <InputNumber
           min={1}
-          className="hover:!border-[#03c0b4]"
           value={record.quantity}
           onChange={(value) => handleQuantityChange(value, record)}
+          className="hover:!border-[#03c0b4]"
         />
       ),
     },
@@ -175,7 +165,7 @@ export default function CartInfo() {
       title: t("delete"),
       dataIndex: "actions",
       align: "center" as const,
-      render: (record: CartItemWithKey) => (
+      render: (_: unknown, record: CartItemWithKey) => (
         <Button
           type="text"
           icon={<FaTrashCan />}
@@ -186,7 +176,7 @@ export default function CartInfo() {
     },
   ];
 
-  return cartItems.length > 0 ? (
+  return localItems.length > 0 ? (
     <>
       <Link
         href={"/shop"}
@@ -194,10 +184,11 @@ export default function CartInfo() {
       >
         <MdOutlineKeyboardArrowLeft size={20} /> <p>Tiếp tục mua sắm</p>
       </Link>
+
       <Row gutter={24} className="px-10 pb-10 pt-2">
         <Col xs={24} lg={16}>
           <Table
-            dataSource={cartItems}
+            dataSource={localItems}
             columns={columns}
             pagination={false}
             rowKey="key"
@@ -236,15 +227,11 @@ export default function CartInfo() {
                 <Text className="!text-base !text-[#f79009] !font-semibold">0đ</Text>
               </Row>
 
-              <Row
-                justify="space-between"
-                align="middle"
-                className="!flex !justify-between !items-center"
-              >
+              <Row justify="space-between" align="middle">
                 <p className="!text-xl font-semibold">{t("finalAmount")}</p>
-                <div style={{ textAlign: "right" }} className="flex items-center gap-1">
+                <div className="flex items-center gap-1 text-right">
                   {discount > 0 && (
-                    <Text delete type="secondary" style={{ display: "block" }}>
+                    <Text delete type="secondary">
                       {formatCurrency(totalOriginal)}
                     </Text>
                   )}
@@ -258,7 +245,7 @@ export default function CartInfo() {
             <Button
               type="primary"
               block
-              className="mt-4 !bg-gradient-to-tr from-[#1250dc] to-[#306de4] transition duration-300 ease-in-out hover:brightness-110 hover:shadow-lg cursor-pointer"
+              className="mt-4 !bg-gradient-to-tr from-[#1250dc] to-[#306de4] hover:brightness-110 hover:shadow-lg"
               onClick={() => console.log("Mua hàng")}
             >
               {t("buyNow")}
@@ -279,8 +266,10 @@ export default function CartInfo() {
       </Row>
     </>
   ) : (
-    <Card>
-      <Text>{t("emptyCart")}</Text>
+    <Card className="!mx-10 !mb-10 !mt-2 !flex !justify-center !items-center">
+      <Text className="!text-center !text-base !text-[#4a4f63] !font-semibold">
+        {t("emptyCart")}
+      </Text>
     </Card>
   );
 }

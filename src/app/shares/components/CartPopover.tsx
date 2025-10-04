@@ -5,26 +5,39 @@ import { Popover, Badge, List, Typography, Image } from "antd";
 import { FaShoppingCart, FaTrashAlt } from "react-icons/fa";
 import { useCart } from "../hooks/carts/useCart";
 import { Link, useRouter } from "../locales/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
 export default function CartPopover() {
-  const { cartItems: hookCartItems, removeFromCart } = useCart();
-  const [cartItems, setCartItems] = useState(hookCartItems);
+  const locale = useLocale();
+
+  const { getCart, removeFromCart } = useCart();
+  const [cartItems, setCartItems] = useState(getCart());
   const [count, setCount] = useState(0);
   const router = useRouter();
-
   const t = useTranslations("cart");
 
-  useEffect(() => {
-    setCartItems(hookCartItems);
-    const total = hookCartItems.reduce((sum, item) => sum + item.quantity, 0);
-    setCount(total);
-  }, [hookCartItems]);
+  // mỗi lần mở lại component thì sync với localStorage
 
-  const handleRemove = (product_id: number, variant_unit: string) => {
-    removeFromCart(product_id, variant_unit);
+  useEffect(() => {
+    const syncCart = () => {
+      const items = getCart();
+      setCartItems(items);
+      setCount(items.reduce((sum, i) => sum + i.quantity, 0));
+    };
+
+    syncCart(); // load lần đầu
+
+    window.addEventListener("cartUpdated", syncCart);
+    return () => window.removeEventListener("cartUpdated", syncCart);
+  }, []);
+
+  const handleRemove = (drug_id: string) => {
+    removeFromCart(drug_id);
+    const updated = getCart();
+    setCartItems(updated);
+    setCount(updated.reduce((sum, item) => sum + item.quantity, 0));
   };
 
   const content = (
@@ -41,12 +54,12 @@ export default function CartPopover() {
             dataSource={cartItems}
             renderItem={(item) => (
               <List.Item
-                key={`${item.product_id}-${item.variant_unit}`}
+                key={`${item.drug_id}`}
                 actions={[
                   <button
-                    key={item.product_id}
+                    key={item.drug_id}
                     className="text-gray-500 hover:text-red-600 cursor-pointer"
-                    onClick={() => handleRemove(item.product_id, item.variant_unit)}
+                    onClick={() => handleRemove(item.drug_id)}
                     aria-label="Remove item"
                   >
                     <FaTrashAlt size={18} />
@@ -69,7 +82,8 @@ export default function CartPopover() {
                     <Text
                       ellipsis
                       style={{ maxWidth: 200 }}
-                      className="text-sm text-[#020b27] font-semibold"
+                      className="text-sm text-[#020b27] font-semibold cursor-pointer"
+                      onClick={() => router.push(`/shop/${item.drug_id}`)}
                     >
                       {item.name}
                     </Text>
@@ -77,12 +91,15 @@ export default function CartPopover() {
                   description={
                     <div className="flex items-center justify-between">
                       <Text style={{ color: "#1250dc" }} className="font-semibold text-sm">
-                        {item.sale_price && item.sale_price < item.price
-                          ? `${item.sale_price.toLocaleString("vi-VN")}đ`
+                        {item.discount_percent > 0
+                          ? `${(
+                              item.price -
+                              (item.price * item.discount_percent) / 100
+                            ).toLocaleString("vi-VN")}đ`
                           : `${item.price.toLocaleString("vi-VN")}đ`}
                       </Text>
                       <Text type="secondary" className="text-xs text-[#657384] font-medium">
-                        x{item.quantity} {item.variant_unit}
+                        SL: {item.quantity}
                       </Text>
                     </div>
                   }

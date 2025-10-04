@@ -24,6 +24,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "acihome.vn",
       },
+      {
+        protocol: "https",
+        hostname: "deepeyex-admin.s3.ap-southeast-1.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "example.com", // 👈 thêm dòng này
+      },
     ],
   },
 };
