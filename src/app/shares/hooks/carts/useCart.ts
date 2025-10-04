@@ -1,94 +1,69 @@
-import { useState, useEffect, useCallback } from "react";
-import { CartItem } from "../../types/types";
+import { useCallback } from "react";
 
-const initialCart: CartItem[] = [
-  {
-    product_id: 1,
-    name: "Sữa rửa mặt dưỡng ẩm",
-    image:
-      "https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/DSC_09324_db795e136a.jpg",
-    price: 120000,
-    sale_price: 99000,
-    quantity: 2,
-    variant_unit: "chai",
-  },
-  {
-    product_id: 2,
-    name: "Serum vitamin C",
-    image:
-      "https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/DSC_09324_db795e136a.jpg",
-    price: 250000,
-    sale_price: 230000,
-    quantity: 1,
-    variant_unit: "lọ",
-  },
-];
+export type CartItem = {
+  drug_id: string;
+  name: string;
+  image: string;
+  price: number;
+  sale_price: number;
+  quantity: number;
+  discount_percent: number;
+};
 
-export function useCart() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+const STORAGE_KEY = "deep-cart";
 
-  useEffect(() => {
-    setCartItems(initialCart);
-  }, []);
+export const useCart = () => {
+  const getCart = (): CartItem[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  };
 
-  const getCart = useCallback(() => {
-    return cartItems;
-  }, [cartItems]);
+  const setCart = (cart: CartItem[]) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+      window.dispatchEvent(new Event("cartUpdated")); // 🔔 báo cho toàn app biết
+    }
+  };
 
   const addToCart = useCallback((item: CartItem) => {
-    setCartItems((prev) => {
-      const exists = prev.find(
-        (c) => c.product_id === item.product_id && c.variant_unit === item.variant_unit,
-      );
-      if (exists) {
-        return prev.map((c) =>
-          c.product_id === item.product_id && c.variant_unit === item.variant_unit
-            ? { ...c, quantity: c.quantity + item.quantity }
-            : c,
-        );
-      }
-      return [...prev, item];
-    });
+    const cart = getCart();
+
+    const index = cart.findIndex((c) => c.drug_id === item.drug_id);
+
+    if (index !== -1) {
+      // nếu sp đã có trong cart thì cộng thêm số lượng
+      cart[index].quantity += item.quantity;
+    } else {
+      // chưa có thì thêm mới
+      cart.push(item);
+    }
+
+    setCart(cart);
   }, []);
 
-  const removeFromCart = useCallback((product_id: number, variant_unit: string) => {
-    setCartItems((prev) =>
-      prev.filter(
-        (item) => !(item.product_id === product_id && item.variant_unit === variant_unit),
-      ),
-    );
+  const updateQuantity = useCallback((drug_id: string, quantity: number) => {
+    const cart = getCart().map((c) => (c.drug_id === drug_id ? { ...c, quantity } : c));
+    setCart(cart);
   }, []);
 
-  const updateQuantity = useCallback(
-    (product_id: number, variant_unit: string, quantity: number) => {
-      if (quantity <= 0) return;
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.product_id === product_id && item.variant_unit === variant_unit
-            ? { ...item, quantity }
-            : item,
-        ),
-      );
-    },
-    [],
-  );
+  const removeFromCart = useCallback((drug_id: string) => {
+    const cart = getCart().filter((c) => c.drug_id !== drug_id);
+    setCart(cart);
+  }, []);
 
-  const totalOriginal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const totalFinal = cartItems.reduce((sum, item) => {
-    const actualPrice = item.sale_price < item.price ? item.sale_price : item.price;
-    return sum + actualPrice * item.quantity;
-  }, 0);
-
-  const discount = totalOriginal - totalFinal;
+  const clearCart = useCallback(() => {
+    setCart([]);
+  }, []);
 
   return {
-    cartItems,
     getCart,
     addToCart,
     removeFromCart,
+    clearCart,
     updateQuantity,
-    totalOriginal,
-    totalFinal,
-    discount,
   };
-}
+};
