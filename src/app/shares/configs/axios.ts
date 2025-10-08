@@ -34,13 +34,14 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const res = await refreshToken();
+        const state = store.getState().auth;
         if (res.data?.access_token) {
           store.dispatch(
             setTokens({
               accessToken: res.data.access_token,
               refreshToken: "",
-              userId: res.data.user_id ?? "",
-              role: res.data.role ?? "",
+              userId: state.userId ?? "",
+              role: state.role ?? "",
             }),
           );
           originalRequest.headers.Authorization = `Bearer ${res.data.access_token}`;
