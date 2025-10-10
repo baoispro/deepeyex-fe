@@ -275,7 +275,6 @@ const OrderPage = () => {
       toast.error("Vui lòng chọn phương thức thanh toán.");
       return;
     }
-
     // Map cartItems sang order_items backend yêu cầu
     const order_items = cartItems.map((item) => ({
       drug_id: item.key.startsWith("drug_") ? item.key : undefined,
@@ -370,17 +369,19 @@ const OrderPage = () => {
     const selectedCity = cities.find((c) => c.code === selectedCityCode);
     const selectedDistrict = districts.find((d) => d.code === selectedDistrictCode);
 
-    // Map cartItems sang order items
-    const items = cartItems.map((item) => ({
-      item_id: item.key, // drug_id hoặc key của item
+    // Map cartItems sang order_items backend yêu cầu
+    const order_items = cartItems.map((item) => ({
+      drug_id: item.drug_id,
+      item_name: item.name,
       quantity: item.quantity,
       price: item.sale_price || item.price,
+      item_id: item.drug_id ?? undefined,
     }));
 
     const orderRequest = {
       patient_id: patient_id,
       book_user_id: user_id,
-      items: items,
+      items: order_items,
       delivery_info: {
         address: deliveryInfo.address,
         phone: deliveryInfo.receiverPhone,

@@ -41,9 +41,12 @@ export interface Order {
 
 // ---------------- REQUEST TYPES ----------------
 export interface OrderItemRequest {
-  item_id: string;
+  item_id?: string;
+  service_id?: string;
   quantity: number;
   price: number;
+  drug_id?: string;
+  item_name: string;
 }
 
 export interface CreateOrderRequest {
