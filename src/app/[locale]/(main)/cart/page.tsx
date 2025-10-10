@@ -50,7 +50,6 @@ export default function CartInfo() {
     }));
     setLocalItems(mapped);
     setSelectAll(mapped.length > 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleQuantityChange = (value: number | null, record: CartItemWithKey) => {

@@ -30,7 +30,7 @@ export function useLoginFirebaseMutation(options?: LoginFirebaseOptions) {
     mutationFn: async (form: LoginFirebaseRequest) => {
       return await AuthApi.loginFirebase(form);
     },
-    onSuccess: (res, variables, context) => {
+    onSuccess: (res, variables, context, mutation) => {
       dispatch(
         setTokens({
           accessToken: res.data?.access_token || "",
@@ -39,10 +39,10 @@ export function useLoginFirebaseMutation(options?: LoginFirebaseOptions) {
           role: res.data?.role || "",
         }),
       );
-      options?.onSuccess?.(res, variables, context);
+      options?.onSuccess?.(res, variables, context, mutation);
     },
-    onError: (err, variables, context) => {
-      options?.onError?.(err, variables, context);
+    onError: (err, variables, context, mutation) => {
+      options?.onError?.(err, variables, context, mutation);
     },
   });
 }
