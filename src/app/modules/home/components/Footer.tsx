@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-8 mt-12">
+    <footer className="bg-gray-900 text-gray-300 py-3">
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center">
         <p>
           &copy; 2025 DeepEyeX.{" "}

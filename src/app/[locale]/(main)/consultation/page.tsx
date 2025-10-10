@@ -1,12 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Tabs, List, Avatar, Button, Card, message, Spin } from "antd";
-import {
-  AiOutlineVideoCamera,
-  AiOutlineAudio,
-  AiOutlineAudioMuted,
-  AiOutlinePhone,
-} from "react-icons/ai";
+import { AiOutlineVideoCamera, AiOutlineAudio, AiOutlineInfoCircle } from "react-icons/ai";
 import ChatBox from "@/app/modules/hospital/components/Chatbox";
 import { collection, onSnapshot, query, where, doc, setDoc, getDocs } from "firebase/firestore";
 import { db } from "@/app/shares/configs/firebase";
@@ -14,16 +9,16 @@ import VideoCallRoom from "@/app/modules/hospital/components/VideoCallRoom";
 
 const Consultation = () => {
   const [showCall, setShowCall] = useState(false);
-  const [isMicOn, setIsMicOn] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("history");
+  const [showInfo, setShowInfo] = useState(false);
 
   const patientEmail = "nguyenlegiabao810@gmail.com";
   const doctorEmail = "baon00382xxx@gmail.com";
 
-  // 🔹 Khởi tạo hội thoại mẫu nếu chưa có
+  // 🔹 Tạo hội thoại mẫu nếu chưa có
   useEffect(() => {
     const setupConversation = async () => {
       try {
@@ -63,21 +58,14 @@ const Consultation = () => {
       where("participants", "array-contains", patientEmail),
     );
 
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setConversations(data);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("❌ Firestore error:", error);
-        setLoading(false);
-      },
-    );
+    const unsub = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setConversations(data);
+      setLoading(false);
+    });
 
     return () => unsub();
   }, []);
@@ -86,6 +74,7 @@ const Consultation = () => {
     const other = item.participants?.find((p: string) => p !== patientEmail) || "Người dùng khác";
     message.success(`Đang mở chat với ${other}`);
     setSelectedConversation(item);
+    setShowInfo(false); // Ẩn info khi chuyển cuộc chat
   };
 
   return (
@@ -132,11 +121,10 @@ const Consultation = () => {
               key: "history",
               label: "💬 Lịch sử tư vấn",
               children: (
-                <div className="flex">
+                <div className="flex h-[30vh] md:h-[75vh] xl:h-[60vh]">
                   {/* Sidebar hội thoại */}
-                  <div className="w-1/3 border-r bg-white flex flex-col">
+                  <div className="w-1/4 border-r bg-white flex flex-col">
                     <div className="p-4 text-lg font-semibold border-b">Danh sách hội thoại</div>
-
                     {loading ? (
                       <div className="flex-1 flex justify-center items-center">
                         <Spin size="large" />
@@ -180,46 +168,107 @@ const Consultation = () => {
                     )}
                   </div>
 
-                  {/* Khu vực chat */}
-                  <div className="flex-1 flex flex-col bg-gray-50">
+                  {/* Chat + Info */}
+                  <div className="flex-1 flex bg-gray-50">
                     {selectedConversation ? (
                       <>
-                        {/* Header */}
-                        <div className="flex justify-between items-center p-4 border-b bg-white shadow-sm">
-                          <div className="flex items-center gap-3">
-                            <Avatar
-                              src={`https://api.dicebear.com/7.x/initials/svg?seed=${
+                        {/* Khu vực chat */}
+                        <div className={`flex flex-col w-${showInfo ? "2/3" : "full"} border-r`}>
+                          {/* Header */}
+                          <div className="flex justify-between items-center p-4 border-b bg-white shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <Avatar
+                                src={`https://api.dicebear.com/7.x/initials/svg?seed=${
+                                  selectedConversation.participants.find(
+                                    (p: string) => p !== patientEmail,
+                                  ) || "User"
+                                }`}
+                                size={48}
+                              />
+                              <div>
+                                <p className="font-semibold text-lg text-gray-800">
+                                  {selectedConversation.participants.find(
+                                    (p: string) => p !== patientEmail,
+                                  ) || "Người dùng khác"}
+                                </p>
+                                <p className="text-xs text-green-600">Đang hoạt động</p>
+                              </div>
+                            </div>
+
+                            {/* Icon Info */}
+                            <Button
+                              type="text"
+                              icon={<AiOutlineInfoCircle size={22} />}
+                              onClick={() => setShowInfo(!showInfo)}
+                            />
+                          </div>
+
+                          {/* ChatBox */}
+                          <div className="flex-1 overflow-y-auto bg-gray-50">
+                            <ChatBox
+                              conversationId={selectedConversation.id}
+                              otherUser={
                                 selectedConversation.participants.find(
                                   (p: string) => p !== patientEmail,
-                                ) || "User"
-                              }`}
-                              size={48}
+                                ) || "Người dùng khác"
+                              }
                             />
-                            <div>
-                              <p className="font-semibold text-lg text-gray-800">
-                                {selectedConversation.participants.find(
-                                  (p: string) => p !== patientEmail,
-                                ) || "Người dùng khác"}
-                              </p>
-                              <p className="text-xs text-green-600">Đang hoạt động</p>
-                            </div>
                           </div>
                         </div>
 
-                        {/* Chatbox */}
-                        <div className="flex-1 overflow-y-auto bg-gray-50 max-h-[calc(100vh-320px)]">
-                          <ChatBox
-                            conversationId={selectedConversation.id}
-                            otherUser={
-                              selectedConversation.participants.find(
-                                (p: string) => p !== patientEmail,
-                              ) || "Người dùng khác"
-                            }
-                          />
-                        </div>
+                        {/* Khu vực thông tin bên phải */}
+                        {showInfo && (
+                          <div className="w-1/3 bg-white p-4 flex flex-col border-l shadow-inner">
+                            <h3 className="text-lg font-semibold mb-4">Thông tin hội thoại</h3>
+
+                            <div className="flex items-center gap-3 mb-4">
+                              <Avatar
+                                size={60}
+                                src={`https://api.dicebear.com/7.x/initials/svg?seed=${
+                                  selectedConversation.participants.find(
+                                    (p: string) => p !== patientEmail,
+                                  ) || "User"
+                                }`}
+                              />
+                              <div>
+                                <p className="font-semibold text-base">
+                                  {selectedConversation.participants.find(
+                                    (p: string) => p !== patientEmail,
+                                  ) || "Người dùng khác"}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {selectedConversation.participants.join(", ")}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 text-sm text-gray-600">
+                              <p>
+                                <span className="font-medium">Ngày tạo: </span>
+                                {new Date(
+                                  selectedConversation.createdAt?.seconds * 1000 || Date.now(),
+                                ).toLocaleString()}
+                              </p>
+                              <p>
+                                <span className="font-medium">Mã cuộc hẹn: </span>
+                                {selectedConversation.appointmentId || "Không có"}
+                              </p>
+                              <p>
+                                <span className="font-medium">Tin nhắn cuối: </span>
+                                {selectedConversation.lastMessage || "Không có"}
+                              </p>
+                            </div>
+
+                            <div className="mt-5 border-t pt-3 text-center">
+                              <Button type="default" danger>
+                                Xóa cuộc hội thoại
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </>
                     ) : (
-                      <div className="flex flex-col justify-center items-center h-full text-gray-400 text-lg">
+                      <div className="flex flex-col justify-center items-center w-full text-gray-400 text-lg">
                         💬 Hãy chọn một cuộc hội thoại để bắt đầu
                       </div>
                     )}
