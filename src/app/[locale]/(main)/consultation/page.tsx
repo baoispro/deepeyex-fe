@@ -6,13 +6,16 @@ import ChatBox from "@/app/modules/hospital/components/Chatbox";
 import { collection, onSnapshot, query, where, doc, setDoc, getDocs } from "firebase/firestore";
 import { db } from "@/app/shares/configs/firebase";
 import VideoCallRoom from "@/app/modules/hospital/components/VideoCallRoom";
+import { toast } from "react-toastify";
 
 const Consultation = () => {
+  const [isCheckingMic, setIsCheckingMic] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
   const [showCall, setShowCall] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("history");
+  const [activeTab, setActiveTab] = useState("online");
   const [showInfo, setShowInfo] = useState(false);
 
   const patientEmail = "nguyenlegiabao810@gmail.com";
@@ -77,6 +80,41 @@ const Consultation = () => {
     setShowInfo(false); // Ẩn info khi chuyển cuộc chat
   };
 
+  const checkMicrophone = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      setIsCheckingMic(true);
+
+      source.connect(analyser);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const interval = setInterval(() => {
+        analyser.getByteFrequencyData(dataArray);
+        let values = 0;
+        for (let i = 0; i < dataArray.length; i++) values += dataArray[i];
+        const average = values / dataArray.length;
+        setMicLevel((prev) => prev * 0.8 + average * 0.2); // làm mượt
+      }, 60);
+
+      // Dừng sau 5 giây
+      setTimeout(() => {
+        clearInterval(interval);
+        stream.getTracks().forEach((track) => track.stop());
+        audioContext.close();
+        setIsCheckingMic(false);
+        toast.success("✅ Micro hoạt động bình thường!");
+      }, 5000);
+    } catch (err) {
+      console.error("❌ Lỗi khi kiểm tra micro:", err);
+      message.error("Không thể truy cập micro. Hãy kiểm tra quyền trình duyệt!");
+    }
+  };
+
   return (
     <div className="aspect-[1.85:1] px-4">
       <Card className="h-full rounded-2xl shadow-md overflow-hidden">
@@ -88,7 +126,13 @@ const Consultation = () => {
               key: "online",
               label: "🎥 Phòng tư vấn trực tuyến",
               children: showCall ? (
-                <VideoCallRoom onLeave={() => setShowCall(false)} />
+                <VideoCallRoom
+                  userToken={
+                    "eyJjdHkiOiJzdHJpbmdlZS1hcGk7dj0xIiwidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifQ.eyJqdGkiOiJTSy4wLlFvYXpEdlRhU1lwZ21DWk95NW81Q01FS1kyNVFwdS0xNzYwMTE5MTU1IiwiaXNzIjoiU0suMC5Rb2F6RHZUYVNZcGdtQ1pPeTVvNUNNRUtZMjVRcHUiLCJleHAiOjE3NjAxMjI3NTUsInVzZXJJZCI6IjEifQ.MyZ7XzpHIfijAG7Su8pES4bo7Oyfijh1Wg1fvRz9hjA"
+                  }
+                  callTo="stringee_user_to_call"
+                  onLeave={() => setShowCall(false)}
+                />
               ) : (
                 <div className="flex flex-col h-[600px] bg-gray-100 rounded-xl p-6 justify-center items-center">
                   <h2 className="text-2xl font-semibold mb-4 text-gray-800">
@@ -106,12 +150,21 @@ const Consultation = () => {
                     >
                       Tham gia ngay
                     </Button>
-                    <Button
-                      icon={<AiOutlineAudio />}
-                      onClick={() => message.info("🔈 Đang bật micro...")}
-                    >
-                      Kiểm tra micro
-                    </Button>
+                    {!isCheckingMic ? (
+                      <Button icon={<AiOutlineAudio />} onClick={checkMicrophone}>
+                        Kiểm tra micro
+                      </Button>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <p className="text-gray-500 mb-2">🎤 Đang kiểm tra micro...</p>
+                        <div className="w-40 h-3 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-green-500 transition-all duration-300 ease-out"
+                            style={{ width: `${Math.min(100, micLevel)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ),
