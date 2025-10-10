@@ -17,12 +17,12 @@ import { RightOutlined } from "@ant-design/icons";
 import { useCart } from "@/app/shares/hooks/carts/useCart";
 import { useTranslations } from "next-intl";
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
-import { Link } from "@/app/shares/locales/navigation";
+import { Link, useRouter } from "@/app/shares/locales/navigation";
 import { FaTrashCan } from "react-icons/fa6";
 
 const { Text } = Typography;
 
-interface CartItemWithKey {
+export interface CartItemWithKey {
   key: string;
   selected: boolean;
   drug_id: string;
@@ -35,12 +35,13 @@ interface CartItemWithKey {
 
 export default function CartInfo() {
   const t = useTranslations("cart");
+  const router = useRouter();
+
   const { getCart, removeFromCart, updateQuantity } = useCart();
 
   const [localItems, setLocalItems] = useState<CartItemWithKey[]>([]);
   const [selectAll, setSelectAll] = useState(true);
 
-  // đồng bộ cart từ hook + thêm field `selected`
   useEffect(() => {
     const mapped = getCart().map((item) => ({
       ...item,
@@ -49,7 +50,8 @@ export default function CartInfo() {
     }));
     setLocalItems(mapped);
     setSelectAll(mapped.length > 0);
-  }, [getCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleQuantityChange = (value: number | null, record: CartItemWithKey) => {
     if (!value) return;
@@ -246,7 +248,11 @@ export default function CartInfo() {
               type="primary"
               block
               className="mt-4 !bg-gradient-to-tr from-[#1250dc] to-[#306de4] hover:brightness-110 hover:shadow-lg"
-              onClick={() => console.log("Mua hàng")}
+              onClick={() => {
+                router.push("/payment");
+                localStorage.setItem("type", "thuoc");
+                localStorage.setItem("cartItems", JSON.stringify(localItems));
+              }}
             >
               {t("buyNow")}
             </Button>
