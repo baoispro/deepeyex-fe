@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Input, message } from "antd";
+import { Button, Input } from "antd";
 import {
   AiOutlineAudio,
   AiOutlineAudioMuted,
@@ -10,132 +10,72 @@ import {
   AiOutlineMessage,
 } from "react-icons/ai";
 import { loadStringeeSdk } from "@/app/shares/utils/stringee-sdk-loader";
+import {
+  connectToStringee,
+  makeVideoCall,
+  hangupCall,
+  muteCall,
+} from "@/app/shares/utils/stringee";
+import { callEventEmitter } from "@/app/shares/utils/callEvents";
 
 interface Props {
-  userToken: string; // token Stringee server cung cấp
-  callTo: string; // số điện thoại hoặc ID Stringee người gọi
+  userToken: string;
+  callTo: string;
   onLeave: () => void;
 }
 
 const VideoCallRoom = ({ userToken, callTo, onLeave }: Props) => {
-  const localVideoRef = useRef<HTMLVideoElement | null>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(true);
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
-  const [client, setClient] = useState<any>(null);
-  const [call, setCall] = useState<any>(null);
-  const [sdk, setSdk] = useState<any>(null);
-
-  // 🔹 Load Stringee SDK và kết nối
   useEffect(() => {
-    let stringee: any;
+    const init = async () => {
+      await loadStringeeSdk();
+      await connectToStringee(userToken);
 
-    const initSDK = async () => {
-      try {
-        const StringeeClientSDK = await loadStringeeSdk();
-
-        const client = new StringeeClientSDK();
-        setClient(client);
-
-        client.connect(userToken);
-
-        client.on("connect", () => {
-          console.log("✅ Connected to Stringee");
-          message.success("Đã kết nối server Stringee");
-        });
-
-        client.on("incomingcall2", (incomingCall: any) => {
-          setCall(incomingCall);
-          incomingCall.on("addremotestream", (stream: any) => {
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = stream;
-          });
-          incomingCall.answer();
-        });
-      } catch (err) {
-        console.error("❌ Lỗi load Stringee SDK:", err);
-      }
+      // Lắng nghe stream từ call
+      callEventEmitter.on("local-stream", (stream: MediaStream) => {
+        if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      });
+      callEventEmitter.on("remote-stream", (stream: MediaStream) => {
+        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = stream;
+      });
+      callEventEmitter.on("incoming-call", (call: any) => {
+        const answer = confirm(`Incoming call from: ${call.fromNumber}, answer?`);
+        if (answer) call.makeCall(() => console.log("Call answered"));
+      });
     };
-
-    initSDK();
-
-    return () => {
-      client?.disconnect?.();
-    };
+    init();
   }, [userToken]);
 
-  // 🔹 Bật camera / mic (cả local stream và call)
-  const toggleCamera = () => {
-    if (!stream) return;
-    stream.getVideoTracks().forEach((t) => (t.enabled = !isCamOn));
-    setIsCamOn(!isCamOn);
-  };
-
-  const toggleMic = () => {
-    if (!stream) return;
-    stream.getAudioTracks().forEach((t) => (t.enabled = !isMicOn));
-    setIsMicOn(!isMicOn);
-  };
-
-  // 🔹 Tạo cuộc gọi
-  const startCall = () => {
-    if (!client) return;
-
-    const call2 = new (window as any).StringeeCall2(client, callTo);
-    setCall(call2);
-
-    call2.on("addlocalstream", (stream: any) => {
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-    });
-    call2.on("addremotestream", (stream: any) => {
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = stream;
-    });
-
-    call2.makeCall((res: any) => console.log("Make call:", res));
-  };
-
-  // 🔹 Kết thúc cuộc gọi
-  const endCall = () => {
-    call?.hangup();
+  const handleStartCall = () => makeVideoCall(userToken, callTo, true);
+  const handleEndCall = () => {
+    hangupCall();
     onLeave();
   };
-
-  // 🔹 Mở camera khi vào phòng
-  useEffect(() => {
-    const startCamera = async () => {
-      try {
-        const userStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        if (localVideoRef.current) localVideoRef.current.srcObject = userStream;
-        setStream(userStream);
-      } catch (err) {
-        message.error("Không thể truy cập camera/micro");
-        console.error(err);
-      }
-    };
-    startCamera();
-
-    return () => {
-      stream?.getTracks().forEach((track) => track.stop());
-    };
-  }, []);
-
-  // 🔹 Chat
+  const handleToggleMic = () => {
+    muteCall(isMicOn);
+    setIsMicOn(!isMicOn);
+  };
+  const handleToggleCam = () => {
+    // enableCamera(!isCamOn);
+    setIsCamOn(!isCamOn);
+  };
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
-    setMessages((prev) => [...prev, newMessage]);
+    setMessages([...messages, newMessage]);
     setNewMessage("");
   };
 
   return (
     <div className="flex h-[600px] bg-gray-100 rounded-xl overflow-hidden shadow-inner">
-      {/* Vùng video */}
+      {/* Video */}
       <div className="flex-1 relative bg-black flex justify-center items-center">
         <video
           ref={localVideoRef}
@@ -155,35 +95,41 @@ const VideoCallRoom = ({ userToken, callTo, onLeave }: Props) => {
           <Button
             shape="circle"
             size="large"
-            onClick={toggleMic}
+            onClick={handleToggleMic}
             icon={isMicOn ? <AiOutlineAudio /> : <AiOutlineAudioMuted />}
           />
           <Button
             shape="circle"
             size="large"
-            onClick={toggleCamera}
+            onClick={handleToggleCam}
             icon={isCamOn ? <AiOutlineVideoCamera /> : <AiOutlineVideoCameraAdd />}
           />
-          <Button shape="circle" danger size="large" icon={<AiOutlinePhone />} onClick={endCall} />
+          <Button
+            shape="circle"
+            danger
+            size="large"
+            icon={<AiOutlinePhone />}
+            onClick={handleEndCall}
+          />
           <Button
             shape="circle"
             size="large"
             icon={<AiOutlineMessage />}
             onClick={() => setIsChatOpen(!isChatOpen)}
           />
-          <Button type="primary" onClick={startCall}>
+          <Button type="primary" onClick={handleStartCall}>
             📞 Gọi {callTo}
           </Button>
         </div>
       </div>
 
-      {/* Vùng chat */}
+      {/* Chat */}
       {isChatOpen && (
         <div className="w-1/3 bg-white flex flex-col border-l">
-          <div className="p-3 font-semibold border-b">💬 Chat trong phòng</div>
+          <div className="p-3 font-semibold border-b">💬 Chat</div>
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 ? (
-              <p className="text-gray-400 text-sm">Chưa có tin nhắn nào</p>
+              <p className="text-gray-400 text-sm">Chưa có tin nhắn</p>
             ) : (
               messages.map((msg, idx) => (
                 <div
