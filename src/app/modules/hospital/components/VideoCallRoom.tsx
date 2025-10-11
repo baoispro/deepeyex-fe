@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { Button, Input, message } from "antd";
-import { loadStringeeSDK } from "../../../shares/utils/stringee-sdk-loader"; // loader
 import {
   AiOutlineAudio,
   AiOutlineAudioMuted,
@@ -10,6 +9,7 @@ import {
   AiOutlinePhone,
   AiOutlineMessage,
 } from "react-icons/ai";
+import { loadStringeeSdk } from "@/app/shares/utils/stringee-sdk-loader";
 
 interface Props {
   userToken: string; // token Stringee server cung cấp
@@ -37,10 +37,9 @@ const VideoCallRoom = ({ userToken, callTo, onLeave }: Props) => {
 
     const initSDK = async () => {
       try {
-        stringee = await loadStringeeSDK();
-        setSdk(stringee);
+        const StringeeClientSDK = await loadStringeeSdk();
 
-        const client = new stringee.StringeeClient();
+        const client = new StringeeClientSDK();
         setClient(client);
 
         client.connect(userToken);
@@ -51,13 +50,10 @@ const VideoCallRoom = ({ userToken, callTo, onLeave }: Props) => {
         });
 
         client.on("incomingcall2", (incomingCall: any) => {
-          console.log("📞 Incoming call...");
           setCall(incomingCall);
-
           incomingCall.on("addremotestream", (stream: any) => {
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = stream;
           });
-
           incomingCall.answer();
         });
       } catch (err) {
@@ -87,9 +83,9 @@ const VideoCallRoom = ({ userToken, callTo, onLeave }: Props) => {
 
   // 🔹 Tạo cuộc gọi
   const startCall = () => {
-    if (!sdk || !client) return;
+    if (!client) return;
 
-    const call2 = new sdk.StringeeCall2(client, callTo);
+    const call2 = new (window as any).StringeeCall2(client, callTo);
     setCall(call2);
 
     call2.on("addlocalstream", (stream: any) => {
