@@ -12,7 +12,9 @@ const Consultation = () => {
   const [isCheckingMic, setIsCheckingMic] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
   const [showCall, setShowCall] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null); // dùng cho video role
+  const [selectedChat, setSelectedChat] = useState<any>(null); // dùng cho tab lịch sử tư vấn
+
   const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("online");
@@ -76,7 +78,7 @@ const Consultation = () => {
   const handleJoinRoom = (item: any) => {
     const other = item.participants?.find((p: string) => p !== patientEmail) || "Người dùng khác";
     message.success(`Đang mở chat với ${other}`);
-    setSelectedConversation(item);
+    selectedChat(item);
     setShowInfo(false); // Ẩn info khi chuyển cuộc chat
   };
 
@@ -125,47 +127,57 @@ const Consultation = () => {
             {
               key: "online",
               label: "🎥 Phòng tư vấn trực tuyến",
-              children: showCall ? (
-                <VideoCallRoom
-                  userToken={
-                    "eyJjdHkiOiJzdHJpbmdlZS1hcGk7dj0xIiwidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifQ.eyJqdGkiOiJTSy4wLlFvYXpEdlRhU1lwZ21DWk95NW81Q01FS1kyNVFwdS0xNzYwMTY0NDY3IiwiaXNzIjoiU0suMC5Rb2F6RHZUYVNZcGdtQ1pPeTVvNUNNRUtZMjVRcHUiLCJleHAiOjE3NjI3NTY0NjcsInVzZXJJZCI6IjIifQ.YwkEUD9NuxcY0dMOkJuVpH6znyqwZxxbdrNTgx9PDXw"
-                  }
-                  callTo="eyJjdHkiOiJzdHJpbmdlZS1hcGk7dj0xIiwidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifQ.eyJqdGkiOiJTSy4wLlFvYXpEdlRhU1lwZ21DWk95NW81Q01FS1kyNVFwdS0xNzYwMTY0NDM4IiwiaXNzIjoiU0suMC5Rb2F6RHZUYVNZcGdtQ1pPeTVvNUNNRUtZMjVRcHUiLCJleHAiOjE3NjI3NTY0MzgsInVzZXJJZCI6IjEifQ.O-TGPV4UAbdjMFARSJCKhcS8dJsZFRlE7Fry_S1zz1o"
-                  onLeave={() => setShowCall(false)}
-                />
-              ) : (
-                <div className="flex flex-col h-[600px] bg-gray-100 rounded-xl p-6 justify-center items-center">
-                  <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-                    Phòng tư vấn trực tuyến
-                  </h2>
-                  <p className="text-gray-500 mb-6">
-                    Bạn có thể tham gia buổi tư vấn qua video call với bác sĩ.
-                  </p>
-                  <div className="flex gap-3">
-                    <Button
-                      type="primary"
-                      icon={<AiOutlineVideoCamera />}
-                      size="large"
-                      onClick={() => setShowCall(true)}
-                    >
-                      Tham gia ngay
-                    </Button>
-                    {!isCheckingMic ? (
-                      <Button icon={<AiOutlineAudio />} onClick={checkMicrophone}>
-                        Kiểm tra micro
+              children: (
+                <div className="flex flex-col items-center justify-center min-h-[600px] bg-gray-100 rounded-xl p-6">
+                  {/* ------------- 1. Chọn vai trò ------------- */}
+                  {!showCall && !selectedConversation && (
+                    <Card title="🔔 Chọn vai trò test gọi video" className="p-6 shadow-lg">
+                      <Button
+                        type="primary"
+                        className="m-2"
+                        onClick={() => setSelectedConversation("A")}
+                      >
+                        Đăng nhập làm User A (100)
                       </Button>
-                    ) : (
-                      <div className="flex flex-col items-center">
-                        <p className="text-gray-500 mb-2">🎤 Đang kiểm tra micro...</p>
-                        <div className="w-40 h-3 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-green-500 transition-all duration-300 ease-out"
-                            style={{ width: `${Math.min(100, micLevel)}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                      <Button className="m-2" onClick={() => setSelectedConversation("B")}>
+                        Đăng nhập làm User B (2)
+                      </Button>
+                    </Card>
+                  )}
+
+                  {/* ------------- 2. Hiển thị giao diện sau khi chọn vai trò ------------- */}
+                  {selectedConversation && !showCall && (
+                    <div className="text-center mt-10">
+                      <h2 className="text-xl font-semibold mb-3">
+                        Bạn đang là{" "}
+                        <b>{selectedConversation === "A" ? "User A (100)" : "User B (2)"}</b>
+                      </h2>
+
+                      {selectedConversation === "A" ? (
+                        <Button type="primary" size="large" onClick={() => setShowCall(true)}>
+                          📞 Gọi đến User 2
+                        </Button>
+                      ) : (
+                        <p className="text-gray-500 mt-2">Đang chờ cuộc gọi đến từ User 100...</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ------------- 3. Gọi VideoCallRoom ------------- */}
+                  {showCall && selectedConversation && (
+                    <VideoCallRoom
+                      userToken={
+                        selectedConversation === "A"
+                          ? "eyJjdHkiOiJzdHJpbmdlZS1hcGk7dj0xIiwidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifQ.eyJqdGkiOiJTSy4wLlFvYXpEdlRhU1lwZ21DWk95NW81Q01FS1kyNVFwdS0xNzYwMTcwMzk5IiwiaXNzIjoiU0suMC5Rb2F6RHZUYVNZcGdtQ1pPeTVvNUNNRUtZMjVRcHUiLCJleHAiOjE3NjAxNzM5OTksInVzZXJJZCI6IjEwMCJ9.qQacRp6kR-YCekFh6qlUMbLycRnQOgu8KSCKeNQgq4I"
+                          : "eyJjdHkiOiJzdHJpbmdlZS1hcGk7dj0xIiwidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifQ.eyJqdGkiOiJTSy4wLkZqUXg2Wmp5aEpzMm5mOFlFSGx6UUFUbGFYN05ZZy0xNzYwMTcwNDAwIiwiaXNzIjoiU0suMC5GalF4NlpqeWhKczJubjhZRUhselFBVGxhWDdOWWciLCJleHAiOjE3NjAxNzQwMDAsInVzZXJJZCI6IjIifQ.bMZ4LE_ukBdYjpeo0Yr2yJ0hgzgiTru2rMQsnlp0M0I"
+                      }
+                      callTo={selectedConversation === "A" ? "2" : undefined}
+                      onLeave={() => {
+                        setShowCall(false);
+                        setSelectedConversation(null);
+                      }}
+                    />
+                  )}
                 </div>
               ),
             },
@@ -192,7 +204,7 @@ const Consultation = () => {
                           const other =
                             item.participants?.find((p: string) => p !== myEmail) ||
                             "Người dùng khác";
-                          const isActive = selectedConversation?.id === item.id;
+                          const isActive = selectedChat?.id === item.id;
 
                           return (
                             <List.Item
@@ -223,7 +235,7 @@ const Consultation = () => {
 
                   {/* Chat + Info */}
                   <div className="flex-1 flex bg-gray-50">
-                    {selectedConversation ? (
+                    {selectedChat ? (
                       <>
                         {/* Khu vực chat */}
                         <div className={`flex flex-col w-${showInfo ? "2/3" : "full"} border-r`}>
@@ -232,7 +244,7 @@ const Consultation = () => {
                             <div className="flex items-center gap-3">
                               <Avatar
                                 src={`https://api.dicebear.com/7.x/initials/svg?seed=${
-                                  selectedConversation.participants.find(
+                                  selectedChat.participants.find(
                                     (p: string) => p !== patientEmail,
                                   ) || "User"
                                 }`}
@@ -240,7 +252,7 @@ const Consultation = () => {
                               />
                               <div>
                                 <p className="font-semibold text-lg text-gray-800">
-                                  {selectedConversation.participants.find(
+                                  {selectedChat.participants.find(
                                     (p: string) => p !== patientEmail,
                                   ) || "Người dùng khác"}
                                 </p>
@@ -259,11 +271,10 @@ const Consultation = () => {
                           {/* ChatBox */}
                           <div className="flex-1 overflow-y-auto bg-gray-50">
                             <ChatBox
-                              conversationId={selectedConversation.id}
+                              conversationId={selectedChat.id}
                               otherUser={
-                                selectedConversation.participants.find(
-                                  (p: string) => p !== patientEmail,
-                                ) || "Người dùng khác"
+                                selectedChat.participants.find((p: string) => p !== patientEmail) ||
+                                "Người dùng khác"
                               }
                             />
                           </div>
@@ -278,19 +289,19 @@ const Consultation = () => {
                               <Avatar
                                 size={60}
                                 src={`https://api.dicebear.com/7.x/initials/svg?seed=${
-                                  selectedConversation.participants.find(
+                                  selectedChat.participants.find(
                                     (p: string) => p !== patientEmail,
                                   ) || "User"
                                 }`}
                               />
                               <div>
                                 <p className="font-semibold text-base">
-                                  {selectedConversation.participants.find(
+                                  {selectedChat.participants.find(
                                     (p: string) => p !== patientEmail,
                                   ) || "Người dùng khác"}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  {selectedConversation.participants.join(", ")}
+                                  {selectedChat.participants.join(", ")}
                                 </p>
                               </div>
                             </div>
@@ -299,16 +310,16 @@ const Consultation = () => {
                               <p>
                                 <span className="font-medium">Ngày tạo: </span>
                                 {new Date(
-                                  selectedConversation.createdAt?.seconds * 1000 || Date.now(),
+                                  selectedChat.createdAt?.seconds * 1000 || Date.now(),
                                 ).toLocaleString()}
                               </p>
                               <p>
                                 <span className="font-medium">Mã cuộc hẹn: </span>
-                                {selectedConversation.appointmentId || "Không có"}
+                                {selectedChat.appointmentId || "Không có"}
                               </p>
                               <p>
                                 <span className="font-medium">Tin nhắn cuối: </span>
-                                {selectedConversation.lastMessage || "Không có"}
+                                {selectedChat.lastMessage || "Không có"}
                               </p>
                             </div>
 
