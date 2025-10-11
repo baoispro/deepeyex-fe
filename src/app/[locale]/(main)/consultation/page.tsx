@@ -5,14 +5,12 @@ import { AiOutlineVideoCamera, AiOutlineAudio, AiOutlineInfoCircle } from "react
 import ChatBox from "@/app/modules/hospital/components/Chatbox";
 import { collection, onSnapshot, query, where, doc, setDoc, getDocs } from "firebase/firestore";
 import { db } from "@/app/shares/configs/firebase";
-import VideoCallRoom from "@/app/modules/hospital/components/VideoCallRoom";
 import { toast } from "react-toastify";
+import ChatHeader from "@/app/modules/hospital/components/VideoCallRoom";
 
 const Consultation = () => {
   const [isCheckingMic, setIsCheckingMic] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
-  const [showCall, setShowCall] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<any>(null); // dùng cho video role
   const [selectedChat, setSelectedChat] = useState<any>(null); // dùng cho tab lịch sử tư vấn
 
   const [conversations, setConversations] = useState<any[]>([]);
@@ -78,7 +76,7 @@ const Consultation = () => {
   const handleJoinRoom = (item: any) => {
     const other = item.participants?.find((p: string) => p !== patientEmail) || "Người dùng khác";
     message.success(`Đang mở chat với ${other}`);
-    selectedChat(item);
+    setSelectedChat(item);
     setShowInfo(false); // Ẩn info khi chuyển cuộc chat
   };
 
@@ -129,55 +127,7 @@ const Consultation = () => {
               label: "🎥 Phòng tư vấn trực tuyến",
               children: (
                 <div className="flex flex-col items-center justify-center min-h-[600px] bg-gray-100 rounded-xl p-6">
-                  {/* ------------- 1. Chọn vai trò ------------- */}
-                  {!showCall && !selectedConversation && (
-                    <Card title="🔔 Chọn vai trò test gọi video" className="p-6 shadow-lg">
-                      <Button
-                        type="primary"
-                        className="m-2"
-                        onClick={() => setSelectedConversation("A")}
-                      >
-                        Đăng nhập làm User A (100)
-                      </Button>
-                      <Button className="m-2" onClick={() => setSelectedConversation("B")}>
-                        Đăng nhập làm User B (2)
-                      </Button>
-                    </Card>
-                  )}
-
-                  {/* ------------- 2. Hiển thị giao diện sau khi chọn vai trò ------------- */}
-                  {selectedConversation && !showCall && (
-                    <div className="text-center mt-10">
-                      <h2 className="text-xl font-semibold mb-3">
-                        Bạn đang là{" "}
-                        <b>{selectedConversation === "A" ? "User A (100)" : "User B (2)"}</b>
-                      </h2>
-
-                      {selectedConversation === "A" ? (
-                        <Button type="primary" size="large" onClick={() => setShowCall(true)}>
-                          📞 Gọi đến User 2
-                        </Button>
-                      ) : (
-                        <p className="text-gray-500 mt-2">Đang chờ cuộc gọi đến từ User 100...</p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* ------------- 3. Gọi VideoCallRoom ------------- */}
-                  {showCall && selectedConversation && (
-                    <VideoCallRoom
-                      userToken={
-                        selectedConversation === "A"
-                          ? "eyJjdHkiOiJzdHJpbmdlZS1hcGk7dj0xIiwidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifQ.eyJqdGkiOiJTSy4wLlFvYXpEdlRhU1lwZ21DWk95NW81Q01FS1kyNVFwdS0xNzYwMTcwMzk5IiwiaXNzIjoiU0suMC5Rb2F6RHZUYVNZcGdtQ1pPeTVvNUNNRUtZMjVRcHUiLCJleHAiOjE3NjAxNzM5OTksInVzZXJJZCI6IjEwMCJ9.qQacRp6kR-YCekFh6qlUMbLycRnQOgu8KSCKeNQgq4I"
-                          : "eyJjdHkiOiJzdHJpbmdlZS1hcGk7dj0xIiwidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifQ.eyJqdGkiOiJTSy4wLkZqUXg2Wmp5aEpzMm5mOFlFSGx6UUFUbGFYN05ZZy0xNzYwMTcwNDAwIiwiaXNzIjoiU0suMC5GalF4NlpqeWhKczJubjhZRUhselFBVGxhWDdOWWciLCJleHAiOjE3NjAxNzQwMDAsInVzZXJJZCI6IjIifQ.bMZ4LE_ukBdYjpeo0Yr2yJ0hgzgiTru2rMQsnlp0M0I"
-                      }
-                      callTo={selectedConversation === "A" ? "2" : undefined}
-                      onLeave={() => {
-                        setShowCall(false);
-                        setSelectedConversation(null);
-                      }}
-                    />
-                  )}
+                  <ChatHeader userId="2993846a-6f43-4201-84cc-acb7da40d0a9" />
                 </div>
               ),
             },

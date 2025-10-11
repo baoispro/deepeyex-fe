@@ -2,10 +2,13 @@
 
 import { useLoginFirebaseMutation } from "@/app/modules/auth/hooks/mutations/use-login-by-google.mutation";
 import { useLoginMutation } from "@/app/modules/auth/hooks/mutations/use-login.mutation";
+import { CallApi } from "@/app/modules/hospital/apis/call/callApi";
 import { PatientApi } from "@/app/modules/hospital/apis/patient/patientApi";
 import { auth, googleProvider } from "@/app/shares/configs/firebase";
 import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
 import { setPatient } from "@/app/shares/stores/authSlice";
+import { connectToStringee } from "@/app/shares/utils/stringee";
+import { loadStringeeSdk } from "@/app/shares/utils/stringee-sdk-loader";
 import { Button, Dropdown, Input, MenuProps } from "antd";
 import { signInWithPopup } from "firebase/auth";
 import { useLocale, useTranslations } from "next-intl";
@@ -49,6 +52,10 @@ export default function LoginPage() {
         dispatch(setPatient(patientInfo));
         localStorage.removeItem("email");
         localStorage.removeItem("user_id");
+        const res = await CallApi.getStringeeToken(data.data?.user_id || "");
+        const stringeeToken = res.data.token;
+        await loadStringeeSdk();
+        connectToStringee(stringeeToken);
         router.push("/");
       } catch (err) {
         toast.warning("Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
@@ -95,6 +102,10 @@ export default function LoginPage() {
         };
         dispatch(setPatient(patientInfo));
         localStorage.removeItem("email");
+        const res = await CallApi.getStringeeToken(data.data?.user_id || "");
+        const stringeeToken = res.data.token;
+        await loadStringeeSdk();
+        connectToStringee(stringeeToken);
         router.push("/");
       } catch (err) {
         toast.warning("Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");

@@ -1,69 +1,111 @@
-import { EventEmitter } from "events";
+import { callEventEmitter } from "./callEvents";
 
-export const callEventEmitter = new EventEmitter();
-
+// utils/stringee.ts
 let client: any = null;
 let currentCall: any = null;
 
-export const connectToStringee = async (token: string) => {
-  return new Promise((resolve, reject) => {
-    if (!window.StringeeClient) return reject("Stringee SDK chưa được tải");
+export function connectToStringee(token: string) {
+  if (typeof window === "undefined" || !window.StringeeClient) {
+    console.error("Stringee SDK not loaded.");
+    return;
+  }
 
-    client = new window.StringeeClient();
+  client = new window.StringeeClient();
 
-    client.on("connect", () => console.log("✅ Đã kết nối Stringee server"));
-    client.on("authen", (res: any) => {
-      if (res.r === 0) console.log("🟢 Authenticated with Stringee", res);
-      else console.error("❌ Authen failed:", res);
-    });
-    client.on("disconnect", () => console.log("❌ Mất kết nối Stringee"));
-    client.on("otherdeviceauthen", () => {
-      console.warn("⚠️ Tài khoản đăng nhập từ thiết bị khác");
-      client.disconnect();
-    });
+  client.connect(token);
 
-    // Khi có cuộc gọi đến
-    client.on("incomingcall", (incomingCall: any) => {
-      console.log("📞 Có cuộc gọi đến:", incomingCall.fromNumber);
-      currentCall = incomingCall;
-      setupCallEvents(currentCall);
-      callEventEmitter.emit("incoming-call", incomingCall);
-    });
-
-    client.connect(token);
-    resolve(client);
-  });
-};
-
-export const makeVideoCall = async (token: string, toUserId: string, isVideo = true) => {
-  if (!client) await connectToStringee(token);
-
-  const call = new window.StringeeCall(client, token, toUserId, isVideo);
-  setupCallEvents(call);
-  call.makeCall((res: any) => console.log("📤 Gọi đi:", res));
-};
-
-export const hangupCall = () => {
-  if (currentCall) currentCall.hangup();
-};
-
-export const muteCall = (muted: boolean) => {
-  if (currentCall) currentCall.mute(muted);
-};
-
-export const setupCallEvents = (call: any) => {
-  call.on("addlocalstream", (stream: MediaStream) => {
-    callEventEmitter.emit("local-stream", stream);
+  client.on("connect", function () {
+    console.log("✅ Connected to Stringee Server");
   });
 
-  call.on("addremotestream", (stream: MediaStream) => {
-    callEventEmitter.emit("remote-stream", stream);
-  });
-
-  call.on("signalingstate", (state: any) => {
-    console.log("📡 signalingstate:", state);
-    if (state.code === 6 || state.code === 5) {
-      callEventEmitter.emit("call-ended");
+  client.on("authen", function (res: any) {
+    if (res.r === 0) {
+      console.log("✅ Authenticated with Stringee", res);
+    } else {
+      console.error("❌ Authentication failed", res);
     }
   });
-};
+
+  client.on("disconnect", function () {
+    console.log("🔌 Disconnected from Stringee Server");
+  });
+
+  // Handle incoming call
+  client.on("incomingcall", function (incomingCall: any) {
+    console.log("📞 Incoming call from:", incomingCall.fromNumber);
+    alert("📞 Incoming call received from: " + incomingCall.fromNumber);
+    currentCall = incomingCall;
+    setupCallEvents(currentCall);
+
+    const answer = confirm(`Incoming call from: ${incomingCall.fromNumber}, answer?`);
+    if (answer) {
+      currentCall.answer((res: any) => console.log("Answer result", res));
+      callEventEmitter.emit("incoming-call", incomingCall);
+    } else {
+      currentCall.reject((res: any) => console.log("Reject result", res));
+    }
+  });
+}
+
+export function makeVideoCall(fromUserId: string, toUserId: string, isVideoCall: boolean) {
+  if (!client) {
+    console.error("Client not initialized");
+    return;
+  }
+
+  currentCall = new window.StringeeCall(client, fromUserId, toUserId, isVideoCall);
+  console.log(
+    `${isVideoCall ? "🎥" : "📞"} Making ${isVideoCall ? "video" : "audio"} call to`,
+    toUserId,
+  );
+  setupCallEvents(currentCall);
+
+  currentCall.makeCall((res: any) => {
+    console.log("📞 Make call result:", res);
+  });
+}
+
+function setupCallEvents(call: any) {
+  call.on("addremotestream", function (stream: MediaStream) {
+    console.log("📺 Remote stream added");
+    const remoteVideo = document.getElementById("remoteVideo") as HTMLVideoElement;
+    if (remoteVideo) remoteVideo.srcObject = stream;
+  });
+
+  call.on("addlocalstream", function (stream: MediaStream) {
+    console.log("📹 Local stream added");
+    const localVideo = document.getElementById("localVideo") as HTMLVideoElement;
+    if (localVideo) localVideo.srcObject = stream;
+  });
+
+  call.on("signalingstate", function (state: any) {
+    console.log("🔁 Signaling state changed:", state);
+  });
+
+  call.on("mediastate", function (state: any) {
+    console.log("📡 Media state changed:", state);
+  });
+
+  call.on("info", function (info: any) {
+    console.log("ℹ️ Call info:", info);
+  });
+}
+
+export function hangupCall() {
+  if (currentCall) {
+    currentCall.hangup((res: any) => {
+      console.log("📴 Call ended", res);
+    });
+  }
+}
+
+export function muteCall(mute: boolean) {
+  if (currentCall) {
+    currentCall.mute(mute);
+    console.log(`🔇 Call ${mute ? "muted" : "unmuted"}`);
+  }
+}
+
+export function getStringeeClient() {
+  return client;
+}

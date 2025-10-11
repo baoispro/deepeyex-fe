@@ -1,154 +1,181 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import { Button, message } from "antd";
-import {
-  AiOutlineAudio,
-  AiOutlineAudioMuted,
-  AiOutlineVideoCamera,
-  AiOutlineVideoCameraAdd,
-  AiOutlinePhone,
-} from "react-icons/ai";
-import { loadStringeeSdk } from "@/app/shares/utils/stringee-sdk-loader";
-import {
-  connectToStringee,
-  makeVideoCall,
-  hangupCall,
-  muteCall,
-  callEventEmitter,
-} from "@/app/shares/utils/stringee";
+import Image from "next/image";
+import { useState, useRef, useEffect } from "react";
+import { FaPhoneAlt } from "react-icons/fa";
+import { IoSearch } from "react-icons/io5";
+import { IoMdVideocam, IoMdMore } from "react-icons/io";
+import { ImPhoneHangUp } from "react-icons/im";
+import { FaVolumeMute } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/shares/stores";
+import { callEventEmitter } from "@/app/shares/utils/callEvents";
+import { hangupCall, makeVideoCall, muteCall } from "@/app/shares/utils/stringee";
 
-interface VideoCallRoomProps {
-  userToken: string;
-  callTo?: string;
-  onLeave: () => void;
+interface ChatHeaderProps {
+  userId?: string;
 }
 
-const VideoCallRoom = ({ userToken, callTo, onLeave }: VideoCallRoomProps) => {
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isCamOn, setIsCamOn] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-  const [incomingCall, setIncomingCall] = useState<any>(null);
+const ChatHeader = ({ userId }: ChatHeaderProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [mute, setMute] = useState(true);
+  const userSenderId = useSelector((state: RootState) => state.auth.userId);
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        await loadStringeeSdk();
-        await connectToStringee(userToken);
-
-        callEventEmitter.on("local-stream", (stream: MediaStream) => {
-          if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-        });
-
-        callEventEmitter.on("remote-stream", (stream: MediaStream) => {
-          if (remoteVideoRef.current) remoteVideoRef.current.srcObject = stream;
-          setIsConnected(true);
-        });
-
-        callEventEmitter.on("incoming-call", (call: any) => {
-          console.log("📞 Có cuộc gọi đến:", call.fromNumber);
-          setIncomingCall(call);
-        });
-
-        callEventEmitter.on("call-ended", () => {
-          message.info("🛑 Cuộc gọi kết thúc");
-          setIsConnected(false);
-          setIncomingCall(null);
-          onLeave();
-        });
-      } catch (err) {
-        console.error("❌ Lỗi khởi tạo Stringee:", err);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    init();
-    return () => callEventEmitter.removeAllListeners();
-  }, [userToken]);
+  useEffect(() => {
+    const handler = (incomingCall: any) => {
+      console.log("📞 Received call in component!", incomingCall);
+      setOpenModal(true);
+    };
 
-  const handleStartCall = async () => {
-    if (!callTo) return message.warning("Thiếu người nhận để gọi");
-    await makeVideoCall(userToken, callTo, true);
+    callEventEmitter.on("incoming-call", handler);
+
+    return () => {
+      callEventEmitter.off("incoming-call", handler); // cleanup
+    };
+  }, [setOpenModal]);
+
+  const handleCall = (isCallVideo: boolean) => {
+    console.log("user2:" + userId);
+    console.log("user1:" + userSenderId.toString());
+    setOpenModal(true);
+    if (userId != "0") makeVideoCall(userSenderId.toString(), userId, isCallVideo);
   };
 
-  const handleEndCall = () => {
+  const hangup = () => {
     hangupCall();
-    setIsConnected(false);
-    setIncomingCall(null);
-    onLeave();
+    setOpenModal(false);
   };
 
-  const handleToggleMic = () => {
-    muteCall(isMicOn);
-    setIsMicOn(!isMicOn);
+  const muteFunction = () => {
+    setMute(!mute);
+    muteCall(mute);
   };
 
-  const handleAnswerCall = () => {
-    if (incomingCall) {
-      incomingCall.answer();
-      setIncomingCall(null);
-      message.success("📞 Đã trả lời cuộc gọi");
-    }
-  };
-
-  const handleRejectCall = () => {
-    if (incomingCall) {
-      incomingCall.reject();
-      setIncomingCall(null);
-      message.info("🚫 Đã từ chối cuộc gọi");
-    }
+  const handleCancel = () => {
+    setOpenModal(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-50 p-4">
-      <div className="relative flex justify-center items-center w-full max-w-3xl bg-gray-900 rounded-2xl overflow-hidden shadow-lg">
+    <div className="flex items-center justify-between space-x-3 mb-4 border-b border-white pb-4">
+      <div className="flex items-center flex-row justify-between w-full">
+        <div className="flex items-center gap-3">
+          {/* <Image
+            src={avatar ? avatar : Images.AvatarDefault}
+            alt={name ? name : "Avatar"}
+            className="w-[3.125rem] h-[3.125rem] rounded-[30px] object-cover"
+            width={50}
+            height={50}
+          /> */}
+          <div>
+            <h2 className="text-lg font-bold">{name}</h2>
+            {/* <p className="text-sm text-gray-400">
+              {isUserOnline ? (
+                <>
+                  <span className="inline-block w-[12px] h-[12px] rounded-full bg-green-500 mr-1" />
+                  <span>Online</span>
+                </>
+              ) : (
+                ""
+              )}
+            </p> */}
+          </div>
+        </div>
+        {/* Các nút chức năng */}
+        <div className="flex gap-2.5">
+          <button
+            className="bg-[#484848] h-10 w-10 rounded-full flex items-center justify-center"
+            // onClick={() => setIsChatSearchOpen(!isChatSearchOpen)}
+          >
+            <IoSearch size={20} color="white" className="text-white" />
+          </button>
+          <button
+            className="bg-[#484848] h-10 w-10 rounded-full flex items-center justify-center"
+            onClick={() => handleCall(false)}
+          >
+            <FaPhoneAlt size={20} color="white" className="text-white" />
+          </button>
+          <button
+            className="bg-[#484848] h-10 w-10 rounded-full flex items-center justify-center"
+            onClick={() => handleCall(true)}
+          >
+            <IoMdVideocam size={20} color="white" className="text-white" />
+          </button>
+          {/* Nút mở ChatInfo */}
+          <button
+            className="bg-[#484848] h-10 w-10 rounded-full flex items-center justify-center"
+            // onClick={() => setIsChatInfoOpen(!isChatInfoOpen)}
+          >
+            <IoMdMore size={20} color="white" />
+          </button>
+        </div>
+      </div>
+      {/* <div className="flex gap-4 mt-4">
         <video
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          className="w-full max-h-[70vh] object-cover"
-        />
-        <video
-          ref={localVideoRef}
-          autoPlay
+          id="localVideo"
           muted
           playsInline
-          className="absolute bottom-4 right-4 w-40 h-28 rounded-lg border-2 border-white shadow-md"
+          autoPlay
+          className="w-48 h-36 bg-black rounded-lg"
         />
-      </div>
+        <video
+          id="remoteVideo"
+          playsInline
+          autoPlay
+          className="w-48 h-36 bg-black rounded-lg"
+        />
+        <button onClick={hangup}>Hang up</button>
+      </div> */}
+      {openModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-[#1a1a1a] p-6 rounded-lg w-[600px]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-white text-lg font-semibold">Video Call</h2>
+              <button onClick={handleCancel} className="text-white text-2xl hover:text-red-500">
+                ×
+              </button>
+            </div>
 
-      <div className="flex justify-center gap-4 mt-6">
-        <Button
-          shape="circle"
-          size="large"
-          onClick={handleToggleMic}
-          icon={isMicOn ? <AiOutlineAudio /> : <AiOutlineAudioMuted />}
-        />
-        <Button
-          shape="circle"
-          danger
-          size="large"
-          onClick={handleEndCall}
-          icon={<AiOutlinePhone />}
-        />
-        {!isConnected && callTo && (
-          <Button type="primary" onClick={handleStartCall}>
-            📞 Gọi
-          </Button>
-        )}
-      </div>
+            <div className="flex gap-4 justify-center">
+              <video
+                id="localVideo"
+                muted
+                playsInline
+                autoPlay
+                className="w-48 h-36 bg-black rounded-lg"
+              />
+              <video
+                id="remoteVideo"
+                playsInline
+                autoPlay
+                className="w-48 h-36 bg-black rounded-lg"
+              />
+            </div>
 
-      {incomingCall && (
-        <div className="absolute bottom-10 bg-white p-4 rounded-xl shadow-lg text-center">
-          <p className="font-semibold mb-3">📞 Cuộc gọi đến từ: {incomingCall.fromNumber}</p>
-          <div className="flex justify-center gap-3">
-            <Button type="primary" onClick={handleAnswerCall}>
-              Trả lời
-            </Button>
-            <Button danger onClick={handleRejectCall}>
-              Từ chối
-            </Button>
+            <div className="flex justify-center mt-4 gap-4">
+              <button
+                onClick={hangup}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+              >
+                <ImPhoneHangUp />
+              </button>
+              <button
+                onClick={muteFunction}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+              >
+                <FaVolumeMute />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -156,4 +183,4 @@ const VideoCallRoom = ({ userToken, callTo, onLeave }: VideoCallRoomProps) => {
   );
 };
 
-export default VideoCallRoom;
+export default ChatHeader;
