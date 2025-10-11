@@ -5,4 +5,7 @@ export enum QueryKeyEnum {
   User = "users",
   Predict = "predict",
   TimeSlot = "timeSlot",
+  Drug = "drugs",
+  Service = "services",
+  Order = "orders",
 }

@@ -22,7 +22,7 @@ export function useLoginMutation(options?: LoginOptions) {
     mutationFn: async (form: LoginRequest) => {
       return await AuthApi.login(form);
     },
-    onSuccess: (res, variables, context) => {
+    onSuccess: (res, variables, context, mutation) => {
       // lưu access token vào redux
       dispatch(
         setTokens({
@@ -32,10 +32,10 @@ export function useLoginMutation(options?: LoginOptions) {
           role: res.data?.role || "",
         }),
       );
-      options?.onSuccess?.(res, variables, context);
+      options?.onSuccess?.(res, variables, context, mutation);
     },
-    onError: (err, variables, context) => {
-      options?.onError?.(err, variables, context);
+    onError: (err, variables, context, mutation) => {
+      options?.onError?.(err, variables, context, mutation);
     },
   });
 }

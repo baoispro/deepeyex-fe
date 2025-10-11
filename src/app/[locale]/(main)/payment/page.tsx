@@ -3,7 +3,7 @@
 import { useRouter } from "@/app/shares/locales/navigation";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
-import { FaArrowLeft, FaRegCreditCard, FaMoneyBill } from "react-icons/fa";
+import { FaArrowLeft, FaRegCreditCard, FaMoneyBill, FaRegPaperPlane } from "react-icons/fa";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { useCreateBookingMutation } from "@/app/modules/booking/hooks/mutations/use-create-booking.mutation";
@@ -11,6 +11,10 @@ import { BookingRequest } from "@/app/modules/booking/apis/bookingApi";
 import { Patient } from "@/app/modules/hospital/types/patient";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/shares/stores";
+import { CartItemWithKey } from "../cart/page";
+import { useCreateOrderMutation } from "@/app/shares/hooks/mutations/use-order-drug.mutation";
+import { useCart } from "@/app/shares/hooks/carts/useCart";
+import { SendEmailApi, SendOrderConfirmationRequest } from "@/app/shares/api/sendMail";
 
 interface BookingService {
   name: string;
@@ -31,13 +35,21 @@ interface BookingInfo {
   hospital: { name: string | null; id: string | null };
 }
 
-interface CartItem {
-  key: string;
+// Interface cho dữ liệu từ API provinces
+interface District {
+  code: number;
   name: string;
-  price: number;
-  quantity: number;
-  image?: string;
-  oldPrice?: number;
+  codename: string;
+  division_type: string;
+}
+
+interface City {
+  code: number;
+  name: string;
+  codename: string;
+  division_type: string;
+  phone_code: number;
+  districts: District[];
 }
 
 const mockPaymentMethods = [
@@ -53,29 +65,121 @@ const mockPaymentMethods = [
   },
 ];
 
+// Cấu hình phí vận chuyển theo địa chỉ
+const SHIPPING_CONFIG = {
+  innerCity: {
+    provinces: ["Thành phố Hà Nội", "Thành phố Hồ Chí Minh"],
+    fee: 15000,
+  },
+  nearby: {
+    provinces: [
+      "Thành phố Hải Phòng",
+      "Thành phố Đà Nẵng",
+      "Thành phố Cần Thơ",
+      "Tỉnh Bắc Ninh",
+      "Tỉnh Hải Dương",
+      "Tỉnh Vĩnh Phúc",
+      "Tỉnh Thái Nguyên",
+      "Tỉnh Quảng Ninh",
+      "Tỉnh Bình Dương",
+      "Tỉnh Đồng Nai",
+      "Tỉnh Long An",
+    ],
+    fee: 30000,
+  },
+  faraway: {
+    fee: 50000,
+  },
+  freeShippingThreshold: 500000, // Miễn phí ship cho đơn hàng trên 500k
+};
+
 const OrderPage = () => {
   const [type, setType] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [hoadon, setHoadon] = useState(false);
   const [bookingInfo, setBookingInfo] = useState<BookingInfo | null>(null);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItemWithKey[]>([]);
   const auth = useSelector((state: RootState) => state.auth);
   const patient_id = auth.patient?.patientId;
   const user_id = auth.userId;
+  const [shippingMethod, setShippingMethod] = useState("delivery");
+
+  // State cho địa chỉ từ API
+  const [cities, setCities] = useState<City[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [selectedCityCode, setSelectedCityCode] = useState<number | null>(null);
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState<number | null>(null);
+  const [wardText, setWardText] = useState<string>(""); // Nhập tay phường/xã
+  const [selectedProvince, setSelectedProvince] = useState<string>("");
+
+  // State cho thông tin giao hàng (thuốc)
+  const [deliveryInfo, setDeliveryInfo] = useState({
+    receiverName: "",
+    receiverPhone: "",
+    receiverEmail: "",
+    address: "",
+    note: "",
+  });
 
   const router = useRouter();
 
-  const { mutate: createBooking, isPending } = useCreateBookingMutation({
-    onSuccess: (res) => {
-      toast.success("Booking created successfully!");
-      console.log("Booking response:", res);
-      // Sau khi tạo booking xong có thể chuyển tới trang thanh toán hoặc confirmation
+  const { clearCart } = useCart();
+  const { mutate: createBooking, isPending: isBookingPending } = useCreateBookingMutation({
+    onSuccess: () => {
+      toast.success("Đặt lịch khám thành công!");
       router.push("/booking/success");
     },
     onError: (err) => {
-      toast.error("Booking failed: " + err.message);
+      toast.error("Đặt lịch thất bại: " + err.message);
     },
   });
+
+  const { mutate: createOrder, isPending: isOrderPending } = useCreateOrderMutation({
+    onSuccess: () => {
+      toast.success("Đặt hàng thành công!");
+      // Clear cart sau khi đặt hàng thành công
+      clearCart();
+      router.push("/booking/success");
+    },
+    onError: (err) => {
+      toast.error("Đặt hàng thất bại: " + err.message);
+    },
+  });
+
+  const isPending = isBookingPending || isOrderPending;
+
+  // Fetch danh sách tỉnh/thành phố từ API
+  useEffect(() => {
+    fetch("https://provinces.open-api.vn/api/?depth=2")
+      .then((res) => res.json())
+      .then((data: City[]) => {
+        setCities(data);
+      })
+      .catch((error) => console.error("Error fetching cities:", error));
+  }, []);
+
+  // Cập nhật districts khi chọn city
+  useEffect(() => {
+    if (selectedCityCode) {
+      const selectedCity = cities.find((city) => city.code === selectedCityCode);
+      if (selectedCity) {
+        setDistricts(selectedCity.districts || []);
+        setSelectedProvince(selectedCity.name);
+        // Reset district và ward khi đổi city
+        setSelectedDistrictCode(null);
+        setWardText("");
+      }
+    } else {
+      setDistricts([]);
+    }
+  }, [selectedCityCode, cities]);
+
+  // Reset ward text khi đổi district
+  useEffect(() => {
+    if (selectedDistrictCode) {
+      setWardText("");
+    }
+  }, [selectedDistrictCode]);
 
   useEffect(() => {
     const localType = localStorage.getItem("type");
@@ -96,7 +200,7 @@ const OrderPage = () => {
         itemList.push({ key: s.name, name: s.name, price: s.price, quantity: 1 });
       }
 
-      setCartItems(itemList);
+      setCartItems(itemList as CartItemWithKey[]);
 
       setBookingInfo({
         patient: patient ? JSON.parse(patient) : null,
@@ -107,43 +211,77 @@ const OrderPage = () => {
       });
     } else {
       // nếu là thuốc, có thể load cart từ mockCartItems hoặc API
-      setCartItems([
-        {
-          key: "1",
-          name: "Sữa Nutrifood Varna Colostrum 237ml hỗ trợ tăng cường sức đề kháng (24 Chai)",
-          image: "/milk-product.png",
-          price: 35000,
-          oldPrice: 38500,
-          quantity: 1,
-        },
-      ]);
+      const cartItems = localStorage.getItem("cartItems");
+      setCartItems(cartItems ? JSON.parse(cartItems) : []);
     }
   }, []);
 
-  // Tính tổng tiền
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const voucherDiscount = type === "thuoc" ? 3500 : 0;
-  const shippingFee = type === "thuoc" ? 0 : 0;
-  const total = subtotal - voucherDiscount - shippingFee;
+  // Hàm tính phí vận chuyển
+  const calculateShippingFee = (): number => {
+    if (type !== "thuoc" || shippingMethod !== "delivery") {
+      return 0; // Không phải thuốc hoặc nhận tại cửa hàng
+    }
 
-  const handleCompleteOrder = async () => {
+    // Miễn phí ship cho đơn hàng trên ngưỡng
+    if (subtotal >= SHIPPING_CONFIG.freeShippingThreshold) {
+      return 0;
+    }
+
+    // Tính phí theo tỉnh/thành phố
+    if (!selectedProvince) {
+      return 0; // Chưa chọn tỉnh
+    }
+
+    if (SHIPPING_CONFIG.innerCity.provinces.includes(selectedProvince)) {
+      return SHIPPING_CONFIG.innerCity.fee;
+    }
+
+    if (SHIPPING_CONFIG.nearby.provinces.includes(selectedProvince)) {
+      return SHIPPING_CONFIG.nearby.fee;
+    }
+
+    return SHIPPING_CONFIG.faraway.fee; // Tỉnh xa
+  };
+
+  // Tính tổng tiền
+  const subtotal = cartItems.reduce((sum, item) => {
+    const itemPrice = item.sale_price || item.price;
+    return sum + itemPrice * item.quantity;
+  }, 0);
+
+  // Tính giảm giá trực tiếp từ sale_price (chỉ cho thuốc)
+  const directDiscount =
+    type === "thuoc"
+      ? cartItems.reduce((sum, item) => {
+          if (item.sale_price && item.price > item.sale_price) {
+            return sum + (item.price - item.sale_price) * item.quantity;
+          }
+          return sum;
+        }, 0)
+      : 0;
+
+  const voucherDiscount = 0; // Giảm giá voucher (nếu có)
+  const shippingFee = calculateShippingFee();
+  const total = subtotal - voucherDiscount + shippingFee;
+
+  // Hàm xử lý đặt lịch khám (booking)
+  const handleCompleteBooking = async () => {
     if (!bookingInfo?.patient) {
-      alert("Không tìm thấy thông tin bệnh nhân.");
+      toast.error("Không tìm thấy thông tin bệnh nhân.");
       return;
     }
 
     if (!paymentMethod) {
-      alert("Vui lòng chọn phương thức thanh toán.");
+      toast.error("Vui lòng chọn phương thức thanh toán.");
       return;
     }
-
     // Map cartItems sang order_items backend yêu cầu
     const order_items = cartItems.map((item) => ({
       drug_id: item.key.startsWith("drug_") ? item.key : undefined,
       service_id: item.key.startsWith("service_") ? item.key : undefined,
       item_name: item.name,
       quantity: item.quantity,
-      price: item.price,
+      price: item.sale_price || item.price,
     }));
 
     const req: BookingRequest = {
@@ -157,7 +295,6 @@ const OrderPage = () => {
       payment_status: paymentMethod === "cash" ? "PENDING" : "PAID",
     };
 
-    // Gọi mutation
     createBooking(req);
 
     // --- Gửi hóa đơn điện tử ---
@@ -192,6 +329,109 @@ const OrderPage = () => {
     }
   };
 
+  // Hàm xử lý đặt hàng thuốc (order)
+  const handleCompleteOrderDrug = async () => {
+    if (!patient_id || !user_id) {
+      toast.error("Vui lòng đăng nhập để đặt hàng.");
+      return;
+    }
+
+    if (!paymentMethod) {
+      toast.error("Vui lòng chọn phương thức thanh toán.");
+      return;
+    }
+
+    // Validation cho giao hàng
+    if (shippingMethod === "delivery") {
+      if (!deliveryInfo.receiverName.trim()) {
+        toast.error("Vui lòng nhập họ tên người nhận.");
+        return;
+      }
+      if (!deliveryInfo.receiverPhone.trim()) {
+        toast.error("Vui lòng nhập số điện thoại người nhận.");
+        return;
+      }
+      if (!selectedCityCode) {
+        toast.error("Vui lòng chọn Tỉnh/Thành phố.");
+        return;
+      }
+      if (!selectedDistrictCode) {
+        toast.error("Vui lòng chọn Quận/Huyện.");
+        return;
+      }
+      if (!deliveryInfo.address.trim()) {
+        toast.error("Vui lòng nhập địa chỉ cụ thể.");
+        return;
+      }
+    }
+
+    // Build địa chỉ đầy đủ
+    const selectedCity = cities.find((c) => c.code === selectedCityCode);
+    const selectedDistrict = districts.find((d) => d.code === selectedDistrictCode);
+
+    // Map cartItems sang order_items backend yêu cầu
+    const order_items = cartItems.map((item) => ({
+      drug_id: item.drug_id,
+      item_name: item.name,
+      quantity: item.quantity,
+      price: item.sale_price || item.price,
+      item_id: item.drug_id ?? undefined,
+    }));
+
+    const orderRequest = {
+      patient_id: patient_id,
+      book_user_id: user_id,
+      items: order_items,
+      delivery_info: {
+        address: deliveryInfo.address,
+        phone: deliveryInfo.receiverPhone,
+        note: deliveryInfo.note,
+        method: shippingMethod === "delivery" ? ("HOME_DELIVERY" as const) : ("PICKUP" as const),
+        city: selectedCity?.name,
+        district: selectedDistrict?.name,
+        ward: wardText || undefined, // Sử dụng wardText thay vì selectedWard
+        fee: shippingFee,
+        fullName: deliveryInfo.receiverName,
+        email: deliveryInfo.receiverEmail,
+      },
+    };
+
+    createOrder(orderRequest);
+
+    try {
+      const body: SendOrderConfirmationRequest = {
+        to_email: deliveryInfo.receiverEmail,
+        patient_name: deliveryInfo.receiverName,
+        order_code: Date.now().toString(),
+        order_items: cartItems,
+        delivery_method:
+          shippingMethod === "delivery" ? ("HOME_DELIVERY" as const) : ("PICKUP" as const),
+        delivery_address: deliveryInfo.address,
+        delivery_phone: deliveryInfo.receiverPhone,
+        delivery_fullname: deliveryInfo.receiverName,
+        delivery_email: deliveryInfo.receiverEmail,
+        delivery_note: deliveryInfo.note,
+        delivery_fee: shippingFee,
+        delivery_city: selectedCity?.name || "",
+        delivery_district: selectedDistrict?.name || "",
+        delivery_ward: wardText,
+      };
+      await SendEmailApi.sendOrderConfirmation(body);
+    } catch (error) {
+      console.error(error);
+      toast.error("Có lỗi xảy ra khi gửi hóa đơn.");
+    }
+  };
+
+  // Hàm chung để xử lý hoàn tất
+  const handleCompleteOrder = () => {
+    if (type === "booking") {
+      handleCompleteBooking();
+    } else if (type === "thuoc") {
+      handleCompleteOrderDrug();
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -218,23 +458,31 @@ const OrderPage = () => {
                     <Image
                       src={item.image || ""}
                       alt={item.name}
-                      className="w-16 h-16 object-cover rounded"
-                      width={16}
-                      height={16}
+                      className="w-16 h-16 object-contain rounded"
+                      width={64}
+                      height={64}
                     />
                   )}
                   <div className="flex-1">
                     <div className="flex justify-between items-center">
                       <p className="font-bold">{item.name}</p>
-                      <p>
+                      <div className="flex flex-col items-end">
                         {type === "thuoc" && (
                           <>
-                            <span className="line-through text-gray-500 mr-2">
-                              {item.oldPrice?.toLocaleString()}₫
-                            </span>
-                            <span className="text-red-500 font-bold">
-                              {item.price.toLocaleString()}₫
-                            </span>
+                            {item.sale_price ? (
+                              <>
+                                <span className="line-through text-gray-500 text-sm">
+                                  Giá gốc: {item.price.toLocaleString()}₫
+                                </span>
+                                <span className="text-red-500 font-bold">
+                                  Giá sale: {item.sale_price.toLocaleString()}₫
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-blue-500 font-bold">
+                                {item.price.toLocaleString()}₫
+                              </span>
+                            )}
                           </>
                         )}
                         {type === "booking" && (
@@ -242,7 +490,7 @@ const OrderPage = () => {
                             {item.price.toLocaleString()}₫
                           </span>
                         )}
-                      </p>
+                      </div>
                       <p className="text-gray-600">
                         x{item.quantity} {type === "thuoc" ? "Chai" : "dịch vụ"}
                       </p>
@@ -275,9 +523,194 @@ const OrderPage = () => {
           {type === "thuoc" && (
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Chọn hình thức nhận hàng</h2>
-              {/* Giữ nguyên UI nhận hàng */}
+              <div className="flex space-x-2 mb-6">
+                <button
+                  className={`py-2 px-4 rounded-full font-medium ${
+                    shippingMethod === "delivery"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                  onClick={() => setShippingMethod("delivery")}
+                >
+                  Giao hàng tận nơi
+                </button>
+                {/* <button
+                  className={`py-2 px-4 rounded-full font-medium ${
+                    shippingMethod === "pickup"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                  onClick={() => setShippingMethod("pickup")}
+                >
+                  Nhận tại nhà thuốc
+                </button> */}
+              </div>
+
+              {shippingMethod === "delivery" && (
+                <>
+                  <h3 className="text-lg font-semibold mb-2">Địa chỉ nhận hàng</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Họ và tên người nhận"
+                      value={deliveryInfo.receiverName}
+                      onChange={(e) =>
+                        setDeliveryInfo({ ...deliveryInfo, receiverName: e.target.value })
+                      }
+                      className="p-3 border border-gray-600 rounded-md col-span-2"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Số điện thoại"
+                      className="p-3 border border-gray-600 rounded-md"
+                      onChange={(e) =>
+                        setDeliveryInfo({ ...deliveryInfo, receiverPhone: e.target.value })
+                      }
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={deliveryInfo.receiverEmail}
+                      onChange={(e) =>
+                        setDeliveryInfo({ ...deliveryInfo, receiverEmail: e.target.value })
+                      }
+                      className="p-3 border border-gray-600 rounded-md"
+                    />
+                    <select
+                      value={selectedCityCode || ""}
+                      onChange={(e) => setSelectedCityCode(Number(e.target.value))}
+                      className="p-3 border border-gray-600 rounded-md appearance-none bg-white cursor-pointer"
+                    >
+                      <option value="" disabled>
+                        Chọn Tỉnh/Thành phố
+                      </option>
+                      {cities.map((city) => (
+                        <option key={city.code} value={city.code}>
+                          {city.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={selectedDistrictCode || ""}
+                      onChange={(e) => setSelectedDistrictCode(Number(e.target.value))}
+                      disabled={!selectedCityCode}
+                      className="p-3 border border-gray-600 rounded-md appearance-none bg-white cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="" disabled>
+                        Chọn Quận/Huyện
+                      </option>
+                      {districts.map((district) => (
+                        <option key={district.code} value={district.code}>
+                          {district.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Nhập Phường/Xã"
+                      value={wardText}
+                      onChange={(e) => setWardText(e.target.value)}
+                      disabled={!selectedDistrictCode}
+                      className="p-3 border border-gray-600 rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Nhập địa chỉ cụ thể (số nhà, tên đường)"
+                      value={deliveryInfo.address}
+                      onChange={(e) =>
+                        setDeliveryInfo({ ...deliveryInfo, address: e.target.value })
+                      }
+                      className="md:col-span-2 p-3 border border-gray-600 rounded-md"
+                    />
+                  </div>
+                  <div className="flex items-center text-gray-500 mt-4 mb-2">
+                    <FaRegPaperPlane className="mr-2" />
+                    <p className="text-sm">Ghi chú (không bắt buộc)</p>
+                  </div>
+                  <textarea
+                    placeholder="Ví dụ: Hãy gọi cho tôi 15 phút trước khi giao"
+                    rows={2}
+                    value={deliveryInfo.note}
+                    onChange={(e) => setDeliveryInfo({ ...deliveryInfo, note: e.target.value })}
+                    className="w-full p-3 border border-gray-600 rounded-md"
+                  ></textarea>
+                </>
+              )}
             </div>
           )}
+        </div>
+
+        {/* Right Column: Tổng tiền */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            {/* Thông báo miễn phí ship */}
+            {type === "thuoc" &&
+              shippingMethod === "delivery" &&
+              subtotal < SHIPPING_CONFIG.freeShippingThreshold &&
+              subtotal > 0 && (
+                <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-md mb-4 flex items-center text-sm">
+                  <FaRegCreditCard className="mr-2 flex-shrink-0" />
+                  <p>
+                    Mua thêm{" "}
+                    <span className="font-bold">
+                      {(SHIPPING_CONFIG.freeShippingThreshold - subtotal).toLocaleString()}₫
+                    </span>{" "}
+                    để được <span className="font-bold">MIỄN PHÍ VẬN CHUYỂN</span>!
+                  </p>
+                </div>
+              )}
+            <div className="space-y-2 mb-4 text-base">
+              <div className="flex justify-between">
+                <p className="font-semibold">Tổng tiền</p>
+                <p>{subtotal.toLocaleString()}₫</p>
+              </div>
+              {directDiscount > 0 && (
+                <div className="flex justify-between">
+                  <p className="font-semibold">Giảm giá trực tiếp</p>
+                  <p className="text-red-500">-{directDiscount.toLocaleString()}₫</p>
+                </div>
+              )}
+              {voucherDiscount > 0 && (
+                <div className="flex justify-between">
+                  <p className="font-semibold">Giảm giá voucher</p>
+                  <p className="text-red-500">-{voucherDiscount.toLocaleString()}₫</p>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                  <p className="font-semibold">Phí vận chuyển</p>
+                  {type === "thuoc" && shippingMethod === "delivery" && (
+                    <p className="text-xs text-gray-500">
+                      {subtotal >= SHIPPING_CONFIG.freeShippingThreshold ? (
+                        "Miễn phí cho đơn trên 500k"
+                      ) : selectedProvince ? (
+                        <>
+                          {SHIPPING_CONFIG.innerCity.provinces.includes(selectedProvince)
+                            ? "Nội thành"
+                            : SHIPPING_CONFIG.nearby.provinces.includes(selectedProvince)
+                              ? "Tỉnh lân cận"
+                              : "Tỉnh xa"}
+                        </>
+                      ) : (
+                        "Chọn tỉnh để xem phí"
+                      )}
+                    </p>
+                  )}
+                </div>
+                {shippingFee === 0 ? (
+                  <p className="text-green-500 font-semibold">Miễn phí</p>
+                ) : (
+                  <p className="text-blue-500 font-semibold">+{shippingFee.toLocaleString()}₫</p>
+                )}
+              </div>
+            </div>
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold">Thành tiền</h3>
+                <h3 className="text-xl font-bold text-blue-500">{total.toLocaleString()}₫</h3>
+              </div>
+            </div>
+          </div>
 
           {/* Phương thức thanh toán + hóa đơn */}
           <div className="bg-white p-6 rounded-lg shadow-md">
@@ -322,18 +755,6 @@ const OrderPage = () => {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Tổng tiền */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="border-t border-gray-200 pt-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold">Thành tiền</h3>
-                <h3 className="text-xl font-bold text-blue-500">{total.toLocaleString()}₫</h3>
-              </div>
             </div>
           </div>
 

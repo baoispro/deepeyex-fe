@@ -1,6 +1,6 @@
 "use client";
 import { useAppSelector } from "@/app/shares/stores";
-import { Layout, Menu, Table } from "antd";
+import { Layout, Menu } from "antd";
 import Avatar from "react-avatar";
 import Link from "next/link";
 import { useState } from "react";

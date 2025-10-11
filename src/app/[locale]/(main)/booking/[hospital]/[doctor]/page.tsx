@@ -30,6 +30,7 @@ import { RootState } from "@/app/shares/stores";
 import { HomeOutlined } from "@ant-design/icons";
 import { useGetTimeSlotsByDoctorAndMonthQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-month.query";
 import { useGetTimeSlotsByDoctorAndDateQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-date.query";
+import { useGetAllServicesByDoctorIdQuery } from "@/app/modules/hospital/hooks/queries/services/use-get-list-service.query";
 
 interface PatientFormValues {
   patientType: "Bản thân" | "Người khác";
@@ -72,17 +73,18 @@ const specialtyServices: Record<string, { name: string; price: number }[]> = {
 const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () => void }) => {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const specialty = doctor.specialty;
-  const services = specialtyServices[specialty] || [];
+  const { data: dataServices } = useGetAllServicesByDoctorIdQuery(doctor.doctor_id);
+  const services = dataServices?.data;
   const baseFee = 0;
 
-  const total = services.find((s) => s.name === selectedService)?.price || baseFee;
+  const total = services?.find((s) => s.name === selectedService)?.price || baseFee;
 
   const handleNext = () => {
     if (!selectedService) return;
     // Lưu service đã chọn vào localStorage
     localStorage.setItem(
       "bookingService",
-      JSON.stringify(services.find((s) => s.name === selectedService)),
+      JSON.stringify(services?.find((s) => s.name === selectedService)),
     );
     onNext();
   };
@@ -104,7 +106,7 @@ const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () =>
           style={{ width: "100%" }}
         >
           <Space direction="vertical" style={{ width: "100%" }}>
-            {services.map((service) => (
+            {services?.map((service) => (
               <div
                 key={service.name}
                 style={{
