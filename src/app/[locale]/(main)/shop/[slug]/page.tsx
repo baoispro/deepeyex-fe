@@ -1,98 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Typography, message, Spin, Divider, Breadcrumb } from "antd";
+import { useState } from "react";
+import { Typography, Spin, Divider, Breadcrumb } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCart } from "@/app/shares/hooks/carts/useCart";
 import Image from "next/image";
 import { HomeOutlined } from "@ant-design/icons";
 import Link from "next/link";
+import { useGetDrugByIdQuery } from "@/app/modules/hospital/hooks/queries/drugs/use-get-drug-by-id.query";
+import { toast } from "react-toastify";
 
 const { Text } = Typography;
-
-interface Product {
-  id: number;
-  name: string;
-  image: string;
-  description: string;
-  usage: string;
-  effect: string;
-  storage: string;
-  precaution: string;
-  price: number;
-  sale_price?: number;
-  stock: number;
-  unit: string;
-}
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const t = useTranslations("product");
+  const locale = useLocale();
   const { addToCart } = useCart();
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [quantity, setQuantity] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [selectedImage, setSelectedImage] = useState<string>("");
+  const [quantityItem, setQuantityItem] = useState<number>(1);
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        // Mock Data
-        const mockData: Product = {
-          id: Number(params.id),
-          name: "Viên uống Medsulin Plus hỗ trợ cải thiện chỉ số đường huyết (60 viên)",
-          image:
-            "https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/DSC_09324_db795e136a.jpg",
+  // Sử dụng API để lấy thông tin drug theo slug
+  const { data: drugResponse, isLoading, error } = useGetDrugByIdQuery(params.slug as string);
 
-          description:
-            "Viên uống hỗ trợ cải thiện chỉ số đường huyết, chiết xuất từ Nhật Bản, bổ sung vitamin và khoáng chất.",
-          usage: "Uống 2 viên mỗi ngày, nên uống sau bữa ăn.",
-          effect: "Hỗ trợ cải thiện chỉ số đường huyết, tăng cường sức khỏe.",
-          storage: "Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp.",
-          precaution:
-            "Không sử dụng cho phụ nữ có thai hoặc đang cho con bú. Tham khảo ý kiến bác sĩ trước khi dùng.",
-          price: 960000,
-          sale_price: 720000,
-          stock: 12,
-          unit: "Hộp",
-        };
-
-        setProduct(mockData);
-      } catch (error) {
-        console.error("Error fetching product:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [params.id]);
+  const drug = drugResponse?.data;
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!drug) return;
 
     addToCart({
-      product_id: product.id,
-      name: product.name,
-      image: selectedImage,
-      price: product.price,
-      sale_price: product.sale_price ?? 0,
-      quantity,
-      variant_unit: product.unit,
+      drug_id: drug.drug_id,
+      name: drug.name,
+      image: drug.image || "",
+      price: drug.price,
+      sale_price:
+        drug.discount_percent > 0 ? drug.price - (drug.price * drug.discount_percent) / 100 : 0,
+      discount_percent: drug.discount_percent,
+      quantity: quantityItem,
     });
 
-    message.success(t("successAdd"));
+    toast.success(t("successAdd"));
   };
 
   const handleBuyNow = () => {
     handleAddToCart();
-    router.push("/cart");
+    router.push(`/${locale}/cart`);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[400px]">
         <Spin size="large" />
@@ -100,7 +57,15 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (!product) {
+  if (error) {
+    return (
+      <div className="text-center py-10">
+        <Text type="danger">Có lỗi xảy ra khi tải dữ liệu: {error.message}</Text>
+      </div>
+    );
+  }
+
+  if (!drug) {
     return (
       <div className="text-center py-10">
         <Text type="danger">{t("notFound")}</Text>
@@ -109,23 +74,23 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="mx-auto p-6">
+    <div className="mx-auto p-6 max-w-7xl">
       <Breadcrumb
         className="!pb-2"
         items={[
           {
-            href: "/",
+            href: `/${locale}`,
             title: <HomeOutlined />,
           },
           {
             title: (
-              <Link href={"/shop"}>
+              <Link href={`/${locale}/shop`}>
                 <span>Cửa hàng</span>
               </Link>
             ),
           },
           {
-            title: product.name,
+            title: drug?.name,
           },
         ]}
       />
@@ -133,7 +98,7 @@ export default function ProductDetailPage() {
         <div className="pt-10">
           <div className="relative h-[443px] w-full">
             <Image
-              src={product.image}
+              src={drug?.image || ""}
               alt={`Image product`}
               fill
               className="rounded-3xl object-contain"
@@ -142,24 +107,26 @@ export default function ProductDetailPage() {
         </div>
 
         <div className="flex flex-col gap-3 pt-10">
-          <div className="text-2xl font-semibold">{product.name}</div>
+          <div className="text-2xl font-semibold">{drug.name}</div>
 
           <div>
-            {product.sale_price && product.sale_price < product.price ? (
+            {drug.discount_percent && drug.discount_percent > 0 ? (
               <div className="flex flex-col items-start">
                 <div className="flex flex-row items-center">
                   <div className="text-[#0070d6] text-3xl font-semibold">
-                    {product.sale_price.toLocaleString("vi-VN")}đ
+                    {(drug.price - (drug.price * drug.discount_percent) / 100).toLocaleString(
+                      "vi-VN",
+                    )}
+                    đ
                   </div>
-                  <div className="ml-2 text-2xl text-[#0070d6]">/ {product.unit}</div>
-                </div>
-                <div className="text-[#4a4f63] text-xl font-medium line-through">
-                  {product.price.toLocaleString("vi-VN")}đ
+                  <div className="text-[#4a4f63] text-xl font-medium line-through">
+                    {drug.price.toLocaleString("vi-VN")}đ
+                  </div>
                 </div>
               </div>
             ) : (
               <Text strong style={{ fontSize: 24, color: "#0070d6" }}>
-                {product.price.toLocaleString("vi-VN")}đ / {product.unit}
+                {drug.price.toLocaleString("vi-VN")}đ
               </Text>
             )}
           </div>
@@ -169,9 +136,7 @@ export default function ProductDetailPage() {
               <Text strong className="w-32">
                 {t("description")}:
               </Text>
-              <div className="text-sm flex-1 leading-relaxed break-words">
-                {product.description}
-              </div>
+              <div className="text-sm flex-1 leading-relaxed break-words">{drug.description}</div>
             </div>
           </div>
 
@@ -181,18 +146,18 @@ export default function ProductDetailPage() {
             <div className="flex items-center border border-gray-300 rounded-full overflow-hidden">
               <button
                 className="w-8 h-8 text-lg text-gray-600 cursor-pointer hover:bg-gray-100"
-                disabled={quantity <= 1}
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantityItem <= 1}
+                onClick={() => setQuantityItem((q) => Math.max(1, q - 1))}
               >
                 −
               </button>
               <div className="w-8 h-8 flex items-center justify-center border-l border-r border-gray-300">
-                {quantity}
+                {quantityItem}
               </div>
               <button
-                disabled={quantity >= product.stock}
+                disabled={quantityItem >= drug.stock_quantity}
                 className="w-8 h-8 text-lg text-gray-600 cursor-pointer hover:bg-gray-100"
-                onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                onClick={() => setQuantityItem((q) => Math.min(drug.stock_quantity, q + 1))}
               >
                 +
               </button>
@@ -202,14 +167,14 @@ export default function ProductDetailPage() {
           <div className="flex flex-row gap-5 mt-2">
             <button
               className="flex-1 cursor-pointer bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold py-3 rounded-full hover:opacity-90"
-              disabled={product.stock === 0}
+              disabled={drug.stock_quantity === 0}
               onClick={handleAddToCart}
             >
               {t("addToCart")}
             </button>
             <button
               className="flex-1 cursor-pointer bg-gray-100 text-blue-600 text-sm font-semibold py-3 rounded-full hover:bg-gray-200"
-              disabled={product.stock === 0}
+              disabled={drug.stock_quantity === 0}
               onClick={handleBuyNow}
             >
               {t("findStore")}

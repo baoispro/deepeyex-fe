@@ -3,7 +3,6 @@
 import React, { useState, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
 import { usePredictMutation } from "../../../shares/hooks/mutations/use-predict.mutation";
-import { EyeDiseaseLabel } from "../../../shares/types/predict";
 import { Modal } from "antd";
 import TreatmentPlanUI from "../../../modules/predict/components/TreatmentPlan";
 import { convertLabelToVietnamese } from "@/app/shares/utils/helper";
@@ -12,7 +11,7 @@ export default function EyeDiagnosisApp() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
-  const [showModal, setShowModal] = useState<boolean>(false);
+  // const [showModal, setShowModal] = useState<boolean>(false);
 
   const { mutate, data, isPending } = usePredictMutation({
     onSuccess: () => {
@@ -195,7 +194,11 @@ export default function EyeDiagnosisApp() {
       </main>
 
       {topDiagnoses.length > 0 && (
-        <Modal open={!!topDiagnoses[0]} onCancel={() => setShowModal(false)} footer={null}>
+        <Modal
+          open={!!topDiagnoses[0]}
+          // onCancel={() => setShowModal(false)}
+          footer={null}
+        >
           {topDiagnoses[0].name === "Mắt bình thường" ? (
             <p className="text-center text-green-600 font-semibold">
               Mắt của bạn bình thường ✅. Nên đi khám định kỳ mỗi 6 - 12 tháng.
