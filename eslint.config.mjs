@@ -16,9 +16,6 @@ const eslintConfig = [
     plugins: { prettier: pluginPrettier },
     rules: {
       "prettier/prettier": "error",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "react-hooks/exhaustive-deps": "off",
     },
   },
 ];
