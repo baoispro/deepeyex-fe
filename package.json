@@ -15,6 +15,7 @@
     "@tanstack/react-query": "^5.87.1",
     "antd": "^5.27.2",
     "axios": "^1.12.1",
+    "emoji-picker-react": "^4.14.0",
     "firebase": "^12.2.1",
     "framer-motion": "^12.23.12",
     "next": "15.4.5",
@@ -41,7 +42,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.6.2",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.14",
     "typescript": "^5"
   }
 }

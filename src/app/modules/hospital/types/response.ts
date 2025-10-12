@@ -5,6 +5,7 @@ import { Doctor } from "./doctor";
 import { TimeSlot } from "./timeslot";
 import { Drug } from "./drug";
 import { Service } from "./service";
+import { Upload } from "./upload";
 
 type GetPatientResponse = ApiResponse<Patient>;
 
@@ -37,6 +38,9 @@ type GetDrugByIdResponse = ApiResponse<Drug>;
 //Service
 type ListServicesResponse = ApiResponse<Service[]>;
 
+//Upload
+type UploadFileResponse = ApiResponse<Upload>;
+
 export type {
   GetPatientResponse,
   CreateHospitalResponse,
@@ -58,4 +62,5 @@ export type {
   ListDrugsResponse,
   GetDrugByIdResponse,
   ListServicesResponse,
+  UploadFileResponse,
 };
