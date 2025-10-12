@@ -1,5 +1,5 @@
 // src/hooks/auth/useLoginMutation.ts
-import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+import { MutationFunctionContext, useMutation, UseMutationOptions } from "@tanstack/react-query";
 import {
   AuthApi,
   LoginRequest,
@@ -33,10 +33,10 @@ export function useLoginMutation(options?: LoginOptions) {
           role: res.data?.role || "",
         }),
       );
-      options?.onSuccess?.(res, variables, context);
+      options?.onSuccess?.(res, variables, {}, context as MutationFunctionContext);
     },
     onError: (err, variables, context) => {
-      options?.onError?.(err, variables, context);
+      options?.onError?.(err, variables, {}, context as MutationFunctionContext);
     },
   });
 }
