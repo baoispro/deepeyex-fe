@@ -42,3 +42,5 @@ next-env.d.ts
 
 yarn.lock
 pnpm-lock.yaml
+
+.vercel
