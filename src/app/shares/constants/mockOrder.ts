@@ -1,5 +1,5 @@
 import { Gender } from "@/app/modules/hospital/enums/gender";
-import { Order } from "@/app/modules/profile/types/order";
+import { Order } from "@/app/shares/types/order";
 
 export const mockOrder: Order[] = [
   {

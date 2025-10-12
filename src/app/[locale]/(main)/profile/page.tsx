@@ -11,9 +11,9 @@ import PatientInfoForm from "@/app/modules/profile/components/PatientInfoForm";
 import DiagnosisHistoryTable from "@/app/modules/profile/components/DiagnosisHistoryTable";
 import InvoiceSection from "@/app/modules/profile/components/InvonceSection";
 import AppointmentList from "@/app/modules/profile/components/AppointmentList";
-import { mockAppointments } from "@/app/shares/constants/mockAppointmen";
-import { mockOrder } from "@/app/shares/constants/mockOrder";
 import { MdDateRange } from "react-icons/md";
+import { useGetAppointmentsByPatientId } from "@/app/modules/hospital/hooks/queries/appointment/use-get-appointments.query";
+import { useGetOrdersByPatientId } from "@/app/modules/hospital/hooks/mutations/orders/use-get-orders.query";
 
 const { Sider, Content } = Layout;
 
@@ -22,6 +22,19 @@ export default function PatientProfile() {
   const auth = useAppSelector((state) => state.auth);
   const image = auth.patient?.image;
   const name = auth.patient?.fullName;
+  const patientId = auth.patient?.patientId;
+
+  // Fetch appointments from API
+  const { data: appointmentsData, isLoading: isLoadingAppointments } =
+    useGetAppointmentsByPatientId(patientId || undefined);
+
+  // Fetch orders from API
+  const { data: ordersData, isLoading: isLoadingOrders } = useGetOrdersByPatientId(
+    patientId || undefined,
+  );
+
+  const appointments = appointmentsData?.data || [];
+  const orders = ordersData?.data || [];
 
   return (
     <>
@@ -58,9 +71,13 @@ export default function PatientProfile() {
 
             {selectedKey === "history" && <DiagnosisHistoryTable />}
 
-            {selectedKey === "invoice" && <InvoiceSection orders={mockOrder} />}
+            {selectedKey === "invoice" && (
+              <InvoiceSection orders={orders} loading={isLoadingOrders} />
+            )}
 
-            {selectedKey === "appointment" && <AppointmentList appointments={mockAppointments} />}
+            {selectedKey === "appointment" && (
+              <AppointmentList appointments={appointments} loading={isLoadingAppointments} />
+            )}
           </Content>
         </Layout>
       </Layout>
