@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Input, Button, Upload, message as antdMessage, Image } from "antd";
 import { FaPaperPlane, FaFileAlt, FaImage, FaSmile } from "react-icons/fa";
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import {
   collection,
   addDoc,
@@ -10,6 +10,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 import { auth, db } from "@/app/shares/configs/firebase";
 import { useUploadFileMutation } from "../hooks/mutations/uploads/use-upload-file.mutation";
@@ -20,7 +21,7 @@ interface Message {
   sender: string;
   fileUrl?: string;
   fileType?: "image" | "video" | "file" | "text";
-  timestamp?: any;
+  timestamp?: Timestamp;
 }
 
 interface ChatBoxProps {
@@ -154,7 +155,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ conversationId, otherUser }) => {
   };
 
   // 🟢 Add emoji
-  const onEmojiClick = (emojiData: any) => {
+  const onEmojiClick = (emojiData: EmojiClickData) => {
     setInput((prev) => prev + emojiData.emoji);
   };
 

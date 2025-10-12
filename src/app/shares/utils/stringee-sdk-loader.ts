@@ -1,6 +1,21 @@
-export const loadStringeeSdk = (): Promise<any> => {
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    StringeeClient?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    StringeeCall?: any;
+  }
+}
+
+interface StringeeClient {
+  connect(token: string): void;
+  disconnect(): void;
+  on(event: string, callback: (...args: unknown[]) => void): void;
+}
+
+export const loadStringeeSdk = (): Promise<StringeeClient> => {
   return new Promise((resolve, reject) => {
-    if ((window as any).StringeeClient) {
+    if (window.StringeeClient) {
       resolve(window.StringeeClient);
       return;
     }

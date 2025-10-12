@@ -1,19 +1,30 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Tabs, List, Avatar, Button, Card, message, Spin } from "antd";
-import { AiOutlineVideoCamera, AiOutlineAudio, AiOutlineInfoCircle } from "react-icons/ai";
+import { AiOutlineInfoCircle } from "react-icons/ai";
 import ChatBox from "@/app/modules/hospital/components/Chatbox";
 import { collection, onSnapshot, query, where, doc, setDoc, getDocs } from "firebase/firestore";
 import { db } from "@/app/shares/configs/firebase";
 import { toast } from "react-toastify";
 import ChatHeader from "@/app/modules/hospital/components/VideoCallRoom";
 
+interface Conversation {
+  id: string;
+  participants: string[];
+  createdAt?: {
+    seconds: number;
+    nanoseconds: number;
+  };
+  lastMessage?: string;
+  appointmentId?: string;
+}
+
 const Consultation = () => {
   const [isCheckingMic, setIsCheckingMic] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
-  const [selectedChat, setSelectedChat] = useState<any>(null); // dùng cho tab lịch sử tư vấn
+  const [selectedChat, setSelectedChat] = useState<Conversation | null>(null); // dùng cho tab lịch sử tư vấn
 
-  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("online");
   const [showInfo, setShowInfo] = useState(false);
@@ -65,7 +76,7 @@ const Consultation = () => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }));
+      })) as Conversation[];
       setConversations(data);
       setLoading(false);
     });
@@ -73,7 +84,7 @@ const Consultation = () => {
     return () => unsub();
   }, []);
 
-  const handleJoinRoom = (item: any) => {
+  const handleJoinRoom = (item: Conversation) => {
     const other = item.participants?.find((p: string) => p !== patientEmail) || "Người dùng khác";
     message.success(`Đang mở chat với ${other}`);
     setSelectedChat(item);
@@ -116,7 +127,7 @@ const Consultation = () => {
   };
 
   return (
-    <div className="aspect-[1.85:1] px-4">
+    <div className="aspect-1.85:1 px-4">
       <Card className="h-full rounded-2xl shadow-md overflow-hidden">
         <Tabs
           activeKey={activeTab}
@@ -260,7 +271,8 @@ const Consultation = () => {
                               <p>
                                 <span className="font-medium">Ngày tạo: </span>
                                 {new Date(
-                                  selectedChat.createdAt?.seconds * 1000 || Date.now(),
+                                  (selectedChat.createdAt?.seconds ??
+                                    Math.floor(Date.now() / 1000)) * 1000,
                                 ).toLocaleString()}
                               </p>
                               <p>

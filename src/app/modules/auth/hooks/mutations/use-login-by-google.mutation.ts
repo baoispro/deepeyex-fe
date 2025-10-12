@@ -1,4 +1,4 @@
-import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+import { MutationFunctionContext, useMutation, UseMutationOptions } from "@tanstack/react-query";
 import {
   AuthApi,
   LoginFirebaseRequest,
@@ -39,10 +39,10 @@ export function useLoginFirebaseMutation(options?: LoginFirebaseOptions) {
           role: res.data?.role || "",
         }),
       );
-      options?.onSuccess?.(res, variables, context);
+      options?.onSuccess?.(res, variables, {}, context as MutationFunctionContext);
     },
     onError: (err, variables, context) => {
-      options?.onError?.(err, variables, context);
+      options?.onError?.(err, variables, {}, context as MutationFunctionContext);
     },
   });
 }

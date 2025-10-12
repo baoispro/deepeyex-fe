@@ -41,13 +41,20 @@ export const createPatientSchema = z.object({
   email: z.email("Email không hợp lệ"),
 
   avatar: z
-    .any()
+    .array(
+      z.object({
+        uid: z.string(),
+        name: z.string(),
+        size: z.number().optional(),
+        type: z.string().optional(),
+        originFileObj: z.instanceof(File).optional(),
+      }),
+    )
     .optional()
     .refine((files) => {
       if (!files || files.length === 0) return true;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return files.every((file: any) => {
+      return files.every((file) => {
         if (file.originFileObj) {
           return file.originFileObj.size < 5 * 1024 * 1024;
         }

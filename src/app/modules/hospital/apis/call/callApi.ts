@@ -10,7 +10,7 @@ export interface StringeeTokenResponse {
   };
 }
 
-const endpoint = "/call/stringee-token";
+const endpoint = "hospital/call/stringee-token";
 
 class CallClient {
   private readonly client: AxiosInstance;

@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { FaPhoneAlt } from "react-icons/fa";
 import { IoSearch } from "react-icons/io5";
@@ -13,6 +12,13 @@ import { hangupCall, makeVideoCall, muteCall } from "@/app/shares/utils/stringee
 
 interface ChatHeaderProps {
   userId?: string;
+}
+
+interface IncomingCall {
+  fromNumber: string;
+  toNumber: string;
+  callId: string;
+  isVideo: boolean;
 }
 
 const ChatHeader = ({ userId }: ChatHeaderProps) => {
@@ -33,7 +39,7 @@ const ChatHeader = ({ userId }: ChatHeaderProps) => {
   }, []);
 
   useEffect(() => {
-    const handler = (incomingCall: any) => {
+    const handler = (incomingCall: IncomingCall) => {
       console.log("📞 Received call in component!", incomingCall);
       setOpenModal(true);
     };
@@ -47,9 +53,9 @@ const ChatHeader = ({ userId }: ChatHeaderProps) => {
 
   const handleCall = (isCallVideo: boolean) => {
     console.log("user2:" + userId);
-    console.log("user1:" + userSenderId.toString());
+    console.log("user1:" + userSenderId?.toString());
     setOpenModal(true);
-    if (userId != "0") makeVideoCall(userSenderId.toString(), userId, isCallVideo);
+    if (userId != "0") makeVideoCall(userSenderId?.toString() || "", userId || "", isCallVideo);
   };
 
   const hangup = () => {
@@ -78,7 +84,7 @@ const ChatHeader = ({ userId }: ChatHeaderProps) => {
             height={50}
           /> */}
           <div>
-            <h2 className="text-lg font-bold">{name}</h2>
+            {/* <h2 className="text-lg font-bold">{name}</h2> */}
             {/* <p className="text-sm text-gray-400">
               {isUserOnline ? (
                 <>
