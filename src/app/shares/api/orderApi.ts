@@ -1,6 +1,7 @@
 import { AxiosInstance } from "axios";
 import api from "../configs/axios";
 import { OrdersResponse } from "@/app/shares/types/order";
+import { ApiResponse } from "../types/response";
 
 const endpoint = "/hospital/orders";
 // ---------------- ENUM ----------------
@@ -28,7 +29,7 @@ export interface DeliveryInfo {
 
 // ---------------- MAIN ORDER ----------------
 export interface Order {
-  id: string;
+  order_id: string;
   patient_id: string;
   appointment_id?: string | null;
   book_user_id: string;
@@ -70,8 +71,8 @@ class OrderClient {
    * @param data - Thông tin đơn hàng
    * @returns Order object
    */
-  async createOrder(data: CreateOrderRequest): Promise<Order> {
-    const response = await this.client.post<Order>(endpoint, data);
+  async createOrder(data: CreateOrderRequest): Promise<ApiResponse<Order>> {
+    const response = await this.client.post<ApiResponse<Order>>(endpoint, data);
     return response.data;
   }
 
