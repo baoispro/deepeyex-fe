@@ -8,4 +8,5 @@ export enum QueryKeyEnum {
   Drug = "drugs",
   Service = "services",
   Order = "orders",
+  Appointment = "appointments",
 }

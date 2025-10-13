@@ -2,17 +2,46 @@
 
 import { useRouter } from "@/app/shares/locales/navigation";
 import { useEffect, useState } from "react";
-import { FaCheckCircle, FaBox, FaTruck, FaHome, FaCalendarCheck } from "react-icons/fa";
+import { FaCheckCircle, FaBox, FaTruck, FaHome, FaCalendarCheck, FaPills } from "react-icons/fa";
 import dayjs from "dayjs";
+import Image from "next/image";
+
+interface OrderItem {
+  key: string;
+  drug_id?: string;
+  name: string;
+  price: number;
+  sale_price?: number;
+  quantity: number;
+  image?: string;
+}
 
 export default function ConfirmOrderPage() {
   const router = useRouter();
   const [orderType, setOrderType] = useState<string | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [orderTotal, setOrderTotal] = useState(0);
 
   useEffect(() => {
     const type = localStorage.getItem("type");
     setOrderType(type);
+
+    // Load cart items nếu là đặt thuốc
+    if (type === "thuoc") {
+      const cartItems = localStorage.getItem("cartItems");
+      if (cartItems) {
+        const items = JSON.parse(cartItems);
+        setOrderItems(items);
+
+        // Tính tổng tiền
+        const total = items.reduce((sum: number, item: OrderItem) => {
+          const price = item.sale_price || item.price;
+          return sum + price * item.quantity;
+        }, 0);
+        setOrderTotal(total);
+      }
+    }
 
     // Trigger animation after mount
     setTimeout(() => setShowAnimation(true), 100);
@@ -29,7 +58,7 @@ export default function ConfirmOrderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Success Animation Card */}
         <div
@@ -38,7 +67,7 @@ export default function ConfirmOrderPage() {
           }`}
         >
           {/* Header with Icon */}
-          <div className="bg-gradient-to-r from-green-400 to-blue-500 px-8 py-12 text-center">
+          <div className="bg-gradient-to-r from-blue-400 to-blue-500 px-8 py-12 text-center">
             <div className="inline-block">
               <div className="relative">
                 <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-20"></div>
@@ -55,7 +84,7 @@ export default function ConfirmOrderPage() {
 
           {/* Order Info */}
           <div className="px-8 py-8">
-            <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6 mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl p-6 mb-8">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <FaBox className="text-blue-500" />
                 Thông tin đơn hàng
@@ -82,13 +111,92 @@ export default function ConfirmOrderPage() {
               </div>
             </div>
 
+            {/* Danh sách thuốc (chỉ hiển thị khi type = thuoc) */}
+            {orderType === "thuoc" && orderItems.length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-xl p-6 mb-8">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <FaPills className="text-blue-500" />
+                  Danh sách thuốc đã đặt
+                </h2>
+                <div className="space-y-4">
+                  {orderItems.map((item, index) => (
+                    <div
+                      key={item.key || index}
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      {/* Ảnh sản phẩm */}
+                      <div className="relative w-20 h-20 flex-shrink-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        {item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-contain p-2"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <FaPills className="text-gray-400 text-2xl" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Thông tin sản phẩm */}
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-800 mb-1">{item.name}</h3>
+                        <div className="flex items-center gap-3 text-sm">
+                          <span className="text-gray-600">Số lượng: {item.quantity}</span>
+                          <span className="text-gray-300">|</span>
+                          <div className="flex items-center gap-2">
+                            {item.sale_price && item.sale_price < item.price ? (
+                              <>
+                                <span className="line-through text-gray-400">
+                                  {item.price.toLocaleString()}₫
+                                </span>
+                                <span className="text-red-500 font-semibold">
+                                  {item.sale_price.toLocaleString()}₫
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-gray-800 font-semibold">
+                                {item.price.toLocaleString()}₫
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tổng tiền cho item */}
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500 mb-1">Tổng cộng</div>
+                        <div className="text-lg font-bold text-blue-600">
+                          {((item.sale_price || item.price) * item.quantity).toLocaleString()}₫
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tổng tiền đơn hàng */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-gray-700">
+                      Tổng giá trị đơn hàng:
+                    </span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      {orderTotal.toLocaleString()}₫
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Timeline/Next Steps */}
             <div className="mb-8">
               <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                 {orderType === "booking" ? (
-                  <FaCalendarCheck className="text-green-500" />
+                  <FaCalendarCheck className="text-blue-500" />
                 ) : (
-                  <FaTruck className="text-green-500" />
+                  <FaTruck className="text-blue-500" />
                 )}
                 {orderType === "booking" ? "Các bước tiếp theo" : "Tiến trình đơn hàng"}
               </h2>
@@ -96,8 +204,8 @@ export default function ConfirmOrderPage() {
               <div className="space-y-4">
                 {orderType === "booking" ? (
                   <>
-                    <div className="flex items-start gap-4 p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-                      <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                         1
                       </div>
                       <div>
@@ -134,8 +242,8 @@ export default function ConfirmOrderPage() {
                   </>
                 ) : (
                   <>
-                    <div className="flex items-start gap-4 p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-                      <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                         1
                       </div>
                       <div>

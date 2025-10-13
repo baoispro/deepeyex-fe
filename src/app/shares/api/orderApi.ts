@@ -1,5 +1,6 @@
 import { AxiosInstance } from "axios";
 import api from "../configs/axios";
+import { OrdersResponse } from "@/app/shares/types/order";
 
 const endpoint = "/hospital/orders";
 // ---------------- ENUM ----------------
@@ -71,6 +72,27 @@ class OrderClient {
    */
   async createOrder(data: CreateOrderRequest): Promise<Order> {
     const response = await this.client.post<Order>(endpoint, data);
+    return response.data;
+  }
+
+  /**
+   * Lấy danh sách orders theo patient_id
+   * @param patientId - Patient ID
+   * @returns Orders list
+   */
+  async getOrdersByPatientId(patientId: string): Promise<OrdersResponse> {
+    const response = await this.client.get<OrdersResponse>(`${endpoint}/patient/${patientId}`);
+    return response.data;
+  }
+
+  /**
+   * Cập nhật trạng thái đơn hàng
+   * @param orderId - Order ID
+   * @param status - New status
+   * @returns Updated order
+   */
+  async updateOrderStatus(orderId: string, status: string): Promise<Order> {
+    const response = await this.client.put<Order>(`${endpoint}/${orderId}/status`, { status });
     return response.data;
   }
 }
