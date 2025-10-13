@@ -34,8 +34,8 @@ import { useGetAllServicesByDoctorIdQuery } from "@/app/modules/hospital/hooks/q
 
 interface PatientFormValues {
   patientType: "Bản thân" | "Người khác";
-  fullName: string;
-  phoneNumber: string;
+  full_name: string;
+  phone: string;
   email: string;
   dob: string;
   gender: "male" | "female" | "";
@@ -44,30 +44,6 @@ interface PatientFormValues {
 
 const { Title, Paragraph, Text } = Typography;
 const { Step } = Steps;
-
-// ---------------- DỊCH VỤ CHUYÊN KHOA ----------------
-const specialtyServices: Record<string, { name: string; price: number }[]> = {
-  ophthalmology: [
-    { name: "Khám mắt", price: 100000 },
-    { name: "Phẫu thuật laser", price: 2500000 },
-  ],
-  internal_medicine: [
-    { name: "Khám tổng quát", price: 80000 },
-    { name: "Điện tâm đồ", price: 120000 },
-  ],
-  neurology: [
-    { name: "Điện não đồ", price: 150000 },
-    { name: "Chụp MRI não", price: 3000000 },
-  ],
-  endocrinology: [
-    { name: "Khám tiểu đường", price: 110000 },
-    { name: "Xét nghiệm hormone", price: 140000 },
-  ],
-  pediatrics: [
-    { name: "Khám nhi", price: 90000 },
-    { name: "Tiêm chủng", price: 70000 },
-  ],
-};
 
 // ---------------- BƯỚC 1: CHỌN DỊCH VỤ ----------------
 const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () => void }) => {
@@ -244,14 +220,17 @@ const SelectDateTimeStep = ({
                 style={{ width: "100%" }}
               >
                 <Row gutter={[8, 8]}>
-                  {timeSlots.map((slot) => {
-                    const slotTime = dayjs(`${selectedDate.format("YYYY-MM-DD")} ${slot}`);
-                    const isPast = slotTime.isBefore(dayjs());
+                  {dayData?.data?.map((slot) => {
+                    const start = dayjs(slot.start_time);
+                    const end = dayjs(slot.end_time);
+                    const slotLabel = `${start.format("HH:mm")} - ${end.format("HH:mm")}`;
+
+                    const isPast = start.isBefore(dayjs()); // nếu giờ bắt đầu < hiện tại → disable
 
                     return (
-                      <Col key={slot} xs={12}>
-                        <Radio.Button value={slot} disabled={isPast} style={{ width: "100%" }}>
-                          {slot}
+                      <Col key={slot.slot_id} xs={12}>
+                        <Radio.Button value={slotLabel} disabled={isPast} style={{ width: "100%" }}>
+                          {slotLabel}
                         </Radio.Button>
                       </Col>
                     );
@@ -302,8 +281,8 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
         layout="vertical"
         initialValues={{
           patientType: "Bản thân",
-          fullName: patient?.fullName || "",
-          phoneNumber: patient?.phone || "",
+          full_name: patient?.fullName || "",
+          phone: patient?.phone || "",
           email: patient?.email || "",
           dob: patient?.dob ? patient.dob.split("T")[0] : "",
           gender: patient?.gender || "",
@@ -312,8 +291,8 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
         onValuesChange={(changed) => {
           if (changed.patientType === "Người khác") {
             form.setFieldsValue({
-              fullName: "",
-              phoneNumber: "",
+              full_name: "",
+              phone: "",
               email: "",
               dob: "",
               gender: "",
@@ -321,8 +300,8 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
             });
           } else if (changed.patientType === "Bản thân") {
             form.setFieldsValue({
-              fullName: patient?.fullName || "",
-              phoneNumber: patient?.phone || "",
+              full_name: patient?.fullName || "",
+              phone: patient?.phone || "",
               email: patient?.email || "",
               dob: patient?.dob ? patient.dob.split("T")[0] : "",
               gender: patient?.gender || "",
@@ -345,7 +324,7 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
           <Col xs={24} md={12}>
             <Form.Item
               label="Họ và tên"
-              name="fullName"
+              name="full_name"
               rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
             >
               <Input placeholder="Nhập họ và tên" />
@@ -355,7 +334,7 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
           <Col xs={24} md={12}>
             <Form.Item
               label="Số điện thoại"
-              name="phoneNumber"
+              name="phone"
               rules={[
                 { required: true, message: "Vui lòng nhập số điện thoại" },
                 {

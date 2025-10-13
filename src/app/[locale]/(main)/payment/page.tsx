@@ -293,6 +293,7 @@ const OrderPage = () => {
       notes: "",
       order_items,
       payment_status: paymentMethod === "cash" ? "PENDING" : "PAID",
+      service_name: bookingInfo.service?.name || "",
     };
 
     createBooking(req);
