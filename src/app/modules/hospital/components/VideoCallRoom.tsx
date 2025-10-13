@@ -1,8 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { FaPhoneAlt } from "react-icons/fa";
-import { IoSearch } from "react-icons/io5";
-import { IoMdVideocam, IoMdMore } from "react-icons/io";
+import { IoMdVideocam } from "react-icons/io";
 import { ImPhoneHangUp } from "react-icons/im";
 import { FaVolumeMute } from "react-icons/fa";
 import { useSelector } from "react-redux";
@@ -101,12 +100,6 @@ const ChatHeader = ({ userId }: ChatHeaderProps) => {
         <div className="flex gap-2.5">
           <button
             className="bg-[#484848] h-10 w-10 rounded-full flex items-center justify-center"
-            // onClick={() => setIsChatSearchOpen(!isChatSearchOpen)}
-          >
-            <IoSearch size={20} color="white" className="text-white" />
-          </button>
-          <button
-            className="bg-[#484848] h-10 w-10 rounded-full flex items-center justify-center"
             onClick={() => handleCall(false)}
           >
             <FaPhoneAlt size={20} color="white" className="text-white" />
@@ -116,13 +109,6 @@ const ChatHeader = ({ userId }: ChatHeaderProps) => {
             onClick={() => handleCall(true)}
           >
             <IoMdVideocam size={20} color="white" className="text-white" />
-          </button>
-          {/* Nút mở ChatInfo */}
-          <button
-            className="bg-[#484848] h-10 w-10 rounded-full flex items-center justify-center"
-            // onClick={() => setIsChatInfoOpen(!isChatInfoOpen)}
-          >
-            <IoMdMore size={20} color="white" />
           </button>
         </div>
       </div>
