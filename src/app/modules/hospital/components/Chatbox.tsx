@@ -26,7 +26,12 @@ interface Message {
 
 interface ChatBoxProps {
   conversationId: string;
-  otherUser: string;
+  otherUser: {
+    id: string;
+    name: string;
+    avatar: string;
+    email: string;
+  };
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({ conversationId, otherUser }) => {
@@ -160,7 +165,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ conversationId, otherUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white border rounded-xl shadow-md">
+    <div className="flex flex-col h-full bg-white rounded-xl shadow-md">
       {/* 🔹 Chat list */}
       <div
         ref={scrollRef}

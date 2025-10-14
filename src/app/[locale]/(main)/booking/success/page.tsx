@@ -18,6 +18,9 @@ import { OrderApi } from "@/app/shares/api/orderApi";
 import { toast } from "react-toastify";
 import { useCart } from "@/app/shares/hooks/carts/useCart";
 import { SendEmailApi, SendOrderConfirmationRequest } from "@/app/shares/api/sendMail";
+import { Doctor } from "@/app/modules/hospital/types/doctor";
+import { Patient } from "@/app/modules/hospital/types/patient";
+import { createOrGetConversation } from "@/app/shares/utils/createOrGetConversation";
 
 interface OrderItem {
   key: string;
@@ -54,6 +57,21 @@ export default function ConfirmOrderPage() {
           if (status === "success") {
             setPaymentStatus("success");
             toast.success("Thanh toán thành công!");
+
+            if (orderType == "booking") {
+              const doctorResponse = JSON.parse(localStorage.getItem("doctor") || "");
+              const patientResponse = JSON.parse(localStorage.getItem("patient") || "");
+              const appointment_id = localStorage.getItem("appointment");
+              await createOrGetConversation(
+                doctorResponse?.data || ({} as Doctor),
+                patientResponse?.data || ({} as Patient),
+                appointment_id || null,
+              );
+            }
+
+            localStorage.removeItem("doctor");
+            localStorage.removeItem("patient");
+            localStorage.removeItem("appointment");
 
             // Cập nhật trạng thái đơn hàng thành PAID
             if (orderId) {

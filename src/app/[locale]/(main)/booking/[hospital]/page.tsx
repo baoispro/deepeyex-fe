@@ -36,7 +36,6 @@ export default function BookingDoctorPage() {
 
   const hospital = data?.data;
   const doctors: Doctor[] = hospital?.Doctors || [];
-  console.log(JSON.stringify(doctors));
 
   // State lọc
   const [nameFilter, setNameFilter] = useState("");

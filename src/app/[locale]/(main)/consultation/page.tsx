@@ -7,16 +7,30 @@ import { collection, onSnapshot, query, where, doc, setDoc, getDocs } from "fire
 import { db } from "@/app/shares/configs/firebase";
 import { toast } from "react-toastify";
 import ChatHeader from "@/app/modules/hospital/components/VideoCallRoom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/shares/stores";
+import { useGetAppointmentsOnline } from "@/app/modules/hospital/hooks/queries/appointment/use-get-appointments-online";
+import { Appointment } from "@/app/modules/hospital/types/appointment";
 
 interface Conversation {
   id: string;
   participants: string[];
-  createdAt?: {
-    seconds: number;
-    nanoseconds: number;
+  doctorInfo: {
+    id: string;
+    name: string;
+    avatar: string;
+    email: string;
   };
+  patientInfo: {
+    id: string;
+    name: string;
+    avatar: string;
+    email: string;
+  };
+  lastAppointmentId?: string;
   lastMessage?: string;
-  appointmentId?: string;
+  createdAt?: { seconds: number; nanoseconds: number };
+  updatedAt?: { seconds: number; nanoseconds: number };
 }
 
 const Consultation = () => {
@@ -28,67 +42,44 @@ const Consultation = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("online");
   const [showInfo, setShowInfo] = useState(false);
+  const user_id = useSelector((state: RootState) => state.auth.userId);
+  const patient_id = useSelector((state: RootState) => state.auth.patient?.patientId);
+  const auth = useSelector((state: RootState) => state.auth);
 
-  const patientEmail = "nguyenlegiabao810@gmail.com";
-  const doctorEmail = "baon00382xxx@gmail.com";
-
-  // 🔹 Tạo hội thoại mẫu nếu chưa có
   useEffect(() => {
-    const setupConversation = async () => {
-      try {
-        const q = query(
-          collection(db, "conversations"),
-          where("participants", "array-contains", patientEmail),
-        );
-        const snapshot = await getDocs(q);
-        const exists = snapshot.docs.find(
-          (d) =>
-            d.data().participants.includes(patientEmail) &&
-            d.data().participants.includes(doctorEmail),
-        );
+    if (!patient_id) return;
 
-        if (!exists) {
-          const convId = "conversation-" + Date.now();
-          const conversationRef = doc(db, "conversations", convId);
-          await setDoc(conversationRef, {
-            participants: [patientEmail, doctorEmail],
-            createdAt: new Date(),
-            lastMessage: "Xin chào bác sĩ!",
-            appointmentId: "appt-" + Date.now(),
-          });
-          console.log("✅ Đã tạo cuộc hội thoại mẫu giữa 2 email");
-        }
-      } catch (err) {
-        console.error("❌ Lỗi khi tạo conversation mẫu:", err);
-      }
-    };
-    setupConversation();
-  }, []);
-
-  // 🔹 Lấy danh sách hội thoại realtime
-  useEffect(() => {
     const q = query(
       collection(db, "conversations"),
-      where("participants", "array-contains", patientEmail),
+      where("participants", "array-contains", patient_id),
     );
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Conversation[];
-      setConversations(data);
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Conversation[];
+        setConversations(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("❌ Lỗi khi lấy danh sách hội thoại:", error);
+        setLoading(false);
+      },
+    );
 
     return () => unsub();
-  }, []);
+  }, [patient_id]);
 
   const handleJoinRoom = (item: Conversation) => {
-    const other = item.participants?.find((p: string) => p !== patientEmail) || "Người dùng khác";
-    message.success(`Đang mở chat với ${other}`);
+    const isPatient = auth?.role === "patient";
+    const other = isPatient ? item.doctorInfo : item.patientInfo;
+
+    message.success(`Đang mở chat với ${other.name}`);
     setSelectedChat(item);
-    setShowInfo(false); // Ẩn info khi chuyển cuộc chat
+    setShowInfo(false);
   };
 
   const checkMicrophone = async () => {
@@ -126,6 +117,10 @@ const Consultation = () => {
     }
   };
 
+  const { data, isLoading, isError } = useGetAppointmentsOnline({
+    book_user_id: user_id || "",
+  });
+
   return (
     <div className="aspect-1.85:1 px-4">
       <Card className="h-full rounded-2xl shadow-md overflow-hidden">
@@ -137,12 +132,73 @@ const Consultation = () => {
               key: "online",
               label: "🎥 Phòng tư vấn trực tuyến",
               children: (
-                <div className="flex flex-col items-center justify-center min-h-[600px] bg-gray-100 rounded-xl p-6">
-                  <ChatHeader userId="2993846a-6f43-4201-84cc-acb7da40d0a9" />
+                <div className="flex flex-col gap-5">
+                  {/** Gọi API lấy danh sách lịch tư vấn online */}
+                  {(() => {
+                    if (isLoading) {
+                      return (
+                        <div className="flex justify-center items-center h-40">
+                          <Spin size="large" />
+                        </div>
+                      );
+                    }
+
+                    if (isError || !data?.data?.length) {
+                      return (
+                        <div className="text-center text-gray-400 mt-6">
+                          Không có lịch tư vấn trực tuyến nào.
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <>
+                        {data.data.map((appointment: Appointment) => (
+                          <div
+                            key={appointment.appointment_id}
+                            className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer space-x-4"
+                          >
+                            {/* Thông tin bác sĩ */}
+                            <div className="flex items-center gap-4">
+                              {/* Avatar */}
+                              <Avatar
+                                src={
+                                  appointment.doctor.image ||
+                                  `https://api.dicebear.com/7.x/initials/svg?seed=${appointment.doctor.full_name}`
+                                }
+                                className="w-12 h-12"
+                              />
+
+                              {/* Info */}
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-gray-800 text-base">
+                                  {appointment.doctor.full_name || "Bác sĩ"}
+                                </span>
+                                <span className="text-gray-500 text-sm">
+                                  {new Date(appointment.time_slots[0].start_time).toLocaleString()}
+                                </span>
+                                <span className="mt-1 px-2 py-1 w-max rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  {appointment.status === "PENDING_ONLINE"
+                                    ? "Đang chờ"
+                                    : appointment.status === "CONFIRMED_ONLINE"
+                                      ? "Đã xác nhận"
+                                      : "Hoàn tất"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Nút gọi video */}
+                            <div>
+                              <ChatHeader userId={appointment.doctor.user_id} />
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    );
+                  })()}
                 </div>
               ),
             },
-
             {
               key: "history",
               label: "💬 Lịch sử tư vấn",
@@ -161,10 +217,8 @@ const Consultation = () => {
                         itemLayout="horizontal"
                         dataSource={conversations}
                         renderItem={(item) => {
-                          const myEmail = patientEmail;
-                          const other =
-                            item.participants?.find((p: string) => p !== myEmail) ||
-                            "Người dùng khác";
+                          const isPatient = auth?.role === "patient";
+                          const other = isPatient ? item.doctorInfo : item.patientInfo;
                           const isActive = selectedChat?.id === item.id;
 
                           return (
@@ -177,11 +231,20 @@ const Consultation = () => {
                               <List.Item.Meta
                                 avatar={
                                   <Avatar
-                                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${other}`}
+                                    src={
+                                      other.avatar ||
+                                      `https://api.dicebear.com/7.x/initials/svg?seed=${other.name}`
+                                    }
                                   />
                                 }
-                                title={<span className="font-semibold">{other}</span>}
-                                description={item.lastMessage || "Chưa có tin nhắn"}
+                                title={<span className="font-semibold">{other.name}</span>}
+                                description={
+                                  item.lastMessage ? (
+                                    item.lastMessage
+                                  ) : (
+                                    <span className="text-gray-400 italic">Chưa có tin nhắn</span>
+                                  )
+                                }
                               />
                             </List.Item>
                           );
@@ -204,24 +267,28 @@ const Consultation = () => {
                           <div className="flex justify-between items-center p-4 border-b bg-white shadow-sm">
                             <div className="flex items-center gap-3">
                               <Avatar
-                                src={`https://api.dicebear.com/7.x/initials/svg?seed=${
-                                  selectedChat.participants.find(
-                                    (p: string) => p !== patientEmail,
-                                  ) || "User"
-                                }`}
+                                src={
+                                  (auth?.role === "patient"
+                                    ? selectedChat.doctorInfo.avatar
+                                    : selectedChat.patientInfo.avatar) ||
+                                  `https://api.dicebear.com/7.x/initials/svg?seed=${
+                                    auth?.role === "patient"
+                                      ? selectedChat.doctorInfo.name
+                                      : selectedChat.patientInfo.name
+                                  }`
+                                }
                                 size={48}
                               />
                               <div>
                                 <p className="font-semibold text-lg text-gray-800">
-                                  {selectedChat.participants.find(
-                                    (p: string) => p !== patientEmail,
-                                  ) || "Người dùng khác"}
+                                  {auth?.role === "patient"
+                                    ? selectedChat.doctorInfo.name
+                                    : selectedChat.patientInfo.name}
                                 </p>
                                 <p className="text-xs text-green-600">Đang hoạt động</p>
                               </div>
                             </div>
 
-                            {/* Icon Info */}
                             <Button
                               type="text"
                               icon={<AiOutlineInfoCircle size={22} />}
@@ -234,8 +301,9 @@ const Consultation = () => {
                             <ChatBox
                               conversationId={selectedChat.id}
                               otherUser={
-                                selectedChat.participants.find((p: string) => p !== patientEmail) ||
-                                "Người dùng khác"
+                                patient_id === selectedChat.doctorInfo.id
+                                  ? selectedChat.patientInfo
+                                  : selectedChat.doctorInfo
                               }
                             />
                           </div>
@@ -249,17 +317,17 @@ const Consultation = () => {
                             <div className="flex items-center gap-3 mb-4">
                               <Avatar
                                 size={60}
-                                src={`https://api.dicebear.com/7.x/initials/svg?seed=${
-                                  selectedChat.participants.find(
-                                    (p: string) => p !== patientEmail,
-                                  ) || "User"
-                                }`}
+                                src={
+                                  auth?.role === "patient"
+                                    ? selectedChat.doctorInfo.avatar
+                                    : selectedChat.patientInfo.avatar
+                                }
                               />
                               <div>
                                 <p className="font-semibold text-base">
-                                  {selectedChat.participants.find(
-                                    (p: string) => p !== patientEmail,
-                                  ) || "Người dùng khác"}
+                                  {auth?.role === "patient"
+                                    ? selectedChat.doctorInfo.name
+                                    : selectedChat.patientInfo.name}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   {selectedChat.participants.join(", ")}
@@ -270,25 +338,18 @@ const Consultation = () => {
                             <div className="space-y-2 text-sm text-gray-600">
                               <p>
                                 <span className="font-medium">Ngày tạo: </span>
-                                {new Date(
-                                  (selectedChat.createdAt?.seconds ??
-                                    Math.floor(Date.now() / 1000)) * 1000,
-                                ).toLocaleString()}
+                                {selectedChat.createdAt
+                                  ? new Date(selectedChat.createdAt.seconds * 1000).toLocaleString()
+                                  : "Không rõ"}
                               </p>
                               <p>
-                                <span className="font-medium">Mã cuộc hẹn: </span>
-                                {selectedChat.appointmentId || "Không có"}
+                                <span className="font-medium">Mã cuộc hẹn cuối: </span>
+                                {selectedChat.lastAppointmentId || "Không có"}
                               </p>
                               <p>
                                 <span className="font-medium">Tin nhắn cuối: </span>
                                 {selectedChat.lastMessage || "Không có"}
                               </p>
-                            </div>
-
-                            <div className="mt-5 border-t pt-3 text-center">
-                              <Button type="default" danger>
-                                Xóa cuộc hội thoại
-                              </Button>
                             </div>
                           </div>
                         )}

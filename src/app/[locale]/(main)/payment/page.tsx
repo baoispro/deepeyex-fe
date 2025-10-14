@@ -16,8 +16,13 @@ import { useCreateOrderMutation } from "@/app/shares/hooks/mutations/use-order-d
 import { useCart } from "@/app/shares/hooks/carts/useCart";
 import { SendEmailApi, SendOrderConfirmationRequest } from "@/app/shares/api/sendMail";
 import { useCreateVnpayPaymentMutation } from "@/app/shares/hooks/mutations/use-vnpay-payment.mutation";
+import { createOrGetConversation } from "@/app/shares/utils/createOrGetConversation";
+import { DoctorApi } from "@/app/modules/hospital/apis/doctor/doctorApi";
+import { Doctor } from "@/app/modules/hospital/types/doctor";
+import { PatientApi } from "@/app/modules/hospital/apis/patient/patientApi";
 
 interface BookingService {
+  service_id: string;
   name: string;
   price: number;
 }
@@ -130,12 +135,29 @@ const OrderPage = () => {
 
   const { clearCart } = useCart();
   const { mutate: createBooking, isPending: isBookingPending } = useCreateBookingMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Nếu thanh toán bằng ATM, chuyển đến VNPay
+      localStorage.removeItem("bookingPatient");
+      localStorage.removeItem("bookingSlot");
+      localStorage.removeItem("doctor_id");
+      localStorage.removeItem("doctor_name");
+      localStorage.removeItem("hospital_id");
+      localStorage.removeItem("hospital_name");
+      if (!data?.data?.appointment) return;
+      const doctorResponse = await DoctorApi.getById(data.data.appointment.doctor_id);
+      const patientResponse = await PatientApi.getByID(data?.data.appointment.patient_id);
+      localStorage.setItem("doctor", JSON.stringify(doctorResponse));
+      localStorage.setItem("patient", JSON.stringify(patientResponse));
+      localStorage.setItem("appointment", data.data.appointment.appointment_id);
       if (paymentMethod === "atm") {
-        const orderId = data.order?.order_id || Date.now().toString();
+        const orderId = data.data.order?.order_id || Date.now().toString();
         handleVnpayPayment(orderId);
       } else {
+        await createOrGetConversation(
+          doctorResponse.data || ({} as Doctor),
+          patientResponse.data || ({} as Patient),
+          data.data.appointment.appointment_id || null,
+        );
         toast.success("Đặt lịch khám thành công!");
         router.push("/booking/success");
       }
@@ -340,11 +362,17 @@ const OrderPage = () => {
       toast.error("Vui lòng chọn phương thức thanh toán.");
       return;
     }
+
+    if (bookingInfo.service?.name === "Tư vấn trực tuyến với bác sĩ" && paymentMethod != "atm") {
+      toast.error("Dịch vụ này chỉ hỗ trợ thanh toán online.");
+      return;
+    }
+
     // Map cartItems sang order_items backend yêu cầu
     const order_items = cartItems.map((item) => ({
       drug_id: item.key.startsWith("drug_") ? item.key : undefined,
-      service_id: item.key.startsWith("service_") ? item.key : undefined,
-      item_name: item.name,
+      service_id: bookingInfo.service?.service_id || undefined,
+      item_name: item.key.startsWith("drug_") ? item.name : bookingInfo.service?.name || "",
       quantity: item.quantity,
       price: item.sale_price || item.price,
     }));

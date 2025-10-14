@@ -1,3 +1,4 @@
+import { Doctor } from "./doctor";
 import { Patient } from "./patient";
 import { TimeSlot } from "./timeslot";
 
@@ -7,7 +8,14 @@ export interface Appointment {
   patient_id: string;
   hospital_id: string;
   doctor_id: string;
-  status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+  status:
+    | "PENDING"
+    | "CONFIRMED"
+    | "COMPLETED"
+    | "CANCELLED"
+    | "PENDING_ONLINE"
+    | "CONFIRMED_ONLINE"
+    | "COMPLETED_ONLINE";
   notes: string;
   created_at: string;
   updated_at: string;
@@ -15,6 +23,7 @@ export interface Appointment {
   service_name: string;
   time_slots: TimeSlot[];
   patient: Patient;
+  doctor: Doctor;
 }
 
 export type LabelStatus = {
@@ -27,4 +36,7 @@ export const statusLabels: Record<Appointment["status"], LabelStatus> = {
   CONFIRMED: { label: "Đã xác nhận", color: "blue" },
   COMPLETED: { label: "Đã hoàn tất", color: "green" },
   CANCELLED: { label: "Đã hủy", color: "red" },
+  PENDING_ONLINE: { label: "Chờ tư vấn trực tuyến", color: "purple" },
+  CONFIRMED_ONLINE: { label: "Đang tư vấn trực tuyến", color: "cyan" },
+  COMPLETED_ONLINE: { label: "Hoàn tất tư vấn trực tuyến", color: "teal" },
 };

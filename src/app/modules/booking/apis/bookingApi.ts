@@ -1,4 +1,5 @@
 import api from "@/app/shares/configs/axios";
+import { ApiResponse } from "@/app/shares/types/response";
 import { AxiosInstance } from "axios";
 
 // ---------------------- Types ----------------------
@@ -64,8 +65,8 @@ class BookingClient {
   }
 
   // ---------------- Create Booking ----------------
-  async createBooking(req: BookingRequest): Promise<BookingResponse> {
-    const response = await this.client.post<BookingResponse>(endpoint, req);
+  async createBooking(req: BookingRequest): Promise<ApiResponse<BookingResponse>> {
+    const response = await this.client.post<ApiResponse<BookingResponse>>(endpoint, req);
     return response.data;
   }
 }
