@@ -15,6 +15,7 @@ import { CartItemWithKey } from "../cart/page";
 import { useCreateOrderMutation } from "@/app/shares/hooks/mutations/use-order-drug.mutation";
 import { useCart } from "@/app/shares/hooks/carts/useCart";
 import { SendEmailApi, SendOrderConfirmationRequest } from "@/app/shares/api/sendMail";
+import { useCreateVnpayPaymentMutation } from "@/app/shares/hooks/mutations/use-vnpay-payment.mutation";
 
 interface BookingService {
   name: string;
@@ -111,7 +112,6 @@ const OrderPage = () => {
   const [selectedDistrictCode, setSelectedDistrictCode] = useState<number | null>(null);
   const [wardText, setWardText] = useState<string>(""); // Nhập tay phường/xã
   const [selectedProvince, setSelectedProvince] = useState<string>("");
-
   // State cho thông tin giao hàng (thuốc)
   const [deliveryInfo, setDeliveryInfo] = useState({
     receiverName: "",
@@ -121,13 +121,24 @@ const OrderPage = () => {
     note: "",
   });
 
+  // State lưu thông tin để gửi email sau khi order thành công
+  const [pendingEmailData, setPendingEmailData] = useState<SendOrderConfirmationRequest | null>(
+    null,
+  );
+
   const router = useRouter();
 
   const { clearCart } = useCart();
   const { mutate: createBooking, isPending: isBookingPending } = useCreateBookingMutation({
-    onSuccess: () => {
-      toast.success("Đặt lịch khám thành công!");
-      router.push("/booking/success");
+    onSuccess: (data) => {
+      // Nếu thanh toán bằng ATM, chuyển đến VNPay
+      if (paymentMethod === "atm") {
+        const orderId = data.order?.order_id || Date.now().toString();
+        handleVnpayPayment(orderId);
+      } else {
+        toast.success("Đặt lịch khám thành công!");
+        router.push("/booking/success");
+      }
     },
     onError: (err) => {
       toast.error("Đặt lịch thất bại: " + err.message);
@@ -135,18 +146,64 @@ const OrderPage = () => {
   });
 
   const { mutate: createOrder, isPending: isOrderPending } = useCreateOrderMutation({
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const newOrderId = res.data?.order_id || "";
+      localStorage.setItem("orderId", newOrderId);
+
+      // Nếu thanh toán bằng ATM, chuyển đến VNPay
+      if (paymentMethod === "atm") {
+        handleVnpayPayment(newOrderId);
+        return;
+      }
+
       toast.success("Đặt hàng thành công!");
+
+      // Gửi email xác nhận đơn hàng nếu có thông tin pending
+      if (pendingEmailData) {
+        try {
+          // Cập nhật order_code với ID vừa nhận được
+          const emailData: SendOrderConfirmationRequest = {
+            ...pendingEmailData,
+            order_code: newOrderId,
+          };
+          await SendEmailApi.sendOrderConfirmation(emailData);
+          toast.success("Hóa đơn đã được gửi tới email của bạn!");
+        } catch (error) {
+          console.error(error);
+          toast.error("Có lỗi xảy ra khi gửi hóa đơn.");
+        } finally {
+          // Reset pending email data
+          setPendingEmailData(null);
+        }
+      }
+
       // Clear cart sau khi đặt hàng thành công
       clearCart();
       router.push("/booking/success");
     },
     onError: (err) => {
       toast.error("Đặt hàng thất bại: " + err.message);
+      // Reset pending email data khi có lỗi
+      setPendingEmailData(null);
     },
   });
 
-  const isPending = isBookingPending || isOrderPending;
+  const { mutate: createVnpayPayment, isPending: isVnpayPending } = useCreateVnpayPaymentMutation({
+    onSuccess: (data) => {
+      const paymentUrl = data.data?.paymentUrl;
+      if (paymentUrl) {
+        // Redirect đến trang thanh toán VNPay
+        window.location.href = paymentUrl;
+      } else {
+        toast.error("Không thể tạo link thanh toán.");
+      }
+    },
+    onError: (err) => {
+      toast.error("Tạo thanh toán thất bại: " + err.message);
+    },
+  });
+
+  const isPending = isBookingPending || isOrderPending || isVnpayPending;
 
   // Fetch danh sách tỉnh/thành phố từ API
   useEffect(() => {
@@ -264,6 +321,14 @@ const OrderPage = () => {
   const shippingFee = calculateShippingFee();
   const total = subtotal - voucherDiscount + shippingFee;
 
+  // Hàm xử lý thanh toán VNPay
+  const handleVnpayPayment = (orderId: string) => {
+    createVnpayPayment({
+      amount: total,
+      orderId: orderId,
+    });
+  };
+
   // Hàm xử lý đặt lịch khám (booking)
   const handleCompleteBooking = async () => {
     if (!bookingInfo?.patient) {
@@ -331,7 +396,7 @@ const OrderPage = () => {
   };
 
   // Hàm xử lý đặt hàng thuốc (order)
-  const handleCompleteOrderDrug = async () => {
+  const handleCompleteOrderDrug = () => {
     if (!patient_id || !user_id) {
       toast.error("Vui lòng đăng nhập để đặt hàng.");
       return;
@@ -397,31 +462,35 @@ const OrderPage = () => {
       },
     };
 
-    createOrder(orderRequest);
+    // Chuẩn bị dữ liệu email để gửi sau khi order thành công
+    const emailData: SendOrderConfirmationRequest = {
+      to_email: deliveryInfo.receiverEmail,
+      patient_name: deliveryInfo.receiverName,
+      order_code: "", // Sẽ được cập nhật trong onSuccess callback
+      order_items: cartItems,
+      delivery_method:
+        shippingMethod === "delivery" ? ("HOME_DELIVERY" as const) : ("PICKUP" as const),
+      delivery_address: deliveryInfo.address,
+      delivery_phone: deliveryInfo.receiverPhone,
+      delivery_fullname: deliveryInfo.receiverName,
+      delivery_email: deliveryInfo.receiverEmail,
+      delivery_note: deliveryInfo.note,
+      delivery_fee: shippingFee,
+      delivery_city: selectedCity?.name || "",
+      delivery_district: selectedDistrict?.name || "",
+      delivery_ward: wardText,
+    };
 
-    try {
-      const body: SendOrderConfirmationRequest = {
-        to_email: deliveryInfo.receiverEmail,
-        patient_name: deliveryInfo.receiverName,
-        order_code: Date.now().toString(),
-        order_items: cartItems,
-        delivery_method:
-          shippingMethod === "delivery" ? ("HOME_DELIVERY" as const) : ("PICKUP" as const),
-        delivery_address: deliveryInfo.address,
-        delivery_phone: deliveryInfo.receiverPhone,
-        delivery_fullname: deliveryInfo.receiverName,
-        delivery_email: deliveryInfo.receiverEmail,
-        delivery_note: deliveryInfo.note,
-        delivery_fee: shippingFee,
-        delivery_city: selectedCity?.name || "",
-        delivery_district: selectedDistrict?.name || "",
-        delivery_ward: wardText,
-      };
-      await SendEmailApi.sendOrderConfirmation(body);
-    } catch (error) {
-      console.error(error);
-      toast.error("Có lỗi xảy ra khi gửi hóa đơn.");
+    // Nếu thanh toán bằng ATM, lưu thông tin email vào localStorage để gửi sau khi thanh toán thành công
+    if (paymentMethod === "atm") {
+      localStorage.setItem("pendingEmailData", JSON.stringify(emailData));
+    } else {
+      // Lưu dữ liệu email để gửi sau khi order thành công (thanh toán COD)
+      setPendingEmailData(emailData);
     }
+
+    // Tạo order - email sẽ được gửi trong onSuccess callback
+    createOrder(orderRequest);
   };
 
   // Hàm chung để xử lý hoàn tất
@@ -679,7 +748,7 @@ const OrderPage = () => {
               )}
               <div className="flex justify-between items-center">
                 <div className="flex flex-col">
-                  <p className="font-semibold">Phí vận chuyển</p>
+                  {type === "thuoc" && <p className="font-semibold">Phí vận chuyển</p>}
                   {type === "thuoc" && shippingMethod === "delivery" && (
                     <p className="text-xs text-gray-500">
                       {subtotal >= SHIPPING_CONFIG.freeShippingThreshold ? (
@@ -698,7 +767,7 @@ const OrderPage = () => {
                     </p>
                   )}
                 </div>
-                {shippingFee === 0 ? (
+                {shippingFee === 0 && type === "thuoc" ? (
                   <p className="text-green-500 font-semibold">Miễn phí</p>
                 ) : (
                   <p className="text-blue-500 font-semibold">+{shippingFee.toLocaleString()}₫</p>
@@ -764,7 +833,13 @@ const OrderPage = () => {
               className="bg-blue-500 text-white text-lg font-bold py-3 px-6 rounded-full w-full"
               onClick={handleCompleteOrder}
             >
-              {isPending ? "Đang xử lý..." : "Hoàn tất"}
+              {isPending
+                ? "Đang xử lý..."
+                : paymentMethod === "atm"
+                  ? "Thanh toán"
+                  : type === "booking"
+                    ? "Đặt lịch khám"
+                    : "Đặt hàng"}
             </button>
           </div>
         </div>

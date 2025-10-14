@@ -2,9 +2,22 @@
 
 import { useRouter } from "@/app/shares/locales/navigation";
 import { useEffect, useState } from "react";
-import { FaCheckCircle, FaBox, FaTruck, FaHome, FaCalendarCheck, FaPills } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaBox,
+  FaTruck,
+  FaHome,
+  FaCalendarCheck,
+  FaPills,
+  FaTimesCircle,
+} from "react-icons/fa";
 import dayjs from "dayjs";
 import Image from "next/image";
+import { VnpayApi } from "@/app/shares/api/vnpayApi";
+import { OrderApi } from "@/app/shares/api/orderApi";
+import { toast } from "react-toastify";
+import { useCart } from "@/app/shares/hooks/carts/useCart";
+import { SendEmailApi, SendOrderConfirmationRequest } from "@/app/shares/api/sendMail";
 
 interface OrderItem {
   key: string;
@@ -18,12 +31,75 @@ interface OrderItem {
 
 export default function ConfirmOrderPage() {
   const router = useRouter();
+  const { clearCart } = useCart();
   const [orderType, setOrderType] = useState<string | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderTotal, setOrderTotal] = useState(0);
+  const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | null>(null);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
+    const handleVnpayReturn = async () => {
+      // Kiểm tra xem có phải từ VNPay return không
+      const queryString = window.location.search;
+      if (queryString.includes("vnp_ResponseCode")) {
+        setIsVerifyingPayment(true);
+        try {
+          // Gọi API verify payment
+          const result = await VnpayApi.verifyReturn(queryString);
+          const { status, orderId } = result.data || {};
+
+          if (status === "success") {
+            setPaymentStatus("success");
+            toast.success("Thanh toán thành công!");
+
+            // Cập nhật trạng thái đơn hàng thành PAID
+            if (orderId) {
+              try {
+                await OrderApi.updateOrderStatus(orderId, "PAID");
+              } catch (error) {
+                console.error("Error updating order status:", error);
+              }
+            }
+
+            // Gửi email xác nhận (nếu có thông tin)
+            const pendingEmailData = localStorage.getItem("pendingEmailData");
+            if (pendingEmailData && orderId) {
+              try {
+                const emailData: SendOrderConfirmationRequest = {
+                  ...JSON.parse(pendingEmailData),
+                  order_code: orderId,
+                };
+                await SendEmailApi.sendOrderConfirmation(emailData);
+                localStorage.removeItem("pendingEmailData");
+              } catch (error) {
+                console.error("Error sending email:", error);
+              }
+            }
+
+            // Clear cart
+            clearCart();
+          } else {
+            setPaymentStatus("failed");
+            toast.error("Thanh toán thất bại. Vui lòng thử lại.");
+          }
+        } catch (error) {
+          console.error("Error verifying payment:", error);
+          setPaymentStatus("failed");
+          toast.error("Có lỗi xảy ra khi xác thực thanh toán.");
+        } finally {
+          setIsVerifyingPayment(false);
+          setIsInitializing(false);
+        }
+      } else {
+        // Không phải từ VNPay, hiển thị success bình thường
+        setPaymentStatus("success");
+        setIsInitializing(false);
+      }
+    };
+
     const type = localStorage.getItem("type");
     setOrderType(type);
 
@@ -43,9 +119,12 @@ export default function ConfirmOrderPage() {
       }
     }
 
+    // Xử lý VNPay return
+    handleVnpayReturn();
+
     // Trigger animation after mount
     setTimeout(() => setShowAnimation(true), 100);
-  }, []);
+  }, [clearCart]);
 
   const handleBackToHome = () => {
     localStorage.removeItem("type");
@@ -56,6 +135,63 @@ export default function ConfirmOrderPage() {
   const handleViewOrders = () => {
     router.push("/profile");
   };
+
+  // Hiển thị loading khi đang khởi tạo hoặc verify payment
+  if (isInitializing || isVerifyingPayment) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">
+            {isVerifyingPayment ? "Đang xác thực thanh toán..." : "Đang tải..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Hiển thị trang thất bại nếu thanh toán thất bại
+  if (paymentStatus === "failed") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div
+            className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-700 transform ${
+              showAnimation ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+            }`}
+          >
+            <div className="bg-gradient-to-r from-red-400 to-red-500 px-8 py-12 text-center">
+              <div className="inline-block">
+                <div className="relative">
+                  <FaTimesCircle className="relative text-white text-8xl" />
+                </div>
+              </div>
+              <h1 className="mt-6 text-4xl font-bold text-white">Thanh toán thất bại!</h1>
+              <p className="mt-3 text-lg text-white/90">
+                Đơn hàng của bạn chưa được thanh toán. Vui lòng thử lại.
+              </p>
+            </div>
+            <div className="px-8 py-8">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => router.push("/payment")}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  Thử lại
+                </button>
+                <button
+                  onClick={() => router.push("/")}
+                  className="px-8 py-4 bg-white text-gray-700 font-bold rounded-xl shadow-lg hover:shadow-xl border-2 border-gray-200 hover:border-gray-300 transform hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  Về trang chủ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -92,9 +228,15 @@ export default function ConfirmOrderPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex justify-between items-center bg-white rounded-lg p-3">
                   <span className="text-gray-600 font-medium">Mã đơn hàng:</span>
-                  <span className="text-gray-900 font-bold">
-                    #{Date.now().toString().slice(-8)}
-                  </span>
+                  {orderType === "booking" ? (
+                    <span className="text-gray-900 font-bold">
+                      #{Date.now().toString().slice(-8)}
+                    </span>
+                  ) : (
+                    <span className="text-gray-900 font-bold">
+                      #{localStorage.getItem("orderId")}
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center bg-white rounded-lg p-3">
                   <span className="text-gray-600 font-medium">Ngày đặt:</span>

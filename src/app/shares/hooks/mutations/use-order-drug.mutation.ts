@@ -1,7 +1,11 @@
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 import { OrderApi, Order, CreateOrderRequest } from "../../api/orderApi";
+import { ApiResponse } from "../../types/response";
 
-type Options = Omit<UseMutationOptions<Order, Error, CreateOrderRequest>, "mutationFn">;
+type Options = Omit<
+  UseMutationOptions<ApiResponse<Order>, Error, CreateOrderRequest>,
+  "mutationFn"
+>;
 
 const useCreateOrderMutation = (options?: Options) => {
   return useMutation({
