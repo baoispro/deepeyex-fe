@@ -33,6 +33,9 @@ const statusColors: Record<Appointment["status"], string> = {
   CONFIRMED: "blue",
   COMPLETED: "green",
   CANCELLED: "red",
+  PENDING_ONLINE: "purple",
+  CONFIRMED_ONLINE: "cyan",
+  COMPLETED_ONLINE: "teal",
 };
 
 const capitalizeWords = (str: string): string => {
