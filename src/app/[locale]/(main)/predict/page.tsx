@@ -1,25 +1,39 @@
 "use client";
 
-import React, { useState, ChangeEvent, DragEvent } from "react";
+import React, { useState, ChangeEvent, DragEvent, useEffect } from "react";
 import Image from "next/image";
 import { usePredictMutation } from "../../../shares/hooks/mutations/use-predict.mutation";
 import { Modal } from "antd";
 import TreatmentPlanUI from "../../../modules/predict/components/TreatmentPlan";
 import { convertLabelToVietnamese } from "@/app/shares/utils/helper";
+import { useCreateAIDiagnosisMutation } from "@/app/modules/hospital/apis/aidiagnosis/hooks/mutations/use-create-diagnosis.mutation";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/shares/stores";
 
 export default function EyeDiagnosisApp() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
-  // const [showModal, setShowModal] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState(false);
+  const patient_id = useSelector((state: RootState) => state.auth.patient?.patientId);
 
   const { mutate, data, isPending } = usePredictMutation({
     onSuccess: () => {
       setIsButtonDisabled(false);
+      setShowModal(true);
     },
     onError: (error) => {
       console.error("Chẩn đoán thất bại:", error.message);
       setIsButtonDisabled(false);
+    },
+  });
+
+  const { mutate: createDiagnosis } = useCreateAIDiagnosisMutation({
+    onSuccess: (res) => {
+      console.log("Tạo chẩn đoán AI thành công:", res);
+    },
+    onError: (err) => {
+      console.error("Tạo chẩn đoán AI thất bại:", err.message);
     },
   });
 
@@ -62,6 +76,23 @@ export default function EyeDiagnosisApp() {
         probability: item.probability,
         label: item.label,
       })) || [];
+
+  useEffect(() => {
+    if (!data || !file) return;
+
+    const top = data?.predictions?.[0];
+    if (!top) return;
+
+    createDiagnosis({
+      patient_id: patient_id || "",
+      record_id: "",
+      disease_code: top.label,
+      confidence: top.probability,
+      eye_type: "both",
+      main_image_url: file,
+      notes: "Chẩn đoán tự động bởi AI",
+    });
+  }, [data]);
 
   return (
     <section className="flex flex-col">
@@ -194,11 +225,7 @@ export default function EyeDiagnosisApp() {
       </main>
 
       {topDiagnoses.length > 0 && (
-        <Modal
-          open={!!topDiagnoses[0]}
-          // onCancel={() => setShowModal(false)}
-          footer={null}
-        >
+        <Modal open={showModal} onCancel={() => setShowModal(false)} footer={null}>
           {topDiagnoses[0].name === "Mắt bình thường" ? (
             <p className="text-center text-green-600 font-semibold">
               Mắt của bạn bình thường ✅. Nên đi khám định kỳ mỗi 6 - 12 tháng.
