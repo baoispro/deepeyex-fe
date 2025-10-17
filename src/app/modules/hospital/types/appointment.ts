@@ -1,4 +1,5 @@
 import { Doctor } from "./doctor";
+import { Hospital } from "./hospital";
 import { Patient } from "./patient";
 import { TimeSlot } from "./timeslot";
 
@@ -24,6 +25,8 @@ export interface Appointment {
   time_slots: TimeSlot[];
   patient: Patient;
   doctor: Doctor;
+  hospital: Hospital;
+  related_record_id: string | null;
 }
 
 export type LabelStatus = {

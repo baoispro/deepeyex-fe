@@ -1,6 +1,21 @@
 import { AxiosInstance } from "axios";
 import api from "@/app/shares/configs/axios";
-import { ListAppointmentsResponse, UpdateAppointmentStatusResponse } from "../../types/response";
+import {
+  CreateFollowUpResponse,
+  ListAppointmentsResponse,
+  UpdateAppointmentStatusResponse,
+} from "../../types/response";
+
+export interface CreateFollowUpRequest {
+  patient_id: string;
+  doctor_id: string;
+  hospital_id: string;
+  book_user_id: string;
+  slot_ids: string[];
+  notes?: string;
+  service_name: string;
+  related_record_id: string;
+}
 
 class AppointmentClient {
   private readonly client: AxiosInstance;
@@ -40,6 +55,14 @@ class AppointmentClient {
     const response = await this.client.get<ListAppointmentsResponse>(
       `/hospital/appointments/online`,
       { params },
+    );
+    return response.data;
+  }
+
+  async createFollowUpAppointment(payload: CreateFollowUpRequest): Promise<CreateFollowUpResponse> {
+    const response = await this.client.post<CreateFollowUpResponse>(
+      `/hospital/appointments/follow-up`,
+      payload,
     );
     return response.data;
   }

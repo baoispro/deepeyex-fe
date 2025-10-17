@@ -9,4 +9,5 @@ export enum QueryKeyEnum {
   Service = "services",
   Order = "orders",
   Appointment = "appointments",
+  MedicalRecords = "medical_records",
 }

@@ -7,6 +7,7 @@ import { Drug } from "./drug";
 import { Service } from "./service";
 import { Upload } from "./upload";
 import { Appointment } from "./appointment";
+import { MedicalRecord } from "./medical_record";
 
 type GetPatientResponse = ApiResponse<Patient>;
 
@@ -45,6 +46,13 @@ type UploadFileResponse = ApiResponse<Upload>;
 // Appointment
 type ListAppointmentsResponse = ApiResponse<Appointment[]>;
 type UpdateAppointmentStatusResponse = ApiResponse<Appointment>;
+type CreateFollowUpResponse = ApiResponse<Appointment>;
+
+// Medical Record
+type GetMedicalRecordByPatientIdResponse = ApiResponse<{
+  records: MedicalRecord[];
+}>;
+
 export type {
   GetPatientResponse,
   CreateHospitalResponse,
@@ -69,4 +77,6 @@ export type {
   ListAppointmentsResponse,
   UpdateAppointmentStatusResponse,
   UploadFileResponse,
+  GetMedicalRecordByPatientIdResponse,
+  CreateFollowUpResponse,
 };
