@@ -4,6 +4,19 @@ import { GetMedicalRecordByPatientIdResponse } from "../../types/response";
 
 const endpoint = "/hospital/medical_records";
 
+// ---------------- Request ----------------
+export interface InitMedicalRecordAndDiagnosisRequest {
+  patient_id: string; // Bắt buộc
+  appointment_id?: string; // Có thể null
+  doctor_id?: string; // Có thể null
+  ai_diagnosis_id?: string; // Có thể null
+}
+
+// ---------------- Response ----------------
+export interface InitMedicalRecordAndDiagnosisResponse {
+  record_id: string; // ID của MedicalRecord vừa tạo
+}
+
 class MedicalRecordClient {
   private readonly client: AxiosInstance;
 
@@ -18,6 +31,16 @@ class MedicalRecordClient {
       {
         params: { patient_id: patientId },
       },
+    );
+    return response.data;
+  }
+
+  async initRecordAndDiagnosis(
+    payload: InitMedicalRecordAndDiagnosisRequest,
+  ): Promise<InitMedicalRecordAndDiagnosisResponse> {
+    const response = await this.client.post<InitMedicalRecordAndDiagnosisResponse>(
+      `${endpoint}/init`,
+      payload,
     );
     return response.data;
   }

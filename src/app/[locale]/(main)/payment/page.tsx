@@ -20,6 +20,10 @@ import { createOrGetConversation } from "@/app/shares/utils/createOrGetConversat
 import { DoctorApi } from "@/app/modules/hospital/apis/doctor/doctorApi";
 import { Doctor } from "@/app/modules/hospital/types/doctor";
 import { PatientApi } from "@/app/modules/hospital/apis/patient/patientApi";
+import {
+  InitMedicalRecordAndDiagnosisRequest,
+  MedicalRecordApi,
+} from "@/app/modules/hospital/apis/medical_record/medicalRecordApi";
 
 interface BookingService {
   service_id: string;
@@ -137,6 +141,21 @@ const OrderPage = () => {
   const { mutate: createBooking, isPending: isBookingPending } = useCreateBookingMutation({
     onSuccess: async (data) => {
       // Nếu thanh toán bằng ATM, chuyển đến VNPay
+      if (!data?.data?.appointment) return;
+      const payload: InitMedicalRecordAndDiagnosisRequest = {
+        patient_id: patient_id || "",
+        ai_diagnosis_id: localStorage.getItem("ai_diagnosis_id") || "",
+        doctor_id: bookingInfo?.doctor.id ?? undefined,
+        appointment_id: data.data.appointment.appointment_id ?? undefined,
+      };
+      const aiDiagnosisId = localStorage.getItem("ai_diagnosis_id");
+      console.log("Payload khởi tạo medical record:", payload);
+
+      if (aiDiagnosisId) {
+        console.log("Khởi tạo medical record với ai_diagnosis_id:", aiDiagnosisId);
+        await MedicalRecordApi.initRecordAndDiagnosis(payload);
+        localStorage.removeItem("ai_diagnosis_id");
+      }
       localStorage.removeItem("bookingPatient");
       localStorage.removeItem("bookingSlot");
       localStorage.removeItem("doctor_id");

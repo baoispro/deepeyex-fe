@@ -31,6 +31,7 @@ export default function EyeDiagnosisApp() {
   const { mutate: createDiagnosis } = useCreateAIDiagnosisMutation({
     onSuccess: (res) => {
       console.log("Tạo chẩn đoán AI thành công:", res);
+      localStorage.setItem("ai_diagnosis_id", res.data?.id || "");
     },
     onError: (err) => {
       console.error("Tạo chẩn đoán AI thất bại:", err.message);
