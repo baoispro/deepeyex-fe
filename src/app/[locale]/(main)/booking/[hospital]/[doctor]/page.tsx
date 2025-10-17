@@ -151,9 +151,9 @@ const SelectDateTimeStep = ({
     selectedDate ? selectedDate.format("YYYY-MM-DD") : "",
     { enabled: !!selectedDate && !!doctor.doctor_id },
   );
-
+  const availableSlots = dayData?.data?.filter((slot) => !slot.appointment_id) || [];
   const timeSlots =
-    dayData?.data?.map((slot) => {
+    availableSlots?.map((slot) => {
       const start = dayjs(slot.start_time).format("HH:mm");
       const end = dayjs(slot.end_time).format("HH:mm");
       return `${start} - ${end}`;
@@ -220,7 +220,7 @@ const SelectDateTimeStep = ({
                 style={{ width: "100%" }}
               >
                 <Row gutter={[8, 8]}>
-                  {dayData?.data?.map((slot) => {
+                  {availableSlots?.map((slot) => {
                     const start = dayjs(slot.start_time);
                     const end = dayjs(slot.end_time);
                     const slotLabel = `${start.format("HH:mm")} - ${end.format("HH:mm")}`;
