@@ -3,38 +3,77 @@ import { useAppSelector } from "@/app/shares/stores";
 import { Layout, Menu } from "antd";
 import Avatar from "react-avatar";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
-import { FaHistory, FaReceipt } from "react-icons/fa";
+import { FaHistory, FaReceipt, FaPrescriptionBottle } from "react-icons/fa";
 import PatientInfoForm from "@/app/modules/profile/components/PatientInfoForm";
 import DiagnosisHistoryTable from "@/app/modules/profile/components/DiagnosisHistoryTable";
 import InvoiceSection from "@/app/modules/profile/components/InvonceSection";
 import AppointmentList from "@/app/modules/profile/components/AppointmentList";
+import PrescriptionList from "@/app/modules/profile/components/PrescriptionList";
 import { MdDateRange } from "react-icons/md";
 import { useGetAppointmentsByPatientId } from "@/app/modules/hospital/hooks/queries/appointment/use-get-appointments.query";
 import { useGetOrdersByPatientId } from "@/app/modules/hospital/hooks/mutations/orders/use-get-orders.query";
+import { useGetPrescriptionsByPatientId } from "@/app/modules/hospital/hooks/queries/prescription/use-get-prescriptions.query";
 
 const { Sider, Content } = Layout;
 
 export default function PatientProfile() {
   const [selectedKey, setSelectedKey] = useState("info");
+  const [appointmentFilters, setAppointmentFilters] = useState({
+    status: "",
+    date: "",
+    sort: "newest",
+  });
+  const [prescriptionFilters, setPrescriptionFilters] = useState({
+    status: "",
+    date: "",
+    sort: "newest",
+  });
+
   const auth = useAppSelector((state) => state.auth);
   const image = auth.patient?.image;
   const name = auth.patient?.fullName;
   const patientId = auth.patient?.patientId;
 
-  // Fetch appointments from API
+  // Fetch appointments from API with filters
   const { data: appointmentsData, isLoading: isLoadingAppointments } =
-    useGetAppointmentsByPatientId(patientId || undefined);
+    useGetAppointmentsByPatientId(patientId || undefined, appointmentFilters);
 
   // Fetch orders from API
   const { data: ordersData, isLoading: isLoadingOrders } = useGetOrdersByPatientId(
     patientId || undefined,
   );
 
+  // Fetch prescriptions from API with filters
+  const { data: prescriptionsData, isLoading: isLoadingPrescriptions } =
+    useGetPrescriptionsByPatientId(patientId || undefined, prescriptionFilters);
+
   const appointments = appointmentsData?.data || [];
   const orders = ordersData?.data || [];
+  const prescriptions = prescriptionsData?.data || [];
+
+  // Reset filters khi chuyển tab
+  useEffect(() => {
+    // Reset appointment filters khi chuyển sang tab appointment
+    if (selectedKey === "appointment") {
+      setAppointmentFilters({
+        status: "",
+        date: "",
+        sort: "newest",
+      });
+    }
+
+    // Reset prescription filters khi chuyển sang tab prescription
+    if (selectedKey === "prescription") {
+      setPrescriptionFilters({
+        status: "",
+        date: "",
+        sort: "newest",
+      });
+    }
+  }, [selectedKey]);
 
   return (
     <>
@@ -45,7 +84,17 @@ export default function PatientProfile() {
         <MdOutlineKeyboardArrowLeft size={20} /> <p>Trang chủ</p>
       </Link>
       <Layout style={{ minHeight: "90vh" }} className="px-10 pt-4 flex flex-row gap-4 min-h-screen">
-        <Sider width={250} className="!bg-white rounded-2xl" style={{ height: "100vh" }}>
+        <Sider
+          width={250}
+          className="!bg-white rounded-2xl"
+          style={{
+            position: "sticky",
+            top: "80px",
+            height: "calc(100vh - 40px)",
+            alignSelf: "flex-start",
+            overflowY: "auto",
+          }}
+        >
           <div className="flex flex-col items-center py-6">
             <Avatar name={name || ""} src={image || ""} size="100" round={true} />
             <h2 className="mt-4 text-xl font-semibold">{name || "Bệnh nhân"}</h2>
@@ -59,6 +108,11 @@ export default function PatientProfile() {
             items={[
               { key: "info", label: "Thông tin bệnh nhân", icon: <CgProfile size={20} /> },
               { key: "appointment", label: "Lịch hẹn khám", icon: <MdDateRange size={20} /> },
+              {
+                key: "prescription",
+                label: "Toa thuốc",
+                icon: <FaPrescriptionBottle size={20} />,
+              },
               { key: "history", label: "Lịch sử chẩn đoán", icon: <FaHistory size={20} /> },
               { key: "invoice", label: "Hóa đơn", icon: <FaReceipt size={20} /> },
             ]}
@@ -76,7 +130,21 @@ export default function PatientProfile() {
             )}
 
             {selectedKey === "appointment" && (
-              <AppointmentList appointments={appointments} loading={isLoadingAppointments} />
+              <AppointmentList
+                appointments={appointments}
+                loading={isLoadingAppointments}
+                filters={appointmentFilters}
+                onFilterChange={setAppointmentFilters}
+              />
+            )}
+
+            {selectedKey === "prescription" && (
+              <PrescriptionList
+                prescriptions={prescriptions}
+                loading={isLoadingPrescriptions}
+                filters={prescriptionFilters}
+                onFilterChange={setPrescriptionFilters}
+              />
             )}
           </Content>
         </Layout>
