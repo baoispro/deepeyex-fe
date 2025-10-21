@@ -15,7 +15,7 @@ export interface Prescription {
   patient_id: string;
   source: "DOCTOR" | "AI";
   description: string;
-  status: "PENDING" | "COMPLETED" | "CANCELLED";
+  status: "PENDING" | "APPROVED" | "CANCELLED";
   items: PrescriptionItem[];
   CreatedAt: string;
   UpdatedAt: string;
@@ -26,7 +26,7 @@ export const prescriptionStatusLabels: Record<
   { label: string; color: string }
 > = {
   PENDING: { label: "Chờ xử lý", color: "orange" },
-  COMPLETED: { label: "Hoàn thành", color: "green" },
+  APPROVED: { label: "Hoàn thành", color: "green" },
   CANCELLED: { label: "Đã hủy", color: "red" },
 };
 
