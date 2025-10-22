@@ -7,6 +7,8 @@ import { ToastContainer } from "react-toastify";
 import { IntlProvider } from "next-intl";
 import { persistor, store } from "./shares/stores";
 import { PersistGate } from "redux-persist/integration/react";
+import { queryClient } from "./shares/configs/queryClient";
+import { SocketInitializer } from "./shares/components/SocketInitializer";
 
 interface Messages {
   [key: string]: string | Messages;
@@ -19,13 +21,14 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children, messages, locale }: ProvidersProps) {
-  const [queryClient] = useState(() => new QueryClient());
+  // const [queryClient] = useState(() => new QueryClient());
 
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
           <IntlProvider locale={locale} messages={messages}>
+            <SocketInitializer />
             {children}
             <ToastContainer
               position="top-right"

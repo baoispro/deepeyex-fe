@@ -1,25 +1,115 @@
 "use client";
 import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
-import { persistor, useAppDispatch, useAppSelector } from "@/app/shares/stores";
+import { persistor, RootState, useAppDispatch, useAppSelector } from "@/app/shares/stores";
 import { clearTokens } from "@/app/shares/stores/authSlice";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
-import { Dropdown, MenuProps } from "antd";
+import { Badge, Button, Dropdown, List, MenuProps, Popover } from "antd";
 import Avatar from "react-avatar";
 import CartPopover from "@/app/shares/components/CartPopover";
+import { useSelector } from "react-redux";
+import { BellOutlined } from "@ant-design/icons";
+import { useGetNotificationsByUserQuery } from "../../hospital/hooks/queries/notification/use-get-all-notification.query";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/vi";
+import { useMarkAllNotificationsReadMutation } from "../../hospital/hooks/mutations/notifications/use-mark-all-read.mutation";
+import { useMarkNotificationReadMutation } from "../../hospital/hooks/mutations/notifications/use-mark-read.mutation";
 
 export default function Header() {
+  dayjs.extend(relativeTime);
+  const MAX_VISIBLE_NOTIFICATIONS = 3;
   const t = useTranslations("home");
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
   const [language, setLanguage] = useState<"vi" | "en">(locale as "vi" | "en");
+  dayjs.locale(language === "vi" ? "vi" : "en");
   const auth = useAppSelector((state) => state.auth);
   const image = auth.patient?.image;
   const isLoggedIn = !!auth.accessToken;
   const dispatch = useAppDispatch();
   const name = auth.patient?.fullName;
+  const socketConnected = useSelector((state: RootState) => state.auth.socketConnected);
+  const { data: notificationsData } = useGetNotificationsByUserQuery(auth.patient?.patientId || "");
+
+  const notifications = Array.isArray(notificationsData?.data) ? notificationsData.data : [];
+  const limitedNotifications = notifications.slice(0, MAX_VISIBLE_NOTIFICATIONS);
+
+  const unreadCount = Array.isArray(notifications)
+    ? notifications.filter((n) => !n.read).length
+    : 0;
+
+  const markAllMutation = useMarkAllNotificationsReadMutation();
+
+  const markSingleMutation = useMarkNotificationReadMutation();
+
+  const handleMarkAllAsRead = () => {
+    const patientId = auth.patient?.patientId;
+    if (patientId) {
+      markAllMutation.mutate(patientId);
+    } else {
+      console.error("Không tìm thấy thông tin bệnh nhân");
+    }
+  };
+
+  const handleClickNotification = (id: string, read?: boolean) => {
+    if (!read) {
+      markSingleMutation.mutate(id);
+    }
+  };
+
+  const notificationContent = (
+    <div className="w-80">
+      <div className="flex justify-between items-center mb-2">
+        <span className="font-semibold text-gray-800">{"Thông báo"}</span>
+        {unreadCount > 0 && (
+          <Button type="link" size="small" onClick={handleMarkAllAsRead}>
+            {"Đánh dấu đã đọc"}
+          </Button>
+        )}
+      </div>
+      <List
+        dataSource={limitedNotifications}
+        locale={{ emptyText: "Không có thông báo" }}
+        renderItem={(item) => (
+          <List.Item
+            onClick={() => handleClickNotification(item.id, item.read)}
+            className={`cursor-pointer px-3 py-2 rounded-md mb-1 flex justify-between items-center transition
+        ${
+          !item.read
+            ? "bg-[#d7e8fa] hover:bg-[#378fe94d] font-semibold" // chưa đọc: nền xanh nhạt, hover giữ nguyên
+            : "hover:bg-[#f5f5f5]" // đã đọc: hover sang xám
+        }`}
+          >
+            {/* Nội dung bên trái */}
+            <div className="flex flex-col px-2 gap-1">
+              <span className="text-sm text-gray-800">{item.title}</span>
+              <span className="text-xs text-gray-500">{item.message}</span>
+              <span className="text-xs text-gray-500">{dayjs(item.createdAt).fromNow()}</span>
+            </div>
+
+            {/* Chấm tròn màu xanh cho chưa đọc */}
+            {!item.read && (
+              <span className="w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0 mx-2"></span>
+            )}
+          </List.Item>
+        )}
+      />
+      {notifications.length > MAX_VISIBLE_NOTIFICATIONS && (
+        <div className="text-center mt-2">
+          <Button
+            type="link"
+            className="text-[#1250dc] hover:underline"
+            onClick={() => router.push("/notification")}
+          >
+            {"Xem tất cả thông báo"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 
   // Flags
   const flags = {
@@ -115,9 +205,9 @@ export default function Header() {
         </div>
 
         {/* Right section */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           {/* Language Selector */}
-          <div className="relative group">
+          <div className="relative group z-50">
             <button className="flex items-center space-x-2 px-3 py-2 border rounded-4xl text-gray-700 hover:bg-gray-50 transition cursor-pointer">
               <Image src={flags[language].src} width={24} height={18} alt={flags[language].alt} />
               <span>{language.toUpperCase()}</span>
@@ -176,8 +266,23 @@ export default function Header() {
                   {t("logout")}
                 </button>
               </div>
+              {socketConnected && (
+                <span className="absolute bottom-0 right-0 block w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+              )}
             </div>
           )}
+          <Popover
+            content={notificationContent}
+            trigger="click"
+            placement="bottomRight"
+            classNames={{ root: "notification-popover" }}
+          >
+            <Badge count={unreadCount} size="small" offset={[-12, 10]}>
+              <button className="p-2 rounded-full hover:bg-gray-100 transition">
+                <BellOutlined className="text-xl text-gray-700" />
+              </button>
+            </Badge>
+          </Popover>
           {/* Cart */}
 
           <CartPopover />
