@@ -5,6 +5,7 @@ import { useLoginMutation } from "@/app/modules/auth/hooks/mutations/use-login.m
 import { CallApi } from "@/app/modules/hospital/apis/call/callApi";
 import { PatientApi } from "@/app/modules/hospital/apis/patient/patientApi";
 import { auth, googleProvider } from "@/app/shares/configs/firebase";
+import { initPatientSocket } from "@/app/shares/configs/socket";
 import { Link, usePathname, useRouter } from "@/app/shares/locales/navigation";
 import { setPatient } from "@/app/shares/stores/authSlice";
 import { connectToStringee } from "@/app/shares/utils/stringee";
@@ -56,6 +57,7 @@ export default function LoginPage() {
         const stringeeToken = res.data.token;
         await loadStringeeSdk();
         connectToStringee(stringeeToken);
+        initPatientSocket(patient.data?.patient_id || "");
         router.push("/");
       } catch (err) {
         toast.warning("Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
@@ -106,6 +108,7 @@ export default function LoginPage() {
         const stringeeToken = res.data.token;
         await loadStringeeSdk();
         connectToStringee(stringeeToken);
+        initPatientSocket(patient.data?.patient_id || "");
         router.push("/");
       } catch (err) {
         toast.warning("Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
