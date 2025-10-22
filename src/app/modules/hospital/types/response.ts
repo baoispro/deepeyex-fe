@@ -47,6 +47,7 @@ type UploadFileResponse = ApiResponse<Upload>;
 type ListAppointmentsResponse = ApiResponse<Appointment[]>;
 type UpdateAppointmentStatusResponse = ApiResponse<Appointment>;
 type CreateFollowUpResponse = ApiResponse<Appointment>;
+type CancelAppointmentResponse = ApiResponse<null>;
 
 // Medical Record
 type GetMedicalRecordByPatientIdResponse = ApiResponse<{
@@ -79,4 +80,5 @@ export type {
   UploadFileResponse,
   GetMedicalRecordByPatientIdResponse,
   CreateFollowUpResponse,
+  CancelAppointmentResponse,
 };

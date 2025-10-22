@@ -1,6 +1,7 @@
 import { AxiosInstance } from "axios";
 import api from "@/app/shares/configs/axios";
 import {
+  CancelAppointmentResponse,
   CreateFollowUpResponse,
   ListAppointmentsResponse,
   UpdateAppointmentStatusResponse,
@@ -27,11 +28,20 @@ class AppointmentClient {
   /**
    * Get appointments by patient ID
    * @param patientId - Patient ID
+   * @param params - Optional filters (status, date, sort)
    * @returns Appointments list
    */
-  async getAppointmentsByPatientId(patientId: string): Promise<ListAppointmentsResponse> {
+  async getAppointmentsByPatientId(
+    patientId: string,
+    params?: {
+      status?: string;
+      date?: string;
+      sort?: string;
+    },
+  ): Promise<ListAppointmentsResponse> {
     const response = await this.client.get<ListAppointmentsResponse>(
       `/hospital/appointments/patient/${patientId}`,
+      { params },
     );
     return response.data;
   }
@@ -63,6 +73,13 @@ class AppointmentClient {
     const response = await this.client.post<CreateFollowUpResponse>(
       `/hospital/appointments/follow-up`,
       payload,
+    );
+    return response.data;
+  }
+
+  async cancelAppointment(appointmentId: string): Promise<CancelAppointmentResponse> {
+    const response = await this.client.put<CancelAppointmentResponse>(
+      `/hospital/appointments/${appointmentId}/cancel`,
     );
     return response.data;
   }
