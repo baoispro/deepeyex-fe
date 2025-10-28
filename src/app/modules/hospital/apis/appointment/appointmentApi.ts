@@ -83,6 +83,13 @@ class AppointmentClient {
     );
     return response.data;
   }
+
+  async confirmFollowUpAppointment(token: string): Promise<CreateFollowUpResponse> {
+    const response = await this.client.post<CreateFollowUpResponse>(
+      `/hospital/appointments/confirm-follow-up?token=${token}`,
+    );
+    return response.data;
+  }
 }
 
 const AppointmentApi = new AppointmentClient();
