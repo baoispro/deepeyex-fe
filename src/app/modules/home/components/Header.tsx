@@ -250,7 +250,13 @@ export default function Header() {
           ) : (
             <div className="relative group">
               <Avatar name={name || ""} src={image || ""} size="40" round={true} />
-              <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition p-2">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition p-2">
+                <Link
+                  href="/dashboard"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 rounded-md"
+                >
+                  Bảng điều khiển
+                </Link>
                 <Link
                   href="/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 rounded-md"
