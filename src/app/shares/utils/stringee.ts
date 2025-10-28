@@ -128,3 +128,26 @@ export function muteCall(mute: boolean): void {
 export function getStringeeClient(): StringeeClient | null {
   return client;
 }
+
+export function logoutFromStringee(): void {
+  if (currentCall) {
+    try {
+      currentCall.hangup((res) => console.log("📴 Call ended on logout", res));
+    } catch (err) {
+      console.error("⚠️ Error hanging up call on logout:", err);
+    }
+    currentCall = null;
+  }
+
+  if (client) {
+    try {
+      client.disconnect();
+      console.log("🔌 Disconnected from Stringee Server");
+    } catch (err) {
+      console.error("⚠️ Error disconnecting from Stringee:", err);
+    }
+    client = null;
+  }
+
+  console.log("👋 Logged out from Stringee successfully.");
+}

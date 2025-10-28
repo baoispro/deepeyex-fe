@@ -16,6 +16,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
 import { useMarkAllNotificationsReadMutation } from "../../hospital/hooks/mutations/notifications/use-mark-all-read.mutation";
 import { useMarkNotificationReadMutation } from "../../hospital/hooks/mutations/notifications/use-mark-read.mutation";
+import { logoutFromStringee } from "@/app/shares/utils/stringee";
 
 export default function Header() {
   dayjs.extend(relativeTime);
@@ -260,6 +261,7 @@ export default function Header() {
                   onClick={() => {
                     dispatch(clearTokens());
                     persistor.flush();
+                    logoutFromStringee();
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 rounded-md"
                 >

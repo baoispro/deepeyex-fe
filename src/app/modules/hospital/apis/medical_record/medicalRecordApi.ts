@@ -27,7 +27,7 @@ class MedicalRecordClient {
   // ---------------- Get all MedicalRecords by PatientID ----------------
   async getByPatientId(patientId: string): Promise<GetMedicalRecordByPatientIdResponse> {
     const response = await this.client.get<GetMedicalRecordByPatientIdResponse>(
-      `${endpoint}/patient`,
+      `${endpoint}/patient_fe`,
       {
         params: { patient_id: patientId },
       },
