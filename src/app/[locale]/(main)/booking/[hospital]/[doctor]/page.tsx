@@ -131,13 +131,14 @@ const SelectDateTimeStep = ({
   onNext: () => void;
   onBack: () => void;
 }) => {
+  const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   // ---- Lấy slot theo tháng để disable ngày ----
   const { data: monthData } = useGetTimeSlotsByDoctorAndMonthQuery(
     doctor.doctor_id,
-    dayjs().format("YYYY-MM"), // tháng hiện tại
+    selectedMonth.format("YYYY-MM"), // tháng hiện tại
     { enabled: !!doctor.doctor_id },
   );
 
@@ -197,6 +198,11 @@ const SelectDateTimeStep = ({
           <Calendar
             fullscreen={true}
             onSelect={handleSelectDate}
+            onPanelChange={(date, mode) => {
+              if (mode === "month") {
+                setSelectedMonth(date); // cập nhật tháng mới → hook tự reload
+              }
+            }}
             disabledDate={(current) => {
               const today = dayjs().startOf("day");
               const isPast = current && current < today;
