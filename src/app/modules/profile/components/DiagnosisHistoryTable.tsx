@@ -3,6 +3,7 @@ import { Card, Typography, Spin, Button } from "antd";
 import { useState } from "react";
 import { FaStethoscope, FaEye } from "react-icons/fa";
 import { useRouter } from "@/app/shares/locales/navigation";
+import { useTranslations } from "next-intl";
 
 const { Title, Text } = Typography;
 
@@ -39,24 +40,26 @@ const mockDiagnosisHistory: DiagnosisHistory[] = [];
 //   },
 // ];
 
-const diagnosisMap: Record<string, string> = {
-  conjunctivitis: "Viêm kết mạc (Đau mắt đỏ)",
-  eyelidedema: "Phù nề mí mắt",
-  healthy_eye: "Mắt bình thường",
-  hordeolum: "Chắp / Lẹo",
-  keratitiswithulcer: "Viêm giác mạc có loét",
-  subconjunctival_hemorrhage: "Xuất huyết dưới kết mạc",
-};
-
 export default function DiagnosisHistoryList() {
+  const t = useTranslations("home");
+  const tPredict = useTranslations("predict");
   const [data] = useState<DiagnosisHistory[]>(mockDiagnosisHistory);
   const [loading] = useState(false);
   const router = useRouter();
 
+  // Lấy diagnosis name từ predict module
+  const getDiagnosisName = (diagnosisKey: string) => {
+    try {
+      return tPredict(`treatmentPlan.diseases.${diagnosisKey}.diagnosis`);
+    } catch {
+      return diagnosisKey;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <Spin size="large" tip="Đang tải lịch sử chẩn đoán..." />
+        <Spin size="large" tip={t("profile.diagnosisHistory.loading")} />
       </div>
     );
   }
@@ -74,11 +77,10 @@ export default function DiagnosisHistoryList() {
 
         {/* Text content */}
         <Title level={3} className="!mb-3 text-gray-800">
-          Chưa có lịch sử chẩn đoán
+          {t("profile.diagnosisHistory.noHistory")}
         </Title>
         <Text className="text-gray-500 text-lg mb-8 max-w-md">
-          Bạn chưa có lịch sử khám bệnh nào. Hãy đặt lịch khám hoặc sử dụng tính năng chẩn đoán AI
-          để kiểm tra sức khỏe mắt.
+          {t("profile.diagnosisHistory.noHistoryDescription")}
         </Text>
 
         {/* Action buttons */}
@@ -90,10 +92,10 @@ export default function DiagnosisHistoryList() {
             onClick={() => router.push("/predict")}
             className="!h-12 !px-8 !bg-gradient-to-r !from-blue-500 !to-blue-600 hover:!from-blue-600 hover:!to-blue-700"
           >
-            Chẩn đoán AI
+            {t("profile.diagnosisHistory.diagnoseAI")}
           </Button>
           <Button size="large" onClick={() => router.push("/booking")} className="!h-12 !px-8">
-            Đặt lịch khám
+            {t("profile.diagnosisHistory.bookAppointment")}
           </Button>
         </div>
 
@@ -101,15 +103,21 @@ export default function DiagnosisHistoryList() {
         <div className="mt-12 grid grid-cols-3 gap-4 max-w-md opacity-40">
           <div className="bg-gray-100 rounded-lg p-4 text-center">
             <div className="text-2xl mb-1">🤖</div>
-            <Text className="text-xs text-gray-500">AI thông minh</Text>
+            <Text className="text-xs text-gray-500">
+              {t("profile.diagnosisHistory.features.aiSmart")}
+            </Text>
           </div>
           <div className="bg-gray-100 rounded-lg p-4 text-center">
             <div className="text-2xl mb-1">👁️</div>
-            <Text className="text-xs text-gray-500">Chính xác cao</Text>
+            <Text className="text-xs text-gray-500">
+              {t("profile.diagnosisHistory.features.highAccuracy")}
+            </Text>
           </div>
           <div className="bg-gray-100 rounded-lg p-4 text-center">
             <div className="text-2xl mb-1">⚡</div>
-            <Text className="text-xs text-gray-500">Nhanh chóng</Text>
+            <Text className="text-xs text-gray-500">
+              {t("profile.diagnosisHistory.features.fast")}
+            </Text>
           </div>
         </div>
       </div>
@@ -118,13 +126,13 @@ export default function DiagnosisHistoryList() {
 
   return (
     <div>
-      <Title level={4}>Lịch sử chẩn đoán</Title>
+      <Title level={4}>{t("profile.diagnosisHistory.title")}</Title>
 
       <div className="grid gap-4 md:grid-cols-2">
         {data.map((item) => (
           <Card key={item.id} hoverable>
             <div className="mb-2">
-              <Text strong>Ngày: </Text>
+              <Text strong>{t("profile.diagnosisHistory.labels.date")} </Text>
               <Text>
                 {new Date(item.date).toLocaleDateString("vi-VN", {
                   day: "2-digit",
@@ -135,18 +143,18 @@ export default function DiagnosisHistoryList() {
             </div>
 
             <div className="mb-2">
-              <Text strong>Chẩn đoán: </Text>
-              <Text>{diagnosisMap[item.diagnosis] || item.diagnosis}</Text>
+              <Text strong>{t("profile.diagnosisHistory.labels.diagnosis")} </Text>
+              <Text>{getDiagnosisName(item.diagnosis) || item.diagnosis}</Text>
             </div>
 
             <div className="mb-2">
-              <Text strong>Bác sĩ: </Text>
+              <Text strong>{t("profile.diagnosisHistory.labels.doctor")} </Text>
               <Text>{item.doctor}</Text>
             </div>
 
             {item.note && (
               <div>
-                <Text strong>Ghi chú: </Text>
+                <Text strong>{t("profile.diagnosisHistory.labels.note")} </Text>
                 <Text>{item.note}</Text>
               </div>
             )}

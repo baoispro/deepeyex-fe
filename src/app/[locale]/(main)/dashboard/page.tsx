@@ -8,6 +8,7 @@ import "dayjs/locale/vi";
 import Image from "next/image";
 import Link from "next/link";
 import Avatar from "react-avatar";
+import { useTranslations } from "next-intl";
 
 dayjs.locale("vi");
 
@@ -141,6 +142,7 @@ const mockNotifications = [
 ];
 
 export default function PatientDashboard() {
+  const t = useTranslations("home");
   const router = useRouter();
   const [medications, setMedications] = useState(mockMedications);
   const today = dayjs().format("YYYY-MM-DD");
@@ -170,8 +172,8 @@ export default function PatientDashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Bảng điều khiển</h1>
-              <p className="text-gray-600 mt-2">Xin chào!</p>
+              <h1 className="text-3xl font-bold text-gray-900">{t("dashboard.title")}</h1>
+              <p className="text-gray-600 mt-2">{t("dashboard.greeting")}</p>
             </div>
           </div>
         </div>
@@ -184,11 +186,13 @@ export default function PatientDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <FaCalendarAlt className="text-blue-500 text-xl" />
-                  <h2 className="text-xl font-bold text-gray-800">Lịch khám hôm nay</h2>
+                  <h2 className="text-xl font-bold text-gray-800">
+                    {t("dashboard.todayAppointments.title")}
+                  </h2>
                 </div>
                 {mockAppointmentsToday.length > 0 && (
                   <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
-                    {mockAppointmentsToday.length} lịch hẹn
+                    {mockAppointmentsToday.length} {t("dashboard.todayAppointments.appointments")}
                   </span>
                 )}
               </div>
@@ -196,12 +200,14 @@ export default function PatientDashboard() {
               {mockAppointmentsToday.length === 0 ? (
                 <div className="text-center py-8">
                   <FaCalendarAlt className="text-gray-300 text-6xl mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">Hôm nay không có lịch khám nào</p>
+                  <p className="text-gray-600 mb-4">
+                    {t("dashboard.todayAppointments.noAppointments")}
+                  </p>
                   <Link
                     href="/booking"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    Đặt lịch khám <FaArrowRight />
+                    {t("dashboard.todayAppointments.bookAppointment")} <FaArrowRight />
                   </Link>
                 </div>
               ) : (
@@ -234,7 +240,8 @@ export default function PatientDashboard() {
                                 BS. {appt.doctor?.full_name || "N/A"}
                               </p>
                               <p className="text-sm text-gray-600">
-                                {appt.service_name || "Khám bệnh"}
+                                {appt.service_name ||
+                                  t("dashboard.todayAppointments.serviceDefault")}
                               </p>
                             </div>
                           </div>
@@ -257,28 +264,32 @@ export default function PatientDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <FaStethoscope className="text-green-500 text-xl" />
-                  <h2 className="text-xl font-bold text-gray-800">Chẩn đoán gần đây</h2>
+                  <h2 className="text-xl font-bold text-gray-800">
+                    {t("dashboard.recentDiagnosis.title")}
+                  </h2>
                 </div>
                 <Link
                   href="/profile"
                   className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                 >
-                  Xem tất cả <FaArrowRight className="text-xs" />
+                  {t("dashboard.recentDiagnosis.viewAll")} <FaArrowRight className="text-xs" />
                 </Link>
               </div>
 
               {mockRecentDiagnosis.length === 0 ? (
                 <div className="text-center py-8 bg-gradient-to-br from-blue-50 to-green-50 rounded-lg border-2 border-dashed border-gray-300">
                   <FaStethoscope className="text-green-300 text-6xl mx-auto mb-4" />
-                  <p className="text-gray-700 font-semibold mb-2">Chưa có lịch sử chẩn đoán</p>
+                  <p className="text-gray-700 font-semibold mb-2">
+                    {t("dashboard.recentDiagnosis.noHistory")}
+                  </p>
                   <p className="text-gray-600 text-sm mb-4">
-                    Hãy chẩn đoán ngay để theo dõi tình hình mắt
+                    {t("dashboard.recentDiagnosis.noHistoryDescription")}
                   </p>
                   <Link
                     href="/predict"
                     className="inline-flex items-center gap-2 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
                   >
-                    Chẩn đoán ngay <FaArrowRight />
+                    {t("dashboard.recentDiagnosis.diagnoseNow")} <FaArrowRight />
                   </Link>
                 </div>
               ) : (
@@ -291,7 +302,7 @@ export default function PatientDashboard() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <p className="font-semibold text-gray-900 mb-1">
-                            {record.diagnosis || "Chưa có chẩn đoán"}
+                            {record.diagnosis || t("dashboard.recentDiagnosis.noDiagnosis")}
                           </p>
                           <p className="text-sm text-gray-600 mb-2">{record.notes}</p>
                           <p className="text-xs text-gray-500">
@@ -309,17 +320,16 @@ export default function PatientDashboard() {
                         <FaStethoscope className="text-yellow-600 text-2xl mt-1" />
                         <div className="flex-1">
                           <p className="font-semibold text-yellow-900 mb-1">
-                            Chưa chẩn đoán hôm nay
+                            {t("dashboard.recentDiagnosis.noDiagnosisToday")}
                           </p>
                           <p className="text-sm text-yellow-800 mb-3">
-                            Bạn chưa chẩn đoán gì hôm nay. Hãy chẩn đoán ngay để theo dõi tình hình
-                            mắt của bạn.
+                            {t("dashboard.recentDiagnosis.noDiagnosisTodayDescription")}
                           </p>
                           <Link
                             href="/predict"
                             className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-semibold"
                           >
-                            Chẩn đoán ngay <FaArrowRight />
+                            {t("dashboard.recentDiagnosis.diagnoseNow")} <FaArrowRight />
                           </Link>
                         </div>
                       </div>
@@ -334,7 +344,9 @@ export default function PatientDashboard() {
               <div className="bg-white rounded-xl shadow-md p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <FaStethoscope className="text-purple-500 text-xl" />
-                  <h2 className="text-xl font-bold text-gray-800">Dòng thời gian chẩn đoán</h2>
+                  <h2 className="text-xl font-bold text-gray-800">
+                    {t("dashboard.diagnosisTimeline.title")}
+                  </h2>
                 </div>
                 <div className="relative">
                   {/* Timeline line */}
@@ -353,7 +365,7 @@ export default function PatientDashboard() {
                         {/* Content */}
                         <div className="flex-1 bg-gray-50 rounded-lg p-4">
                           <p className="font-semibold text-gray-900 mb-1">
-                            {record.diagnosis || "Chẩn đoán"}
+                            {record.diagnosis || t("dashboard.diagnosisTimeline.diagnosis")}
                           </p>
                           <p className="text-sm text-gray-600 mb-2">{record.notes}</p>
                           <p className="text-xs text-gray-500">
@@ -374,7 +386,9 @@ export default function PatientDashboard() {
             <div className="bg-white rounded-xl shadow-md p-6">
               <div className="flex items-center gap-2 mb-4">
                 <FaPills className="text-orange-500 text-xl" />
-                <h2 className="text-xl font-bold text-gray-800">Nhắc uống thuốc</h2>
+                <h2 className="text-xl font-bold text-gray-800">
+                  {t("dashboard.medicationReminder.title")}
+                </h2>
               </div>
               <div className="space-y-3">
                 {medications.map((med) => (
@@ -404,16 +418,20 @@ export default function PatientDashboard() {
                       {med.instruction}
                     </p>
                     {med.taken ? (
-                      <p className="text-xs text-green-600 font-semibold">✓ Đã uống thuốc</p>
+                      <p className="text-xs text-green-600 font-semibold">
+                        {t("dashboard.medicationReminder.taken")}
+                      </p>
                     ) : !med.isUpcoming ? (
                       <button
                         onClick={() => handleMarkMedicationTaken(med.id)}
                         className="text-xs text-orange-600 hover:text-orange-700 font-semibold"
                       >
-                        Chưa uống
+                        {t("dashboard.medicationReminder.notTaken")}
                       </button>
                     ) : (
-                      <p className="text-xs text-gray-500 font-semibold">Chưa đến giờ</p>
+                      <p className="text-xs text-gray-500 font-semibold">
+                        {t("dashboard.medicationReminder.notTimeYet")}
+                      </p>
                     )}
                   </div>
                 ))}
@@ -425,13 +443,15 @@ export default function PatientDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <FaBell className="text-red-500 text-xl" />
-                  <h2 className="text-xl font-bold text-gray-800">Thông báo</h2>
+                  <h2 className="text-xl font-bold text-gray-800">
+                    {t("dashboard.notifications.title")}
+                  </h2>
                 </div>
                 <Link
                   href="/notification"
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                 >
-                  Xem tất cả
+                  {t("dashboard.notifications.viewAll")}
                 </Link>
               </div>
               <div className="space-y-3">

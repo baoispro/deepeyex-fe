@@ -2,6 +2,7 @@
 
 import { Modal } from "antd";
 import React from "react";
+import { useTranslations } from "next-intl";
 
 interface BookingTypeModalProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ interface BookingTypeModalProps {
 }
 
 const BookingTypeModal: React.FC<BookingTypeModalProps> = ({ isOpen, onClose, onSelect }) => {
+  const t = useTranslations("booking");
+
   const handleSelectType = (type: "new" | "reexam") => {
     localStorage.setItem("booking_type", type);
     onSelect(type);
@@ -26,7 +29,7 @@ const BookingTypeModal: React.FC<BookingTypeModalProps> = ({ isOpen, onClose, on
       className="rounded-2xl"
     >
       <div className="flex flex-col items-center gap-6 py-5">
-        <h2 className="text-xl font-semibold text-center">Chọn loại lịch hẹn của bạn</h2>
+        <h2 className="text-xl font-semibold text-center">{t("bookingTypeModal.title")}</h2>
 
         <div className="grid grid-cols-2 gap-5 w-full">
           {/* Ô Khám mới */}
@@ -35,14 +38,17 @@ const BookingTypeModal: React.FC<BookingTypeModalProps> = ({ isOpen, onClose, on
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === "Enter" && handleSelectType("new")}
+            aria-label={t("bookingTypeModal.newExam.title")}
             className="cursor-pointer bg-white rounded-2xl p-6 text-center shadow-md border border-transparent
                        hover:shadow-[0_6px_20px_rgba(18,80,220,0.2)] hover:border-blue-200 hover:-translate-y-1
                        transition-all duration-300 ease-out focus:outline-none"
           >
             <div className="flex flex-col items-center">
-              <h3 className="font-semibold text-base text-[#1250dc]">Khám mới</h3>
+              <h3 className="font-semibold text-base text-[#1250dc]">
+                {t("bookingTypeModal.newExam.title")}
+              </h3>
               <p className="text-sm text-gray-500 mt-1">
-                Dành cho bệnh nhân khám lần đầu hoặc chưa có hồ sơ.
+                {t("bookingTypeModal.newExam.description")}
               </p>
             </div>
           </div>
@@ -53,14 +59,17 @@ const BookingTypeModal: React.FC<BookingTypeModalProps> = ({ isOpen, onClose, on
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === "Enter" && handleSelectType("reexam")}
+            aria-label={t("bookingTypeModal.reExam.title")}
             className="cursor-pointer bg-white rounded-2xl p-6 text-center shadow-md border border-transparent
                        hover:shadow-[0_6px_20px_rgba(34,197,94,0.2)] hover:border-green-200 hover:-translate-y-1
                        transition-all duration-300 ease-out focus:outline-none"
           >
             <div className="flex flex-col items-center">
-              <h3 className="font-semibold text-base text-[#1250dc]">Tái khám</h3>
+              <h3 className="font-semibold text-base text-[#1250dc]">
+                {t("bookingTypeModal.reExam.title")}
+              </h3>
               <p className="text-sm text-gray-500 mt-1">
-                Dành cho bệnh nhân đã có hồ sơ khám trước đó.
+                {t("bookingTypeModal.reExam.description")}
               </p>
             </div>
           </div>

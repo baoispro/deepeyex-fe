@@ -9,11 +9,278 @@
   "contact": "Contact",
   "login": "Login",
   "signup": "Sign up",
-  "profile": "Profile",
+  "info": "Profile",
   "logout": "Logout",
   "subtitle": "Eye Care & Holistic Health Center",
   "text": "We solve all your eye care needs by providing personalized and holistic eye care for you and your family!",
   "button": "Start Diagnosis",
   "subtitle1": "AI-Powered Eye Disease Diagnosis",
-  "text1": "Detect Early, Protect Your Vision"
+  "text1": "Detect Early, Protect Your Vision",
+  "header": {
+    "notifications": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications",
+    "viewAllNotifications": "View all notifications",
+    "dashboard": "Dashboard",
+    "vietnamese": "Vietnamese",
+    "english": "English",
+    "patientNotFound": "Patient information not found"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Hello!",
+    "todayAppointments": {
+      "title": "Today's Appointments",
+      "appointments": "appointments",
+      "noAppointments": "No appointments today",
+      "bookAppointment": "Book Appointment",
+      "serviceDefault": "Medical Examination"
+    },
+    "recentDiagnosis": {
+      "title": "Recent Diagnosis",
+      "viewAll": "View All",
+      "noHistory": "No diagnosis history",
+      "noHistoryDescription": "Start diagnosing now to track your eye health",
+      "diagnoseNow": "Diagnose Now",
+      "noDiagnosisToday": "No diagnosis today",
+      "noDiagnosisTodayDescription": "You haven't diagnosed anything today. Diagnose now to track your eye health.",
+      "noDiagnosis": "No diagnosis"
+    },
+    "diagnosisTimeline": {
+      "title": "Diagnosis Timeline",
+      "diagnosis": "Diagnosis"
+    },
+    "medicationReminder": {
+      "title": "Medication Reminder",
+      "taken": "✓ Medication taken",
+      "notTaken": "Not taken",
+      "notTimeYet": "Not time yet"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "viewAll": "View All"
+    }
+  },
+  "profile": {
+    "backToHome": "Home",
+    "defaultPatientName": "Patient",
+    "menu": {
+      "patientInfo": "Patient Information",
+      "appointments": "Appointments",
+      "prescriptions": "Prescriptions",
+      "diagnosisHistory": "Diagnosis History",
+      "invoices": "Invoices"
+    },
+    "patientInfoForm": {
+      "updateSuccess": "Patient information updated successfully!",
+      "updateFailed": "Update failed!",
+      "imageUploadError": "You can only upload image files!",
+      "patientNotFound": "Patient information not found for update.",
+      "changeAvatar": "Change Avatar",
+      "fullName": {
+        "label": "Full Name",
+        "placeholder": "Enter full name",
+        "required": "Please enter full name"
+      },
+      "dob": {
+        "label": "Date of Birth",
+        "required": "Please enter date of birth"
+      },
+      "gender": {
+        "label": "Gender",
+        "required": "Please select gender",
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+      },
+      "address": {
+        "label": "Address",
+        "placeholder": "Enter address"
+      },
+      "phone": {
+        "label": "Phone Number",
+        "placeholder": "Enter phone number"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter email"
+      },
+      "save": {
+        "saving": "Saving...",
+        "button": "Save Information"
+      }
+    },
+    "diagnosisHistory": {
+      "title": "Diagnosis History",
+      "loading": "Loading diagnosis history...",
+      "noHistory": "No diagnosis history",
+      "noHistoryDescription": "You don't have any medical history yet. Book an appointment or use the AI diagnosis feature to check your eye health.",
+      "diagnoseAI": "AI Diagnosis",
+      "bookAppointment": "Book Appointment",
+      "features": {
+        "aiSmart": "Smart AI",
+        "highAccuracy": "High Accuracy",
+        "fast": "Fast"
+      },
+      "labels": {
+        "date": "Date:",
+        "diagnosis": "Diagnosis:",
+        "doctor": "Doctor:",
+        "note": "Note:"
+      }
+    },
+    "invoice": {
+      "cancelSuccess": "Order cancelled successfully!",
+      "cancelFailed": "Failed to cancel order:"
+    },
+    "notification": {
+      "title": "Notifications",
+      "markAllRead": "Mark all as read",
+      "tabs": {
+        "all": "All",
+        "unread": "Unread"
+      },
+      "empty": "No notifications",
+      "groups": {
+        "today": "Today",
+        "earlier": "Earlier"
+      }
+    },
+    "appointmentList": {
+      "title": "Appointments",
+      "total": "Total: {count} appointments",
+      "filters": {
+        "title": "Search Filters",
+        "status": "Status",
+        "allStatus": "All Status",
+        "all": "All",
+        "date": "Appointment Date",
+        "selectDate": "Select Date",
+        "reset": "Reset Filters"
+      },
+      "status": {
+        "PENDING": "Pending",
+        "CONFIRMED": "Confirmed",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "PENDING_ONLINE": "Pending (Online)",
+        "CONFIRMED_ONLINE": "Confirmed (Online)",
+        "COMPLETED_ONLINE": "Completed (Online)"
+      },
+      "loading": "Loading appointments...",
+      "empty": {
+        "title": "No Appointments",
+        "description": "You haven't booked any appointments yet. Find a suitable hospital and doctor for professional consultation and treatment.",
+        "bookNow": "Book Appointment Now",
+        "buyDrugs": "Buy Medicine"
+      },
+      "card": {
+        "appointmentCode": "Appointment Code:",
+        "service": "Service:",
+        "specialty": "Ophthalmology",
+        "contact": "Contact",
+        "note": "Note:",
+        "bookedAt": "Booked at:",
+        "cancelling": "Cancelling...",
+        "cancel": "Cancel Appointment",
+        "cancelTooltip": "Cancel Appointment",
+        "pastAppointment": "Past Appointment",
+        "cannotCancelPast": "Cannot cancel appointment that has passed"
+      },
+      "modal": {
+        "title": "Confirm Cancellation",
+        "message": "Are you sure you want to cancel appointment {code}?",
+        "warning": "Note: After cancellation, you will not be able to undo this action.",
+        "confirm": "Confirm",
+        "close": "Close"
+      },
+      "toast": {
+        "cancelSuccess": "Appointment cancelled successfully!",
+        "cancelFailed": "Failed to cancel appointment: {message}",
+        "cannotCancelTime": "Cannot cancel appointment because there is less than 12 hours remaining. If you still want to cancel, please call hotline: 1900-xxx-xxx"
+      }
+    },
+    "prescriptionList": {
+      "title": "Prescriptions",
+      "total": "Total: {count} prescriptions",
+      "filters": {
+        "title": "Search Filters",
+        "status": "Status",
+        "allStatus": "All Status",
+        "all": "All",
+        "date": "Prescription Date",
+        "selectDate": "Select Date",
+        "reset": "Reset Filters"
+      },
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "CANCELLED": "Cancelled"
+      },
+      "source": {
+        "DOCTOR": "Doctor Prescription",
+        "AI": "AI Diagnosis"
+      },
+      "loading": "Loading prescriptions...",
+      "empty": {
+        "title": "No Prescriptions",
+        "description": "You don't have any prescriptions yet. Book an appointment with a doctor to get a suitable prescription.",
+        "bookNow": "Book Appointment Now"
+      },
+      "card": {
+        "note": "Note:",
+        "details": "Prescription Details ({count} drugs)",
+        "dosage": "Dosage:",
+        "frequency": "Frequency:",
+        "duration": "Duration:",
+        "from": "From:",
+        "days": "days"
+      }
+    },
+    "invoiceSection": {
+      "title": "Invoices",
+      "total": "Total: {count} orders",
+      "loading": "Loading invoices...",
+      "empty": {
+        "title": "No Invoices",
+        "description": "You don't have any invoices yet. Book an appointment or buy medicine to view invoice history here.",
+        "buyDrugs": "Buy Medicine Now",
+        "bookAppointment": "Book Appointment",
+        "features": {
+          "electronicInvoice": "Electronic Invoice",
+          "easyPayment": "Easy Payment",
+          "secure": "Secure"
+        }
+      },
+      "order": {
+        "orderNumber": "Order #{code}",
+        "productList": "Product/Service List:",
+        "deliveryMethod": "Delivery Method:",
+        "subtotal": "Subtotal:",
+        "deliveryFee": "Delivery Fee:",
+        "total": "Total Payment:",
+        "printInvoice": "Print Invoice",
+        "cancelling": "Cancelling...",
+        "cancel": "Cancel Order"
+      },
+      "status": {
+        "PENDING": "Pending",
+        "CONFIRMED": "Confirmed",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "PAID": "Paid"
+      },
+      "deliveryMethod": {
+        "PICKUP": "Pickup at Facility",
+        "HOME_DELIVERY": "Home Delivery"
+      },
+      "modal": {
+        "title": "Confirm Order Cancellation",
+        "message": "Are you sure you want to cancel order #{code}?",
+        "warning": "Note: After cancellation, you will not be able to undo this action.",
+        "confirm": "Confirm",
+        "close": "Close"
+      }
+    }
+  }
 }

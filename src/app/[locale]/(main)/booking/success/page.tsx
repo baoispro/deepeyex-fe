@@ -21,6 +21,7 @@ import { SendEmailApi, SendOrderConfirmationRequest } from "@/app/shares/api/sen
 import { Doctor } from "@/app/modules/hospital/types/doctor";
 import { Patient } from "@/app/modules/hospital/types/patient";
 import { createOrGetConversation } from "@/app/shares/utils/createOrGetConversation";
+import { useTranslations } from "next-intl";
 
 interface OrderItem {
   key: string;
@@ -33,6 +34,7 @@ interface OrderItem {
 }
 
 export default function ConfirmOrderPage() {
+  const t = useTranslations("booking");
   const router = useRouter();
   const { clearCart } = useCart();
   const [orderType, setOrderType] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export default function ConfirmOrderPage() {
 
           if (status === "success") {
             setPaymentStatus("success");
-            toast.success("Thanh toán thành công!");
+            toast.success(t("successPage.messages.paymentSuccess"));
 
             if (orderType == "booking") {
               const doctorResponse = JSON.parse(localStorage.getItem("doctor") || "");
@@ -101,12 +103,12 @@ export default function ConfirmOrderPage() {
             clearCart();
           } else {
             setPaymentStatus("failed");
-            toast.error("Thanh toán thất bại. Vui lòng thử lại.");
+            toast.error(t("successPage.messages.paymentFailed"));
           }
         } catch (error) {
           console.error("Error verifying payment:", error);
           setPaymentStatus("failed");
-          toast.error("Có lỗi xảy ra khi xác thực thanh toán.");
+          toast.error(t("successPage.messages.verificationError"));
         } finally {
           setIsVerifyingPayment(false);
           setIsInitializing(false);
@@ -142,6 +144,7 @@ export default function ConfirmOrderPage() {
 
     // Trigger animation after mount
     setTimeout(() => setShowAnimation(true), 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clearCart]);
 
   const handleBackToHome = () => {
@@ -161,7 +164,9 @@ export default function ConfirmOrderPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-lg text-gray-600">
-            {isVerifyingPayment ? "Đang xác thực thanh toán..." : "Đang tải..."}
+            {isVerifyingPayment
+              ? t("successPage.loading.verifying")
+              : t("successPage.loading.loading")}
           </p>
         </div>
       </div>
@@ -184,10 +189,10 @@ export default function ConfirmOrderPage() {
                   <FaTimesCircle className="relative text-white text-8xl" />
                 </div>
               </div>
-              <h1 className="mt-6 text-4xl font-bold text-white">Thanh toán thất bại!</h1>
-              <p className="mt-3 text-lg text-white/90">
-                Đơn hàng của bạn chưa được thanh toán. Vui lòng thử lại.
-              </p>
+              <h1 className="mt-6 text-4xl font-bold text-white">
+                {t("successPage.failed.title")}
+              </h1>
+              <p className="mt-3 text-lg text-white/90">{t("successPage.failed.message")}</p>
             </div>
             <div className="px-8 py-8">
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -195,13 +200,13 @@ export default function ConfirmOrderPage() {
                   onClick={() => router.push("/payment")}
                   className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  Thử lại
+                  {t("successPage.failed.tryAgain")}
                 </button>
                 <button
                   onClick={() => router.push("/")}
                   className="px-8 py-4 bg-white text-gray-700 font-bold rounded-xl shadow-lg hover:shadow-xl border-2 border-gray-200 hover:border-gray-300 transform hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  Về trang chủ
+                  {t("successPage.failed.backToHome")}
                 </button>
               </div>
             </div>
@@ -229,11 +234,11 @@ export default function ConfirmOrderPage() {
               </div>
             </div>
             <h1 className="mt-6 text-4xl font-bold text-white">
-              {orderType === "booking" ? "Đặt lịch thành công!" : "Đặt hàng thành công!"}
+              {orderType === "booking"
+                ? t("successPage.success.bookingTitle")
+                : t("successPage.success.orderTitle")}
             </h1>
-            <p className="mt-3 text-lg text-white/90">
-              Cảm ơn bạn đã tin tưởng sử dụng dịch vụ của chúng tôi
-            </p>
+            <p className="mt-3 text-lg text-white/90">{t("successPage.success.thankYou")}</p>
           </div>
 
           {/* Order Info */}
@@ -241,11 +246,13 @@ export default function ConfirmOrderPage() {
             <div className="bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl p-6 mb-8">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <FaBox className="text-blue-500" />
-                Thông tin đơn hàng
+                {t("successPage.orderInfo.title")}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex justify-between items-center bg-white rounded-lg p-3">
-                  <span className="text-gray-600 font-medium">Mã đơn hàng:</span>
+                  <span className="text-gray-600 font-medium">
+                    {t("successPage.orderInfo.orderCode")}
+                  </span>
                   {orderType === "booking" ? (
                     <span className="text-gray-900 font-bold">
                       #{Date.now().toString().slice(-8)}
@@ -257,15 +264,21 @@ export default function ConfirmOrderPage() {
                   )}
                 </div>
                 <div className="flex justify-between items-center bg-white rounded-lg p-3">
-                  <span className="text-gray-600 font-medium">Ngày đặt:</span>
+                  <span className="text-gray-600 font-medium">
+                    {t("successPage.orderInfo.orderDate")}
+                  </span>
                   <span className="text-gray-900 font-bold">
                     {dayjs().format("DD/MM/YYYY HH:mm")}
                   </span>
                 </div>
                 <div className="flex justify-between items-center bg-white rounded-lg p-3 md:col-span-2">
-                  <span className="text-gray-600 font-medium">Loại đơn hàng:</span>
+                  <span className="text-gray-600 font-medium">
+                    {t("successPage.orderInfo.orderType")}
+                  </span>
                   <span className="text-blue-600 font-bold">
-                    {orderType === "booking" ? "Đặt lịch khám bệnh" : "Đặt mua thuốc"}
+                    {orderType === "booking"
+                      ? t("successPage.orderInfo.bookingType")
+                      : t("successPage.orderInfo.drugType")}
                   </span>
                 </div>
               </div>
@@ -276,7 +289,7 @@ export default function ConfirmOrderPage() {
               <div className="bg-white border border-gray-200 rounded-xl p-6 mb-8">
                 <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <FaPills className="text-blue-500" />
-                  Danh sách thuốc đã đặt
+                  {t("successPage.drugList.title")}
                 </h2>
                 <div className="space-y-4">
                   {orderItems.map((item, index) => (
@@ -304,7 +317,9 @@ export default function ConfirmOrderPage() {
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-800 mb-1">{item.name}</h3>
                         <div className="flex items-center gap-3 text-sm">
-                          <span className="text-gray-600">Số lượng: {item.quantity}</span>
+                          <span className="text-gray-600">
+                            {t("successPage.drugList.quantity")} {item.quantity}
+                          </span>
                           <span className="text-gray-300">|</span>
                           <div className="flex items-center gap-2">
                             {item.sale_price && item.sale_price < item.price ? (
@@ -327,7 +342,9 @@ export default function ConfirmOrderPage() {
 
                       {/* Tổng tiền cho item */}
                       <div className="text-right">
-                        <div className="text-xs text-gray-500 mb-1">Tổng cộng</div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          {t("successPage.drugList.total")}
+                        </div>
                         <div className="text-lg font-bold text-blue-600">
                           {((item.sale_price || item.price) * item.quantity).toLocaleString()}₫
                         </div>
@@ -340,7 +357,7 @@ export default function ConfirmOrderPage() {
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-gray-700">
-                      Tổng giá trị đơn hàng:
+                      {t("successPage.drugList.orderTotal")}
                     </span>
                     <span className="text-2xl font-bold text-blue-600">
                       {orderTotal.toLocaleString()}₫
@@ -358,7 +375,9 @@ export default function ConfirmOrderPage() {
                 ) : (
                   <FaTruck className="text-blue-500" />
                 )}
-                {orderType === "booking" ? "Các bước tiếp theo" : "Tiến trình đơn hàng"}
+                {orderType === "booking"
+                  ? t("successPage.timeline.booking.title")
+                  : t("successPage.timeline.order.title")}
               </h2>
 
               <div className="space-y-4">
@@ -369,9 +388,11 @@ export default function ConfirmOrderPage() {
                         1
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-800">Xác nhận lịch hẹn</h3>
+                        <h3 className="font-bold text-gray-800">
+                          {t("successPage.timeline.booking.step1.title")}
+                        </h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          Bệnh viện sẽ xác nhận lịch hẹn của bạn trong vòng 24h
+                          {t("successPage.timeline.booking.step1.description")}
                         </p>
                       </div>
                     </div>
@@ -381,9 +402,11 @@ export default function ConfirmOrderPage() {
                         2
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-700">Nhận thông báo</h3>
+                        <h3 className="font-bold text-gray-700">
+                          {t("successPage.timeline.booking.step2.title")}
+                        </h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          Bạn sẽ nhận email/SMS khi lịch hẹn được xác nhận
+                          {t("successPage.timeline.booking.step2.description")}
                         </p>
                       </div>
                     </div>
@@ -393,9 +416,11 @@ export default function ConfirmOrderPage() {
                         3
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-700">Đến khám</h3>
+                        <h3 className="font-bold text-gray-700">
+                          {t("successPage.timeline.booking.step3.title")}
+                        </h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          Đến bệnh viện đúng giờ hẹn để được khám
+                          {t("successPage.timeline.booking.step3.description")}
                         </p>
                       </div>
                     </div>
@@ -407,9 +432,11 @@ export default function ConfirmOrderPage() {
                         1
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-800">Đơn hàng đã đặt</h3>
+                        <h3 className="font-bold text-gray-800">
+                          {t("successPage.timeline.order.step1.title")}
+                        </h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          Đơn hàng của bạn đã được tiếp nhận và đang xử lý
+                          {t("successPage.timeline.order.step1.description")}
                         </p>
                       </div>
                     </div>
@@ -419,9 +446,11 @@ export default function ConfirmOrderPage() {
                         2
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-700">Chuẩn bị hàng</h3>
+                        <h3 className="font-bold text-gray-700">
+                          {t("successPage.timeline.order.step2.title")}
+                        </h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          Nhà thuốc sẽ chuẩn bị đơn hàng trong 1-2 giờ
+                          {t("successPage.timeline.order.step2.description")}
                         </p>
                       </div>
                     </div>
@@ -431,9 +460,11 @@ export default function ConfirmOrderPage() {
                         3
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-700">Giao hàng</h3>
+                        <h3 className="font-bold text-gray-700">
+                          {t("successPage.timeline.order.step3.title")}
+                        </h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          Đơn hàng sẽ được giao trong 1-3 ngày làm việc
+                          {t("successPage.timeline.order.step3.description")}
                         </p>
                       </div>
                     </div>
@@ -446,20 +477,20 @@ export default function ConfirmOrderPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
               <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                 <FaHome className="text-blue-600" />
-                Lưu ý quan trọng
+                {t("successPage.importantNotes.title")}
               </h3>
               <ul className="space-y-2 text-sm text-blue-800">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">•</span>
-                  <span>Bạn sẽ nhận được email xác nhận chi tiết trong vài phút tới</span>
+                  <span>{t("successPage.importantNotes.note1")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">•</span>
-                  <span>Vui lòng kiểm tra cả hộp thư spam nếu không thấy email</span>
+                  <span>{t("successPage.importantNotes.note2")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">•</span>
-                  <span>Bạn có thể theo dõi trạng thái đơn hàng trong mục &quot;Hồ sơ&quot;</span>
+                  <span>{t("successPage.importantNotes.note3")}</span>
                 </li>
               </ul>
             </div>
@@ -471,14 +502,14 @@ export default function ConfirmOrderPage() {
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <FaBox />
-                Xem đơn hàng của tôi
+                {t("successPage.actions.viewOrders")}
               </button>
               <button
                 onClick={handleBackToHome}
                 className="px-8 py-4 bg-white text-gray-700 font-bold rounded-xl shadow-lg hover:shadow-xl border-2 border-gray-200 hover:border-gray-300 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <FaHome />
-                Về trang chủ
+                {t("successPage.actions.backToHome")}
               </button>
             </div>
           </div>
@@ -487,12 +518,12 @@ export default function ConfirmOrderPage() {
         {/* Support Section */}
         <div className="mt-8 text-center">
           <p className="text-gray-600">
-            Cần hỗ trợ?{" "}
+            {t("successPage.support.needHelp")}{" "}
             <a
               href="mailto:support@deepeyex.com"
               className="text-blue-600 hover:underline font-semibold"
             >
-              Liên hệ với chúng tôi
+              {t("successPage.support.contactUs")}
             </a>
           </p>
         </div>

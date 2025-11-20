@@ -60,7 +60,9 @@ export default function ProductDetailPage() {
   if (error) {
     return (
       <div className="text-center py-10">
-        <Text type="danger">Có lỗi xảy ra khi tải dữ liệu: {error.message}</Text>
+        <Text type="danger">
+          {t("page.error")} {error.message}
+        </Text>
       </div>
     );
   }
@@ -85,7 +87,7 @@ export default function ProductDetailPage() {
           {
             title: (
               <Link href={`/${locale}/shop`}>
-                <span>Cửa hàng</span>
+                <span>{t("detail.breadcrumb.shop")}</span>
               </Link>
             ),
           },
@@ -99,7 +101,7 @@ export default function ProductDetailPage() {
           <div className="relative h-[443px] w-full">
             <Image
               src={drug?.image || ""}
-              alt={`Image product`}
+              alt={t("detail.imageAlt")}
               fill
               className="rounded-3xl object-contain"
             />
@@ -215,8 +217,8 @@ export default function ProductDetailPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-semibold">Đổi trả trong 30 ngày</p>
-                  <p className="text-gray-500">kể từ ngày mua hàng</p>
+                  <p className="font-semibold">{t("detail.benefits.return30Days.title")}</p>
+                  <p className="text-gray-500">{t("detail.benefits.return30Days.description")}</p>
                 </div>
               </div>
 
@@ -262,8 +264,8 @@ export default function ProductDetailPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-semibold">Miễn phí 100%</p>
-                  <p className="text-gray-500">đổi thuốc</p>
+                  <p className="font-semibold">{t("detail.benefits.free100.title")}</p>
+                  <p className="text-gray-500">{t("detail.benefits.free100.description")}</p>
                 </div>
               </div>
 
@@ -306,8 +308,8 @@ export default function ProductDetailPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-semibold">Miễn phí vận chuyển</p>
-                  <p className="text-gray-500">theo chính sách giao hàng</p>
+                  <p className="font-semibold">{t("detail.benefits.freeShipping.title")}</p>
+                  <p className="text-gray-500">{t("detail.benefits.freeShipping.description")}</p>
                 </div>
               </div>
             </div>

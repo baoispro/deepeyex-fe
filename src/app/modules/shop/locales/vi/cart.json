@@ -15,5 +15,8 @@
   "agreeTerms": "Bằng việc tiến hành đặt mua hàng, bạn đồng ý với Điều khoản dịch vụ và Chính sách xử lý dữ liệu cá nhân.",
   "empty": "Không có sản phẩm nào.",
   "products": "sản phẩm",
-  "viewCart": "Xem giỏ hàng"
+  "viewCart": "Xem giỏ hàng",
+  "selectAll": "Chọn tất cả",
+  "continueShopping": "Tiếp tục mua sắm",
+  "productImageAlt": "hình ảnh sản phẩm"
 }

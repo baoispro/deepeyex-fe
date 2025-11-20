@@ -3,14 +3,14 @@ import React, { useState, useEffect } from "react";
 import { Tabs, List, Avatar, Button, Card, message, Spin } from "antd";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import ChatBox from "@/app/modules/hospital/components/Chatbox";
-import { collection, onSnapshot, query, where, doc, setDoc, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/app/shares/configs/firebase";
-import { toast } from "react-toastify";
 import ChatHeader from "@/app/modules/hospital/components/VideoCallRoom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/shares/stores";
 import { useGetAppointmentsOnline } from "@/app/modules/hospital/hooks/queries/appointment/use-get-appointments-online";
 import { Appointment } from "@/app/modules/hospital/types/appointment";
+import { useTranslations } from "next-intl";
 
 interface Conversation {
   id: string;
@@ -34,8 +34,7 @@ interface Conversation {
 }
 
 const Consultation = () => {
-  const [isCheckingMic, setIsCheckingMic] = useState(false);
-  const [micLevel, setMicLevel] = useState(0);
+  const t = useTranslations("booking");
   const [selectedChat, setSelectedChat] = useState<Conversation | null>(null); // dùng cho tab lịch sử tư vấn
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -65,56 +64,22 @@ const Consultation = () => {
         setLoading(false);
       },
       (error) => {
-        console.error("❌ Lỗi khi lấy danh sách hội thoại:", error);
+        console.error(t("consultation.messages.conversationError"), error);
         setLoading(false);
       },
     );
 
     return () => unsub();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient_id]);
 
   const handleJoinRoom = (item: Conversation) => {
     const isPatient = auth?.role === "patient";
     const other = isPatient ? item.doctorInfo : item.patientInfo;
 
-    message.success(`Đang mở chat với ${other.name}`);
+    message.success(`${t("consultation.messages.openingChat")} ${other.name}`);
     setSelectedChat(item);
     setShowInfo(false);
-  };
-
-  const checkMicrophone = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      setIsCheckingMic(true);
-
-      source.connect(analyser);
-
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-      const interval = setInterval(() => {
-        analyser.getByteFrequencyData(dataArray);
-        let values = 0;
-        for (let i = 0; i < dataArray.length; i++) values += dataArray[i];
-        const average = values / dataArray.length;
-        setMicLevel((prev) => prev * 0.8 + average * 0.2); // làm mượt
-      }, 60);
-
-      // Dừng sau 5 giây
-      setTimeout(() => {
-        clearInterval(interval);
-        stream.getTracks().forEach((track) => track.stop());
-        audioContext.close();
-        setIsCheckingMic(false);
-        toast.success("✅ Micro hoạt động bình thường!");
-      }, 5000);
-    } catch (err) {
-      console.error("❌ Lỗi khi kiểm tra micro:", err);
-      message.error("Không thể truy cập micro. Hãy kiểm tra quyền trình duyệt!");
-    }
   };
 
   const { data, isLoading, isError } = useGetAppointmentsOnline({
@@ -130,7 +95,7 @@ const Consultation = () => {
           items={[
             {
               key: "online",
-              label: "🎥 Phòng tư vấn trực tuyến",
+              label: t("consultation.tabs.online"),
               children: (
                 <div className="flex flex-col gap-5">
                   {/** Gọi API lấy danh sách lịch tư vấn online */}
@@ -138,7 +103,7 @@ const Consultation = () => {
                     if (isLoading) {
                       return (
                         <div className="flex justify-center items-center h-40">
-                          <Spin size="large" />
+                          <Spin size="large" tip={t("consultation.online.loading")} />
                         </div>
                       );
                     }
@@ -146,7 +111,7 @@ const Consultation = () => {
                     if (isError || !data?.data?.length) {
                       return (
                         <div className="text-center text-gray-400 mt-6">
-                          Không có lịch tư vấn trực tuyến nào.
+                          {t("consultation.online.noAppointments")}
                         </div>
                       );
                     }
@@ -172,17 +137,17 @@ const Consultation = () => {
                               {/* Info */}
                               <div className="flex flex-col">
                                 <span className="font-semibold text-gray-800 text-base">
-                                  {appointment.doctor.full_name || "Bác sĩ"}
+                                  {appointment.doctor.full_name || t("consultation.online.doctor")}
                                 </span>
                                 <span className="text-gray-500 text-sm">
                                   {new Date(appointment.time_slots[0].start_time).toLocaleString()}
                                 </span>
                                 <span className="mt-1 px-2 py-1 w-max rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                   {appointment.status === "PENDING_ONLINE"
-                                    ? "Đang chờ"
+                                    ? t("consultation.online.status.pending")
                                     : appointment.status === "CONFIRMED_ONLINE"
-                                      ? "Đã xác nhận"
-                                      : "Hoàn tất"}
+                                      ? t("consultation.online.status.confirmed")
+                                      : t("consultation.online.status.completed")}
                                 </span>
                               </div>
                             </div>
@@ -201,12 +166,14 @@ const Consultation = () => {
             },
             {
               key: "history",
-              label: "💬 Lịch sử tư vấn",
+              label: t("consultation.tabs.history"),
               children: (
                 <div className="flex h-[30vh] md:h-[75vh] xl:h-[60vh]">
                   {/* Sidebar hội thoại */}
                   <div className="w-1/4 border-r bg-white flex flex-col">
-                    <div className="p-4 text-lg font-semibold border-b">Danh sách hội thoại</div>
+                    <div className="p-4 text-lg font-semibold border-b">
+                      {t("consultation.history.conversationList")}
+                    </div>
                     {loading ? (
                       <div className="flex-1 flex justify-center items-center">
                         <Spin size="large" />
@@ -242,7 +209,9 @@ const Consultation = () => {
                                   item.lastMessage ? (
                                     item.lastMessage
                                   ) : (
-                                    <span className="text-gray-400 italic">Chưa có tin nhắn</span>
+                                    <span className="text-gray-400 italic">
+                                      {t("consultation.history.noMessage")}
+                                    </span>
                                   )
                                 }
                               />
@@ -252,7 +221,7 @@ const Consultation = () => {
                       />
                     ) : (
                       <div className="text-center text-gray-400 mt-10">
-                        Không có cuộc hội thoại nào.
+                        {t("consultation.history.noConversations")}
                       </div>
                     )}
                   </div>
@@ -285,7 +254,9 @@ const Consultation = () => {
                                     ? selectedChat.doctorInfo.name
                                     : selectedChat.patientInfo.name}
                                 </p>
-                                <p className="text-xs text-green-600">Đang hoạt động</p>
+                                <p className="text-xs text-green-600">
+                                  {t("consultation.history.active")}
+                                </p>
                               </div>
                             </div>
 
@@ -312,7 +283,9 @@ const Consultation = () => {
                         {/* Khu vực thông tin bên phải */}
                         {showInfo && (
                           <div className="w-1/3 bg-white p-4 flex flex-col border-l shadow-inner">
-                            <h3 className="text-lg font-semibold mb-4">Thông tin hội thoại</h3>
+                            <h3 className="text-lg font-semibold mb-4">
+                              {t("consultation.history.conversationInfo")}
+                            </h3>
 
                             <div className="flex items-center gap-3 mb-4">
                               <Avatar
@@ -337,18 +310,24 @@ const Consultation = () => {
 
                             <div className="space-y-2 text-sm text-gray-600">
                               <p>
-                                <span className="font-medium">Ngày tạo: </span>
+                                <span className="font-medium">
+                                  {t("consultation.history.createdDate")}{" "}
+                                </span>
                                 {selectedChat.createdAt
                                   ? new Date(selectedChat.createdAt.seconds * 1000).toLocaleString()
-                                  : "Không rõ"}
+                                  : t("consultation.history.unknown")}
                               </p>
                               <p>
-                                <span className="font-medium">Mã cuộc hẹn cuối: </span>
-                                {selectedChat.lastAppointmentId || "Không có"}
+                                <span className="font-medium">
+                                  {t("consultation.history.lastAppointment")}{" "}
+                                </span>
+                                {selectedChat.lastAppointmentId || t("consultation.history.none")}
                               </p>
                               <p>
-                                <span className="font-medium">Tin nhắn cuối: </span>
-                                {selectedChat.lastMessage || "Không có"}
+                                <span className="font-medium">
+                                  {t("consultation.history.lastMessage")}{" "}
+                                </span>
+                                {selectedChat.lastMessage || t("consultation.history.none")}
                               </p>
                             </div>
                           </div>
@@ -356,7 +335,7 @@ const Consultation = () => {
                       </>
                     ) : (
                       <div className="flex flex-col justify-center items-center w-full text-gray-400 text-lg">
-                        💬 Hãy chọn một cuộc hội thoại để bắt đầu
+                        {t("consultation.history.selectConversation")}
                       </div>
                     )}
                   </div>

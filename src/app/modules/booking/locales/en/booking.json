@@ -1,0 +1,362 @@
+{
+  "bookingTypeModal": {
+    "title": "Select Your Appointment Type",
+    "newExam": {
+      "title": "New Examination",
+      "description": "For first-time patients or those without existing records."
+    },
+    "reExam": {
+      "title": "Re-examination",
+      "description": "For patients with previous medical records."
+    }
+  },
+  "page": {
+    "title": "Nationwide Hospital System",
+    "workingHours": "Operating hours: 6:00 AM - 11:00 PM daily (Varies by hospital)",
+    "tabs": {
+      "search": "Search Hospital",
+      "nearby": "Nearby Hospitals"
+    },
+    "search": {
+      "placeholder": "Search by street name and province",
+      "or": "Or",
+      "selectCity": "Select Province/City",
+      "selectWard": "Select Ward/District",
+      "suggestions": "Suggested Hospitals",
+      "loadMore": "Load more hospitals"
+    },
+    "nearby": {
+      "findButton": "Find nearby hospitals",
+      "noResults": "No results yet",
+      "noLocationSupport": "Browser does not support GPS location!",
+      "locationError": "Unable to get your location!"
+    },
+    "hospitalDetail": {
+      "address": "Address:",
+      "phone": "Phone:",
+      "email": "Email:",
+      "selectButton": "Select Hospital",
+      "callButton": "Call for consultation",
+      "images": "Hospital Images:",
+      "selectHospital": "Please select a hospital to view details"
+    }
+  },
+  "doctorPage": {
+    "title": "Select Doctor",
+    "filter": {
+      "title": "Doctor Filter",
+      "searchPlaceholder": "Search by doctor name",
+      "specialty": "Specialty:",
+      "selectSpecialty": "Select specialty",
+      "gender": "Gender:",
+      "genderAll": "All",
+      "genderMale": "Male",
+      "genderFemale": "Female"
+    },
+    "specialties": {
+      "NHAN_KHOA": "Ophthalmology",
+      "PHAU_THUAT": "Surgery",
+      "KHUC_XA": "Refraction"
+    },
+    "loading": "Loading doctor list...",
+    "emptyText": "No doctors found.",
+    "phone": "Phone:",
+    "email": "Email:",
+    "bookButton": "Book Appointment"
+  },
+  "appointmentPage": {
+    "breadcrumb": {
+      "home": "Home",
+      "booking": "Booking",
+      "appointment": "Book Appointment"
+    },
+    "loading": "Loading doctor information...",
+    "doctorNotFound": "Doctor not found",
+    "steps": {
+      "service": "Specialty & Service",
+      "datetime": "Date & Time",
+      "patient": "Patient Information"
+    },
+    "step1": {
+      "title": "Appointment Information",
+      "specialty": "Specialty:",
+      "service": "Service",
+      "total": "Total:",
+      "nextButton": "Select Date & Time"
+    },
+    "step2": {
+      "title": "Appointment Information",
+      "selectDate": "Select Date",
+      "selectTime": "Select Time",
+      "loadingSlots": "Loading schedule...",
+      "noSlots": "No available slots for this date",
+      "selectDateFirst": "Please select a date first",
+      "backButton": "Back",
+      "nextButton": "Add Patient Information"
+    },
+    "step3": {
+      "patientType": "Select Patient",
+      "patientTypeSelf": "Myself",
+      "patientTypeOther": "Someone else",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "Enter full name",
+      "fullNameRequired": "Please enter full name",
+      "phone": "Phone Number",
+      "phonePlaceholder": "Enter phone number",
+      "phoneRequired": "Please enter phone number",
+      "phoneInvalid": "Invalid phone number (e.g., 0912345678)",
+      "email": "Email",
+      "emailPlaceholder": "Enter email",
+      "emailRequired": "Please enter email",
+      "emailInvalid": "Invalid email",
+      "dob": "Date of Birth",
+      "dobRequired": "Please select date of birth",
+      "ageInvalid": "Age must be between 1 and 100",
+      "gender": "Gender",
+      "genderRequired": "Please select gender",
+      "genderMale": "Male",
+      "genderFemale": "Female",
+      "address": "Address",
+      "addressPlaceholder": "Enter address",
+      "addressRequired": "Please enter address",
+      "backButton": "Back",
+      "nextButton": "Select Payment Method"
+    }
+  },
+  "paymentPage": {
+    "backButton": "Back",
+    "bookingInfo": "Appointment Information",
+    "productList": "Product List",
+    "originalPrice": "Original Price:",
+    "salePrice": "Sale Price:",
+    "bottle": "Bottle",
+    "service": "service",
+    "doctor": "Doctor:",
+    "hospital": "Hospital:",
+    "time": "Time:",
+    "patientInfo": "Patient Information",
+    "fullName": "Full Name:",
+    "phone": "Phone:",
+    "email": "Email:",
+    "shippingMethod": "Select Delivery Method",
+    "delivery": "Home Delivery",
+    "pickup": "Pickup at Pharmacy",
+    "deliveryAddress": "Delivery Address",
+    "receiverName": "Receiver Name",
+    "receiverPhone": "Phone Number",
+    "receiverEmail": "Email",
+    "selectProvince": "Select Province/City",
+    "selectDistrict": "Select District",
+    "enterWard": "Enter Ward",
+    "enterAddress": "Enter specific address (house number, street name)",
+    "note": "Note (optional)",
+    "notePlaceholder": "Example: Please call me 15 minutes before delivery",
+    "freeShippingMessage": "Buy more",
+    "freeShippingMessage2": "to get",
+    "freeShipping": "FREE SHIPPING",
+    "total": "Subtotal",
+    "directDiscount": "Direct Discount",
+    "voucherDiscount": "Voucher Discount",
+    "shippingFee": "Shipping Fee",
+    "freeForOrderOver": "Free for orders over 500k",
+    "innerCity": "Inner City",
+    "nearbyProvince": "Nearby Province",
+    "farProvince": "Far Province",
+    "selectProvinceToSeeFee": "Select province to see fee",
+    "free": "Free",
+    "totalAmount": "Total",
+    "invoiceRequest": "Request Electronic Invoice",
+    "selectPaymentMethod": "Select Payment Method",
+    "paymentCash": "Cash on Delivery",
+    "paymentATM": "Payment by Domestic ATM Card and Bank Account",
+    "processing": "Processing...",
+    "pay": "Pay",
+    "bookAppointment": "Book Appointment",
+    "placeOrder": "Place Order",
+    "errors": {
+      "noPatientInfo": "Patient information not found.",
+      "selectPaymentMethod": "Please select a payment method.",
+      "onlineOnly": "This service only supports online payment.",
+      "loginRequired": "Please login to place an order.",
+      "receiverNameRequired": "Please enter receiver name.",
+      "receiverPhoneRequired": "Please enter receiver phone number.",
+      "provinceRequired": "Please select Province/City.",
+      "districtRequired": "Please select District.",
+      "addressRequired": "Please enter specific address."
+    },
+    "success": {
+      "bookingSuccess": "Appointment booked successfully!",
+      "orderSuccess": "Order placed successfully!",
+      "invoiceSent": "Invoice has been sent to your email!",
+      "invoiceError": "An error occurred while sending invoice."
+    },
+    "failures": {
+      "bookingFailed": "Booking failed:",
+      "orderFailed": "Order failed:",
+      "paymentFailed": "Payment creation failed:",
+      "noPaymentUrl": "Unable to create payment link."
+    }
+  },
+  "successPage": {
+    "loading": {
+      "verifying": "Verifying payment...",
+      "loading": "Loading..."
+    },
+    "failed": {
+      "title": "Payment Failed!",
+      "message": "Your order has not been paid. Please try again.",
+      "tryAgain": "Try Again",
+      "backToHome": "Back to Home"
+    },
+    "success": {
+      "bookingTitle": "Appointment Booked Successfully!",
+      "orderTitle": "Order Placed Successfully!",
+      "thankYou": "Thank you for trusting our services"
+    },
+    "orderInfo": {
+      "title": "Order Information",
+      "orderCode": "Order Code:",
+      "orderDate": "Order Date:",
+      "orderType": "Order Type:",
+      "bookingType": "Medical Appointment",
+      "drugType": "Drug Order"
+    },
+    "drugList": {
+      "title": "Ordered Drugs List",
+      "quantity": "Quantity:",
+      "total": "Total",
+      "orderTotal": "Total Order Value:"
+    },
+    "timeline": {
+      "booking": {
+        "title": "Next Steps",
+        "step1": {
+          "title": "Confirm Appointment",
+          "description": "The hospital will confirm your appointment within 24 hours"
+        },
+        "step2": {
+          "title": "Receive Notification",
+          "description": "You will receive an email/SMS when the appointment is confirmed"
+        },
+        "step3": {
+          "title": "Visit Hospital",
+          "description": "Arrive at the hospital on time for your appointment"
+        }
+      },
+      "order": {
+        "title": "Order Progress",
+        "step1": {
+          "title": "Order Placed",
+          "description": "Your order has been received and is being processed"
+        },
+        "step2": {
+          "title": "Preparing Order",
+          "description": "The pharmacy will prepare your order within 1-2 hours"
+        },
+        "step3": {
+          "title": "Delivery",
+          "description": "Your order will be delivered within 1-3 business days"
+        }
+      }
+    },
+    "importantNotes": {
+      "title": "Important Notes",
+      "note1": "You will receive a detailed confirmation email in the next few minutes",
+      "note2": "Please check your spam folder if you don't see the email",
+      "note3": "You can track your order status in the \"Profile\" section"
+    },
+    "actions": {
+      "viewOrders": "View My Orders",
+      "backToHome": "Back to Home"
+    },
+    "support": {
+      "needHelp": "Need help?",
+      "contactUs": "Contact us"
+    },
+    "messages": {
+      "paymentSuccess": "Payment successful!",
+      "paymentFailed": "Payment failed. Please try again.",
+      "verificationError": "An error occurred while verifying payment."
+    }
+  },
+  "followUpBooking": {
+    "step1": {
+      "title": "Select Follow-up Record",
+      "subtitle": "Enter record code or select an existing record to continue booking a follow-up appointment.",
+      "enterRecordCode": "Enter Record Code",
+      "recordCodePlaceholder": "Example: MR-20251015",
+      "orSelect": "Or select existing record",
+      "selectRecord": "Select Record",
+      "selectRecordPlaceholder": "Select your record",
+      "loadingRecords": "Loading records...",
+      "loadError": "Unable to load records",
+      "recordDate": "Record dated",
+      "confirmButton": "Confirm Record",
+      "warning": "Please select a record to continue!"
+    },
+    "step2": {
+      "title": "Select Follow-up Date & Time",
+      "summaryTitle": "Selected Record Summary",
+      "previousDate": "Previous Visit Date",
+      "diagnosis": "Diagnosis",
+      "doctor": "Doctor",
+      "hospital": "Hospital",
+      "noData": "Not available",
+      "selectTime": "Select Time",
+      "loadingSlots": "Loading slots...",
+      "noSlots": "No slots available for this date",
+      "selectDateFirst": "Please select a date first",
+      "notesLabel": "Additional Notes",
+      "notesPlaceholder": "Current symptoms, questions for doctor...",
+      "confirmButton": "Confirm Follow-up Appointment",
+      "warning": "Please select date, slot and record!"
+    },
+    "messages": {
+      "success": "Follow-up appointment booked successfully for record",
+      "failed": "Booking failed:"
+    }
+  },
+  "videoCall": {
+    "joinVideoCall": "Join Video Call",
+    "title": "Video Call",
+    "hangup": "Hang Up",
+    "mute": "Mute",
+    "unmute": "Unmute"
+  },
+  "consultation": {
+    "tabs": {
+      "online": "🎥 Online Consultation Room",
+      "history": "💬 Consultation History"
+    },
+    "online": {
+      "loading": "Loading...",
+      "noAppointments": "No online consultation appointments.",
+      "doctor": "Doctor",
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed"
+      }
+    },
+    "history": {
+      "conversationList": "Conversation List",
+      "noMessage": "No messages yet",
+      "noConversations": "No conversations.",
+      "active": "Active",
+      "conversationInfo": "Conversation Information",
+      "createdDate": "Created Date:",
+      "lastAppointment": "Last Appointment ID:",
+      "lastMessage": "Last Message:",
+      "unknown": "Unknown",
+      "none": "None",
+      "selectConversation": "💬 Please select a conversation to start"
+    },
+    "messages": {
+      "openingChat": "Opening chat with",
+      "microWorking": "✅ Microphone is working normally!",
+      "microError": "Cannot access microphone. Please check browser permissions!",
+      "conversationError": "❌ Error fetching conversation list:",
+      "microCheckError": "❌ Error checking microphone:"
+    }
+  }
+}

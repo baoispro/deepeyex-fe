@@ -31,11 +31,13 @@ import { toast } from "react-toastify";
 import { CreateFollowUpRequest } from "../apis/appointment/appointmentApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeyEnum } from "@/app/shares/enums/queryKey";
+import { useTranslations } from "next-intl";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const FollowUpBooking: React.FC = () => {
+  const t = useTranslations("booking");
   const queryClient = useQueryClient();
   const patientId = useAppSelector((state) => state.auth.patient?.patientId || "");
   const userId = useAppSelector((state) => state.auth.userId || "");
@@ -45,7 +47,6 @@ const FollowUpBooking: React.FC = () => {
     isError,
   } = useGetMedicalRecordsByPatientQuery(patientId);
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [step, setStep] = useState(1);
 
@@ -60,7 +61,7 @@ const FollowUpBooking: React.FC = () => {
 
   const handleSubmitStep1 = () => {
     if (!selectedRecord) {
-      message.warning("Vui lòng chọn hồ sơ để tiếp tục!");
+      message.warning(t("followUpBooking.step1.warning"));
       return;
     }
     setStep(2);
@@ -90,7 +91,7 @@ const FollowUpBooking: React.FC = () => {
 
   const createFollowUpMutation = useCreateFollowUpAppointmentMutation({
     onSuccess: () => {
-      toast.success(`Đặt lịch tái khám thành công cho hồ sơ ${selectedRecord?.record_id} 🎉`);
+      toast.success(`${t("followUpBooking.messages.success")} ${selectedRecord?.record_id} 🎉`);
       // reset form & state
       setStep(1);
       setSelectedRecord(null);
@@ -104,13 +105,13 @@ const FollowUpBooking: React.FC = () => {
       }
     },
     onError: (err: Error) => {
-      toast.error(`Đặt lịch thất bại: ${err.message}`);
+      toast.error(`${t("followUpBooking.messages.failed")} ${err.message}`);
     },
   });
 
   const handleFinalSubmit = async () => {
     if (!selectedSlot || !selectedRecord || !doctorId) {
-      message.warning("Vui lòng chọn ngày, slot và hồ sơ!");
+      message.warning(t("followUpBooking.step2.warning"));
       return;
     }
 
@@ -121,7 +122,7 @@ const FollowUpBooking: React.FC = () => {
       book_user_id: userId, // giả sử book_user là patient
       slot_ids: [selectedSlot],
       notes: form.getFieldValue("notes") || "",
-      service_name: "Tái khám",
+      service_name: t("bookingTypeModal.reExam.title"),
       related_record_id: selectedRecord.record_id,
     };
 
@@ -148,11 +149,9 @@ const FollowUpBooking: React.FC = () => {
             <div className="text-center mb-6">
               <FileTextOutlined className="text-[#1250dc] text-4xl mb-3 animate-pulse" />
               <Title level={3} style={{ color: "#1250dc", marginBottom: 0 }}>
-                Chọn hồ sơ tái khám
+                {t("followUpBooking.step1.title")}
               </Title>
-              <Text type="secondary">
-                Nhập mã hồ sơ hoặc chọn hồ sơ đã có để tiếp tục đặt lịch tái khám.
-              </Text>
+              <Text type="secondary">{t("followUpBooking.step1.subtitle")}</Text>
             </div>
 
             <Form layout="vertical" form={form} autoComplete="off">
@@ -160,34 +159,38 @@ const FollowUpBooking: React.FC = () => {
                 label={
                   <Space>
                     <FileSearchOutlined />
-                    <Text strong>Nhập mã hồ sơ</Text>
+                    <Text strong>{t("followUpBooking.step1.enterRecordCode")}</Text>
                   </Space>
                 }
                 name="recordCode"
               >
-                <Input placeholder="Ví dụ: MR-20251015" size="large" style={{ borderRadius: 8 }} />
+                <Input
+                  placeholder={t("followUpBooking.step1.recordCodePlaceholder")}
+                  size="large"
+                  style={{ borderRadius: 8 }}
+                />
               </Form.Item>
 
               <Divider plain style={{ color: "#999" }}>
-                Hoặc chọn hồ sơ đã có
+                {t("followUpBooking.step1.orSelect")}
               </Divider>
 
               <Form.Item
                 label={
                   <Space>
                     <FileTextOutlined />
-                    <Text strong>Chọn hồ sơ</Text>
+                    <Text strong>{t("followUpBooking.step1.selectRecord")}</Text>
                   </Space>
                 }
                 name="existingRecord"
               >
                 {isLoading ? (
-                  <Spin tip="Đang tải hồ sơ..." />
+                  <Spin tip={t("followUpBooking.step1.loadingRecords")} />
                 ) : isError ? (
-                  <Text type="danger">Không thể tải hồ sơ</Text>
+                  <Text type="danger">{t("followUpBooking.step1.loadError")}</Text>
                 ) : (
                   <Select
-                    placeholder="Chọn hồ sơ của bạn"
+                    placeholder={t("followUpBooking.step1.selectRecordPlaceholder")}
                     allowClear
                     size="large"
                     style={{ borderRadius: 8 }}
@@ -195,7 +198,7 @@ const FollowUpBooking: React.FC = () => {
                   >
                     {(existingRecords?.data?.records || []).map((rec) => (
                       <Option key={rec.record_id} value={rec.record_id}>
-                        {`Hồ sơ ngày ${
+                        {`${t("followUpBooking.step1.recordDate")} ${
                           rec.appointment?.time_slots?.[0]?.start_time
                             ? new Date(rec.appointment.time_slots[0].start_time).toLocaleDateString(
                                 "vi-VN",
@@ -223,7 +226,7 @@ const FollowUpBooking: React.FC = () => {
                     fontWeight: 500,
                   }}
                 >
-                  Xác nhận hồ sơ
+                  {t("followUpBooking.step1.confirmButton")}
                 </Button>
               </Form.Item>
             </Form>
@@ -234,31 +237,33 @@ const FollowUpBooking: React.FC = () => {
         {step === 2 && selectedRecord && (
           <>
             <Title level={4} style={{ color: "#1250dc", marginBottom: 12 }}>
-              Chọn ngày giờ tái khám
+              {t("followUpBooking.step2.title")}
             </Title>
 
             <Row gutter={16}>
               {/* Cột trái: Thông tin hồ sơ */}
               <Col span={10}>
                 <Title level={5} style={{ color: "#1250dc", marginBottom: 12 }}>
-                  Tóm tắt hồ sơ đã chọn
+                  {t("followUpBooking.step2.summaryTitle")}
                 </Title>
                 <Descriptions bordered column={1} size="small">
-                  <Descriptions.Item label="Ngày khám trước">
+                  <Descriptions.Item label={t("followUpBooking.step2.previousDate")}>
                     {selectedRecord.appointment?.time_slots?.[0]?.start_time
                       ? dayjs(selectedRecord.appointment.time_slots[0].start_time).format(
                           "DD/MM/YYYY",
                         )
                       : dayjs(selectedRecord.created_at).format("DD/MM/YYYY")}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Chuẩn đoán">
+                  <Descriptions.Item label={t("followUpBooking.step2.diagnosis")}>
                     {selectedRecord.diagnosis}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Bác sĩ">
-                    {selectedRecord.appointment?.doctor?.full_name || "Chưa có"}
+                  <Descriptions.Item label={t("followUpBooking.step2.doctor")}>
+                    {selectedRecord.appointment?.doctor?.full_name ||
+                      t("followUpBooking.step2.noData")}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Bệnh viện">
-                    {selectedRecord.appointment?.hospital?.name || "Chưa có"}
+                  <Descriptions.Item label={t("followUpBooking.step2.hospital")}>
+                    {selectedRecord.appointment?.hospital?.name ||
+                      t("followUpBooking.step2.noData")}
                   </Descriptions.Item>
                 </Descriptions>
               </Col>
@@ -281,11 +286,13 @@ const FollowUpBooking: React.FC = () => {
                   }}
                 />
 
-                <Divider style={{ margin: "16px 0" }}>Chọn giờ</Divider>
+                <Divider style={{ margin: "16px 0" }}>
+                  {t("followUpBooking.step2.selectTime")}
+                </Divider>
 
                 {selectedDate ? (
                   isDayLoading ? (
-                    <Spin tip="Đang tải slot..." />
+                    <Spin tip={t("followUpBooking.step2.loadingSlots")} />
                   ) : dayData?.data?.length ? (
                     <Radio.Group
                       onChange={(e) => setSelectedSlot(e.target.value)}
@@ -313,18 +320,21 @@ const FollowUpBooking: React.FC = () => {
                       </Row>
                     </Radio.Group>
                   ) : (
-                    <Text type="danger">Không có slot cho ngày này</Text>
+                    <Text type="danger">{t("followUpBooking.step2.noSlots")}</Text>
                   )
                 ) : (
-                  <Text>Vui lòng chọn ngày trước</Text>
+                  <Text>{t("followUpBooking.step2.selectDateFirst")}</Text>
                 )}
 
                 <Divider style={{ margin: "16px 0" }} />
 
                 <Form layout="vertical" form={form} onFinish={handleFinalSubmit}>
-                  <Form.Item label={<Text strong>Ghi chú bổ sung</Text>} name="notes">
+                  <Form.Item
+                    label={<Text strong>{t("followUpBooking.step2.notesLabel")}</Text>}
+                    name="notes"
+                  >
                     <Input.TextArea
-                      placeholder="Triệu chứng hiện tại, câu hỏi bác sĩ..."
+                      placeholder={t("followUpBooking.step2.notesPlaceholder")}
                       rows={4}
                     />
                   </Form.Item>
@@ -333,7 +343,7 @@ const FollowUpBooking: React.FC = () => {
                     <Button
                       type="primary"
                       htmlType="submit"
-                      loading={loading}
+                      loading={createFollowUpMutation.isPending}
                       block
                       size="large"
                       style={{
@@ -345,7 +355,7 @@ const FollowUpBooking: React.FC = () => {
                         fontWeight: 500,
                       }}
                     >
-                      Xác nhận đặt lịch tái khám
+                      {t("followUpBooking.step2.confirmButton")}
                     </Button>
                   </Form.Item>
                 </Form>

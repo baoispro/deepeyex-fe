@@ -11,5 +11,33 @@
   "findStore": "Find pharmacy",
   "description": "Product Description",
   "successAdd": "Product added to cart successfully",
-  "notFound": "Product not found"
+  "notFound": "Product not found",
+  "productCard": {
+    "imageAlt": "product image",
+    "addToCartSuccess": "Added to cart successfully"
+  },
+  "page": {
+    "loading": "Loading...",
+    "error": "An error occurred while loading data:"
+  },
+  "detail": {
+    "breadcrumb": {
+      "shop": "Shop"
+    },
+    "imageAlt": "Product image",
+    "benefits": {
+      "return30Days": {
+        "title": "30-Day Return",
+        "description": "from purchase date"
+      },
+      "free100": {
+        "title": "100% Free",
+        "description": "drug exchange"
+      },
+      "freeShipping": {
+        "title": "Free Shipping",
+        "description": "according to delivery policy"
+      }
+    }
+  }
 }

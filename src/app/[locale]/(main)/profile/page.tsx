@@ -16,10 +16,12 @@ import { MdDateRange } from "react-icons/md";
 import { useGetAppointmentsByPatientId } from "@/app/modules/hospital/hooks/queries/appointment/use-get-appointments.query";
 import { useGetOrdersByPatientId } from "@/app/modules/hospital/hooks/mutations/orders/use-get-orders.query";
 import { useGetPrescriptionsByPatientId } from "@/app/modules/hospital/hooks/queries/prescription/use-get-prescriptions.query";
+import { useTranslations } from "next-intl";
 
 const { Sider, Content } = Layout;
 
 export default function PatientProfile() {
+  const t = useTranslations("home");
   const [selectedKey, setSelectedKey] = useState("info");
   const [appointmentFilters, setAppointmentFilters] = useState({
     status: "",
@@ -81,7 +83,7 @@ export default function PatientProfile() {
         href={"/shop"}
         className="px-10 flex gap-1 items-center text-[#1250dc] font-medium hover:text-[#5979c4]"
       >
-        <MdOutlineKeyboardArrowLeft size={20} /> <p>Trang chủ</p>
+        <MdOutlineKeyboardArrowLeft size={20} /> <p>{t("profile.backToHome")}</p>
       </Link>
       <Layout style={{ minHeight: "90vh" }} className="px-10 pt-4 flex flex-row gap-4 min-h-screen">
         <Sider
@@ -97,7 +99,9 @@ export default function PatientProfile() {
         >
           <div className="flex flex-col items-center py-6">
             <Avatar name={name || ""} src={image || ""} size="100" round={true} />
-            <h2 className="mt-4 text-xl font-semibold">{name || "Bệnh nhân"}</h2>
+            <h2 className="mt-4 text-xl font-semibold">
+              {name || t("profile.defaultPatientName")}
+            </h2>
           </div>
           <Menu
             defaultSelectedKeys={["profile"]}
@@ -106,15 +110,31 @@ export default function PatientProfile() {
             onClick={(e) => setSelectedKey(e.key)}
             className="!px-4"
             items={[
-              { key: "info", label: "Thông tin bệnh nhân", icon: <CgProfile size={20} /> },
-              { key: "appointment", label: "Lịch hẹn khám", icon: <MdDateRange size={20} /> },
+              {
+                key: "info",
+                label: t("profile.menu.patientInfo"),
+                icon: <CgProfile size={20} />,
+              },
+              {
+                key: "appointment",
+                label: t("profile.menu.appointments"),
+                icon: <MdDateRange size={20} />,
+              },
               {
                 key: "prescription",
-                label: "Toa thuốc",
+                label: t("profile.menu.prescriptions"),
                 icon: <FaPrescriptionBottle size={20} />,
               },
-              { key: "history", label: "Lịch sử chẩn đoán", icon: <FaHistory size={20} /> },
-              { key: "invoice", label: "Hóa đơn", icon: <FaReceipt size={20} /> },
+              {
+                key: "history",
+                label: t("profile.menu.diagnosisHistory"),
+                icon: <FaHistory size={20} />,
+              },
+              {
+                key: "invoice",
+                label: t("profile.menu.invoices"),
+                icon: <FaReceipt size={20} />,
+              },
             ]}
           ></Menu>
         </Sider>

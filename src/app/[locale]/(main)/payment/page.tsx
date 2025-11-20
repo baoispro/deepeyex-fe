@@ -24,6 +24,7 @@ import {
   InitMedicalRecordAndDiagnosisRequest,
   MedicalRecordApi,
 } from "@/app/modules/hospital/apis/medical_record/medicalRecordApi";
+import { useTranslations } from "next-intl";
 
 interface BookingService {
   service_id: string;
@@ -62,18 +63,7 @@ interface City {
   districts: District[];
 }
 
-const mockPaymentMethods = [
-  {
-    key: "cash",
-    icon: <FaMoneyBill className="text-blue-500" />,
-    name: "Thanh toán tiền mặt khi nhận hàng",
-  },
-  {
-    key: "atm",
-    icon: <FaRegCreditCard className="text-blue-500" />,
-    name: "Thanh toán bằng thẻ ATM nội địa và tài khoản ngân hàng",
-  },
-];
+// Payment methods will be defined inside component to use translations
 
 // Cấu hình phí vận chuyển theo địa chỉ
 const SHIPPING_CONFIG = {
@@ -104,6 +94,7 @@ const SHIPPING_CONFIG = {
 };
 
 const OrderPage = () => {
+  const t = useTranslations("booking");
   const [type, setType] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [hoadon, setHoadon] = useState(false);
@@ -113,6 +104,19 @@ const OrderPage = () => {
   const patient_id = auth.patient?.patientId;
   const user_id = auth.userId;
   const [shippingMethod, setShippingMethod] = useState("delivery");
+
+  const mockPaymentMethods = [
+    {
+      key: "cash",
+      icon: <FaMoneyBill className="text-blue-500" />,
+      name: t("paymentPage.paymentCash"),
+    },
+    {
+      key: "atm",
+      icon: <FaRegCreditCard className="text-blue-500" />,
+      name: t("paymentPage.paymentATM"),
+    },
+  ];
 
   // State cho địa chỉ từ API
   const [cities, setCities] = useState<City[]>([]);
@@ -177,12 +181,12 @@ const OrderPage = () => {
           patientResponse.data || ({} as Patient),
           data.data.appointment.appointment_id || null,
         );
-        toast.success("Đặt lịch khám thành công!");
+        toast.success(t("paymentPage.success.bookingSuccess"));
         router.push("/booking/success");
       }
     },
     onError: (err) => {
-      toast.error("Đặt lịch thất bại: " + err.message);
+      toast.error(t("paymentPage.failures.bookingFailed") + " " + err.message);
     },
   });
 
@@ -197,7 +201,7 @@ const OrderPage = () => {
         return;
       }
 
-      toast.success("Đặt hàng thành công!");
+      toast.success(t("paymentPage.success.orderSuccess"));
 
       // Gửi email xác nhận đơn hàng nếu có thông tin pending
       if (pendingEmailData) {
@@ -208,10 +212,10 @@ const OrderPage = () => {
             order_code: newOrderId,
           };
           await SendEmailApi.sendOrderConfirmation(emailData);
-          toast.success("Hóa đơn đã được gửi tới email của bạn!");
+          toast.success(t("paymentPage.success.invoiceSent"));
         } catch (error) {
           console.error(error);
-          toast.error("Có lỗi xảy ra khi gửi hóa đơn.");
+          toast.error(t("paymentPage.success.invoiceError"));
         } finally {
           // Reset pending email data
           setPendingEmailData(null);
@@ -223,7 +227,7 @@ const OrderPage = () => {
       router.push("/booking/success");
     },
     onError: (err) => {
-      toast.error("Đặt hàng thất bại: " + err.message);
+      toast.error(t("paymentPage.failures.orderFailed") + " " + err.message);
       // Reset pending email data khi có lỗi
       setPendingEmailData(null);
     },
@@ -236,11 +240,11 @@ const OrderPage = () => {
         // Redirect đến trang thanh toán VNPay
         window.location.href = paymentUrl;
       } else {
-        toast.error("Không thể tạo link thanh toán.");
+        toast.error(t("paymentPage.failures.noPaymentUrl"));
       }
     },
     onError: (err) => {
-      toast.error("Tạo thanh toán thất bại: " + err.message);
+      toast.error(t("paymentPage.failures.paymentFailed") + " " + err.message);
     },
   });
 
@@ -373,17 +377,17 @@ const OrderPage = () => {
   // Hàm xử lý đặt lịch khám (booking)
   const handleCompleteBooking = async () => {
     if (!bookingInfo?.patient) {
-      toast.error("Không tìm thấy thông tin bệnh nhân.");
+      toast.error(t("paymentPage.errors.noPatientInfo"));
       return;
     }
 
     if (!paymentMethod) {
-      toast.error("Vui lòng chọn phương thức thanh toán.");
+      toast.error(t("paymentPage.errors.selectPaymentMethod"));
       return;
     }
 
     if (bookingInfo.service?.name === "Tư vấn trực tuyến với bác sĩ" && paymentMethod != "atm") {
-      toast.error("Dịch vụ này chỉ hỗ trợ thanh toán online.");
+      toast.error(t("paymentPage.errors.onlineOnly"));
       return;
     }
 
@@ -432,48 +436,48 @@ const OrderPage = () => {
 
       const result = await res.json();
       if (result.success) {
-        toast.success("Hóa đơn đã được gửi tới email của bạn!");
+        toast.success(t("paymentPage.success.invoiceSent"));
       } else {
-        alert("Gửi hóa đơn thất bại: " + (result.error || "unknown error"));
+        alert(t("paymentPage.success.invoiceError") + ": " + (result.error || "unknown error"));
       }
     } catch (error) {
       console.error(error);
-      alert("Có lỗi xảy ra khi gửi hóa đơn.");
+      alert(t("paymentPage.success.invoiceError"));
     }
   };
 
   // Hàm xử lý đặt hàng thuốc (order)
   const handleCompleteOrderDrug = () => {
     if (!patient_id || !user_id) {
-      toast.error("Vui lòng đăng nhập để đặt hàng.");
+      toast.error(t("paymentPage.errors.loginRequired"));
       return;
     }
 
     if (!paymentMethod) {
-      toast.error("Vui lòng chọn phương thức thanh toán.");
+      toast.error(t("paymentPage.errors.selectPaymentMethod"));
       return;
     }
 
     // Validation cho giao hàng
     if (shippingMethod === "delivery") {
       if (!deliveryInfo.receiverName.trim()) {
-        toast.error("Vui lòng nhập họ tên người nhận.");
+        toast.error(t("paymentPage.errors.receiverNameRequired"));
         return;
       }
       if (!deliveryInfo.receiverPhone.trim()) {
-        toast.error("Vui lòng nhập số điện thoại người nhận.");
+        toast.error(t("paymentPage.errors.receiverPhoneRequired"));
         return;
       }
       if (!selectedCityCode) {
-        toast.error("Vui lòng chọn Tỉnh/Thành phố.");
+        toast.error(t("paymentPage.errors.provinceRequired"));
         return;
       }
       if (!selectedDistrictCode) {
-        toast.error("Vui lòng chọn Quận/Huyện.");
+        toast.error(t("paymentPage.errors.districtRequired"));
         return;
       }
       if (!deliveryInfo.address.trim()) {
-        toast.error("Vui lòng nhập địa chỉ cụ thể.");
+        toast.error(t("paymentPage.errors.addressRequired"));
         return;
       }
     }
@@ -560,12 +564,12 @@ const OrderPage = () => {
                 className="flex items-center text-gray-600 hover:text-blue-500"
                 onClick={() => router.back()}
               >
-                <FaArrowLeft className="mr-2" /> Quay lại
+                <FaArrowLeft className="mr-2" /> {t("paymentPage.backButton")}
               </button>
             </div>
 
             <h2 className="text-xl font-semibold mb-4">
-              {type === "booking" ? "Thông tin đặt khám" : "Danh sách sản phẩm"}
+              {type === "booking" ? t("paymentPage.bookingInfo") : t("paymentPage.productList")}
             </h2>
 
             <div className="space-y-4">
@@ -589,10 +593,10 @@ const OrderPage = () => {
                             {item.sale_price ? (
                               <>
                                 <span className="line-through text-gray-500 text-sm">
-                                  Giá gốc: {item.price.toLocaleString()}₫
+                                  {t("paymentPage.originalPrice")} {item.price.toLocaleString()}₫
                                 </span>
                                 <span className="text-red-500 font-bold">
-                                  Giá sale: {item.sale_price.toLocaleString()}₫
+                                  {t("paymentPage.salePrice")} {item.sale_price.toLocaleString()}₫
                                 </span>
                               </>
                             ) : (
@@ -609,16 +613,24 @@ const OrderPage = () => {
                         )}
                       </div>
                       <p className="text-gray-600">
-                        x{item.quantity} {type === "thuoc" ? "Chai" : "dịch vụ"}
+                        x{item.quantity}{" "}
+                        {type === "thuoc" ? t("paymentPage.bottle") : t("paymentPage.service")}
                       </p>
                     </div>
                     {type === "booking" && bookingInfo && bookingInfo.slot && (
                       <p>
-                        <span>Bác sĩ: {bookingInfo.doctor.name}</span> <br />
-                        <span>Bệnh viện: {bookingInfo.hospital.name}</span> <br />
                         <span>
-                          Thời gian: {dayjs(bookingInfo.slot.start_time).format("DD/MM/YYYY HH:mm")}{" "}
-                          - {dayjs(bookingInfo.slot.end_time).format("HH:mm")}
+                          {t("paymentPage.doctor")} {bookingInfo.doctor.name}
+                        </span>{" "}
+                        <br />
+                        <span>
+                          {t("paymentPage.hospital")} {bookingInfo.hospital.name}
+                        </span>{" "}
+                        <br />
+                        <span>
+                          {t("paymentPage.time")}{" "}
+                          {dayjs(bookingInfo.slot.start_time).format("DD/MM/YYYY HH:mm")} -{" "}
+                          {dayjs(bookingInfo.slot.end_time).format("HH:mm")}
                         </span>
                       </p>
                     )}
@@ -629,17 +641,23 @@ const OrderPage = () => {
 
             {type === "booking" && bookingInfo?.patient && (
               <div className="mt-6 p-4 border rounded-md bg-gray-50">
-                <h3 className="font-semibold mb-2">Thông tin người đặt</h3>
-                <p>Họ và tên: {bookingInfo.patient.full_name}</p>
-                <p>Số điện thoại: {bookingInfo.patient.phone}</p>
-                <p>Email: {bookingInfo.patient.email}</p>
+                <h3 className="font-semibold mb-2">{t("paymentPage.patientInfo")}</h3>
+                <p>
+                  {t("paymentPage.fullName")} {bookingInfo.patient.full_name}
+                </p>
+                <p>
+                  {t("paymentPage.phone")} {bookingInfo.patient.phone}
+                </p>
+                <p>
+                  {t("paymentPage.email")} {bookingInfo.patient.email}
+                </p>
               </div>
             )}
           </div>
 
           {type === "thuoc" && (
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Chọn hình thức nhận hàng</h2>
+              <h2 className="text-xl font-semibold mb-4">{t("paymentPage.shippingMethod")}</h2>
               <div className="flex space-x-2 mb-6">
                 <button
                   className={`py-2 px-4 rounded-full font-medium ${
@@ -649,7 +667,7 @@ const OrderPage = () => {
                   }`}
                   onClick={() => setShippingMethod("delivery")}
                 >
-                  Giao hàng tận nơi
+                  {t("paymentPage.delivery")}
                 </button>
                 {/* <button
                   className={`py-2 px-4 rounded-full font-medium ${
@@ -665,11 +683,11 @@ const OrderPage = () => {
 
               {shippingMethod === "delivery" && (
                 <>
-                  <h3 className="text-lg font-semibold mb-2">Địa chỉ nhận hàng</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t("paymentPage.deliveryAddress")}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
                       type="text"
-                      placeholder="Họ và tên người nhận"
+                      placeholder={t("paymentPage.receiverName")}
                       value={deliveryInfo.receiverName}
                       onChange={(e) =>
                         setDeliveryInfo({ ...deliveryInfo, receiverName: e.target.value })
@@ -678,7 +696,7 @@ const OrderPage = () => {
                     />
                     <input
                       type="text"
-                      placeholder="Số điện thoại"
+                      placeholder={t("paymentPage.receiverPhone")}
                       className="p-3 border border-gray-600 rounded-md"
                       onChange={(e) =>
                         setDeliveryInfo({ ...deliveryInfo, receiverPhone: e.target.value })
@@ -686,7 +704,7 @@ const OrderPage = () => {
                     />
                     <input
                       type="email"
-                      placeholder="Email"
+                      placeholder={t("paymentPage.receiverEmail")}
                       value={deliveryInfo.receiverEmail}
                       onChange={(e) =>
                         setDeliveryInfo({ ...deliveryInfo, receiverEmail: e.target.value })
@@ -699,7 +717,7 @@ const OrderPage = () => {
                       className="p-3 border border-gray-600 rounded-md appearance-none bg-white cursor-pointer"
                     >
                       <option value="" disabled>
-                        Chọn Tỉnh/Thành phố
+                        {t("paymentPage.selectProvince")}
                       </option>
                       {cities.map((city) => (
                         <option key={city.code} value={city.code}>
@@ -714,7 +732,7 @@ const OrderPage = () => {
                       className="p-3 border border-gray-600 rounded-md appearance-none bg-white cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                       <option value="" disabled>
-                        Chọn Quận/Huyện
+                        {t("paymentPage.selectDistrict")}
                       </option>
                       {districts.map((district) => (
                         <option key={district.code} value={district.code}>
@@ -724,7 +742,7 @@ const OrderPage = () => {
                     </select>
                     <input
                       type="text"
-                      placeholder="Nhập Phường/Xã"
+                      placeholder={t("paymentPage.enterWard")}
                       value={wardText}
                       onChange={(e) => setWardText(e.target.value)}
                       disabled={!selectedDistrictCode}
@@ -732,7 +750,7 @@ const OrderPage = () => {
                     />
                     <input
                       type="text"
-                      placeholder="Nhập địa chỉ cụ thể (số nhà, tên đường)"
+                      placeholder={t("paymentPage.enterAddress")}
                       value={deliveryInfo.address}
                       onChange={(e) =>
                         setDeliveryInfo({ ...deliveryInfo, address: e.target.value })
@@ -742,10 +760,10 @@ const OrderPage = () => {
                   </div>
                   <div className="flex items-center text-gray-500 mt-4 mb-2">
                     <FaRegPaperPlane className="mr-2" />
-                    <p className="text-sm">Ghi chú (không bắt buộc)</p>
+                    <p className="text-sm">{t("paymentPage.note")}</p>
                   </div>
                   <textarea
-                    placeholder="Ví dụ: Hãy gọi cho tôi 15 phút trước khi giao"
+                    placeholder={t("paymentPage.notePlaceholder")}
                     rows={2}
                     value={deliveryInfo.note}
                     onChange={(e) => setDeliveryInfo({ ...deliveryInfo, note: e.target.value })}
@@ -768,54 +786,57 @@ const OrderPage = () => {
                 <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-md mb-4 flex items-center text-sm">
                   <FaRegCreditCard className="mr-2 flex-shrink-0" />
                   <p>
-                    Mua thêm{" "}
+                    {t("paymentPage.freeShippingMessage")}{" "}
                     <span className="font-bold">
                       {(SHIPPING_CONFIG.freeShippingThreshold - subtotal).toLocaleString()}₫
                     </span>{" "}
-                    để được <span className="font-bold">MIỄN PHÍ VẬN CHUYỂN</span>!
+                    {t("paymentPage.freeShippingMessage2")}{" "}
+                    <span className="font-bold">{t("paymentPage.freeShipping")}</span>!
                   </p>
                 </div>
               )}
             <div className="space-y-2 mb-4 text-base">
               <div className="flex justify-between">
-                <p className="font-semibold">Tổng tiền</p>
+                <p className="font-semibold">{t("paymentPage.total")}</p>
                 <p>{subtotal.toLocaleString()}₫</p>
               </div>
               {directDiscount > 0 && (
                 <div className="flex justify-between">
-                  <p className="font-semibold">Giảm giá trực tiếp</p>
+                  <p className="font-semibold">{t("paymentPage.directDiscount")}</p>
                   <p className="text-red-500">-{directDiscount.toLocaleString()}₫</p>
                 </div>
               )}
               {voucherDiscount > 0 && (
                 <div className="flex justify-between">
-                  <p className="font-semibold">Giảm giá voucher</p>
+                  <p className="font-semibold">{t("paymentPage.voucherDiscount")}</p>
                   <p className="text-red-500">-{voucherDiscount.toLocaleString()}₫</p>
                 </div>
               )}
               <div className="flex justify-between items-center">
                 <div className="flex flex-col">
-                  {type === "thuoc" && <p className="font-semibold">Phí vận chuyển</p>}
+                  {type === "thuoc" && (
+                    <p className="font-semibold">{t("paymentPage.shippingFee")}</p>
+                  )}
                   {type === "thuoc" && shippingMethod === "delivery" && (
                     <p className="text-xs text-gray-500">
                       {subtotal >= SHIPPING_CONFIG.freeShippingThreshold ? (
-                        "Miễn phí cho đơn trên 500k"
+                        t("paymentPage.freeForOrderOver")
                       ) : selectedProvince ? (
                         <>
                           {SHIPPING_CONFIG.innerCity.provinces.includes(selectedProvince)
-                            ? "Nội thành"
+                            ? t("paymentPage.innerCity")
                             : SHIPPING_CONFIG.nearby.provinces.includes(selectedProvince)
-                              ? "Tỉnh lân cận"
-                              : "Tỉnh xa"}
+                              ? t("paymentPage.nearbyProvince")
+                              : t("paymentPage.farProvince")}
                         </>
                       ) : (
-                        "Chọn tỉnh để xem phí"
+                        t("paymentPage.selectProvinceToSeeFee")
                       )}
                     </p>
                   )}
                 </div>
                 {shippingFee === 0 && type === "thuoc" ? (
-                  <p className="text-green-500 font-semibold">Miễn phí</p>
+                  <p className="text-green-500 font-semibold">{t("paymentPage.free")}</p>
                 ) : (
                   <p className="text-blue-500 font-semibold">+{shippingFee.toLocaleString()}₫</p>
                 )}
@@ -823,7 +844,7 @@ const OrderPage = () => {
             </div>
             <div className="border-t border-gray-200 pt-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold">Thành tiền</h3>
+                <h3 className="text-xl font-bold">{t("paymentPage.totalAmount")}</h3>
                 <h3 className="text-xl font-bold text-blue-500">{total.toLocaleString()}₫</h3>
               </div>
             </div>
@@ -832,7 +853,7 @@ const OrderPage = () => {
           {/* Phương thức thanh toán + hóa đơn */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Yêu cầu xuất hóa đơn điện tử</h3>
+              <h3 className="text-lg font-semibold">{t("paymentPage.invoiceRequest")}</h3>
               <div
                 className={`relative inline-block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${hoadon ? "bg-blue-500" : "bg-gray-300"}`}
                 onClick={() => setHoadon(!hoadon)}
@@ -843,7 +864,7 @@ const OrderPage = () => {
               </div>
             </div>
 
-            <h3 className="text-lg font-semibold mb-2">Chọn phương thức thanh toán</h3>
+            <h3 className="text-lg font-semibold mb-2">{t("paymentPage.selectPaymentMethod")}</h3>
             <div className="space-y-4">
               {mockPaymentMethods.map((method) => (
                 <div
@@ -881,12 +902,12 @@ const OrderPage = () => {
               onClick={handleCompleteOrder}
             >
               {isPending
-                ? "Đang xử lý..."
+                ? t("paymentPage.processing")
                 : paymentMethod === "atm"
-                  ? "Thanh toán"
+                  ? t("paymentPage.pay")
                   : type === "booking"
-                    ? "Đặt lịch khám"
-                    : "Đặt hàng"}
+                    ? t("paymentPage.bookAppointment")
+                    : t("paymentPage.placeOrder")}
             </button>
           </div>
         </div>
