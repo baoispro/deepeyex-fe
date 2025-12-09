@@ -8,7 +8,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MdMoreHoriz } from "react-icons/md";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import "dayjs/locale/vi";
 import { useMarkAllNotificationsReadMutation } from "@/app/modules/hospital/hooks/mutations/notifications/use-mark-all-read.mutation";
 import { useMarkNotificationReadMutation } from "@/app/modules/hospital/hooks/mutations/notifications/use-mark-read.mutation";
@@ -16,6 +16,7 @@ import { useMarkNotificationReadMutation } from "@/app/modules/hospital/hooks/mu
 dayjs.extend(relativeTime);
 
 export default function NotificationsPage() {
+  const t = useTranslations("home");
   const auth = useAppSelector((state) => state.auth);
   const locale = useLocale();
   dayjs.locale(locale === "vi" ? "vi" : "en");
@@ -78,7 +79,7 @@ export default function NotificationsPage() {
               level={3}
               className="text-2xl !mb-0 bg-gradient-to-r from-[#1250dc] to-[#3b82f6] text-transparent bg-clip-text"
             >
-              Thông báo
+              {t("profile.notification.title")}
             </Typography.Title>
             <div className="flex items-center gap-2">
               <Popover
@@ -94,12 +95,12 @@ export default function NotificationsPage() {
                         if (patientId) {
                           markAllMutation.mutate(patientId);
                         } else {
-                          message.error("Không tìm thấy thông tin bệnh nhân");
+                          message.error(t("header.patientNotFound"));
                         }
                       }}
                       disabled={filteredNotifications.every((n) => n.read)}
                     >
-                      Đánh dấu tất cả là đã đọc
+                      {t("profile.notification.markAllRead")}
                     </Button>
                   </div>
                 }
@@ -113,8 +114,8 @@ export default function NotificationsPage() {
             activeKey={tab}
             onChange={(key) => setTab(key)}
             items={[
-              { key: "all", label: "Tất cả" },
-              { key: "unread", label: "Chưa đọc" },
+              { key: "all", label: t("profile.notification.tabs.all") },
+              { key: "unread", label: t("profile.notification.tabs.unread") },
             ]}
           />
         </div>
@@ -122,12 +123,14 @@ export default function NotificationsPage() {
         {/* Danh sách */}
         <div className="px-6 py-4 bg-white">
           {filteredNotifications.length === 0 ? (
-            <Empty description="Không có thông báo nào" />
+            <Empty description={t("profile.notification.empty")} />
           ) : (
             <>
               {grouped.today.length > 0 && (
                 <div>
-                  <h3 className="text-base font-semibold mb-3">Hôm nay</h3>
+                  <h3 className="text-base font-semibold mb-3">
+                    {t("profile.notification.groups.today")}
+                  </h3>
                   <div className="space-y-2">
                     {grouped.today.map((item) => (
                       <motion.div
@@ -160,7 +163,9 @@ export default function NotificationsPage() {
 
               {grouped.earlier.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="text-base font-semibold mb-3">Trước đó</h3>
+                  <h3 className="text-base font-semibold mb-3">
+                    {t("profile.notification.groups.earlier")}
+                  </h3>
                   <div className="space-y-2">
                     {grouped.earlier.map((item) => (
                       <motion.div

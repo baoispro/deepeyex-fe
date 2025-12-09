@@ -24,9 +24,11 @@ import { useGetHospitalbyAddressQuery } from "@/app/modules/hospital/hooks/queri
 import { useFindHospitalByNearbyMutation } from "@/app/modules/hospital/hooks/mutations/hospitals/use-find-nearby.mutation";
 import BookingTypeModal from "@/app/modules/hospital/components/BookingTypeModal";
 import FollowUpBooking from "@/app/modules/hospital/components/FollowUpBooking";
+import { useTranslations } from "next-intl";
 
 const NhaThuocPage = () => {
   const router = useRouter();
+  const t = useTranslations("booking");
   type SearchProps = GetProps<typeof Input.Search>;
   const onSearch: SearchProps["onSearch"] = (value) => setSearchKeyword(value);
 
@@ -67,7 +69,7 @@ const NhaThuocPage = () => {
 
   const handleFindNearby = () => {
     if (!navigator.geolocation) {
-      alert("Trình duyệt không hỗ trợ định vị GPS!");
+      alert(t("page.nearby.noLocationSupport"));
       return;
     }
 
@@ -78,7 +80,7 @@ const NhaThuocPage = () => {
         findNearbyMutation.mutate({ lat: latitude, lng: longitude, radiusKm: 5 });
       },
       () => {
-        alert("Không thể lấy vị trí của bạn!");
+        alert(t("page.nearby.locationError"));
         setFindingNearby(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
@@ -100,17 +102,17 @@ const NhaThuocPage = () => {
   const tabItems: TabsProps["items"] = [
     {
       key: "1",
-      label: "Tìm kiếm bệnh viện",
+      label: t("page.tabs.search"),
       children: (
         <div className="flex flex-col gap-2">
-          <Search placeholder="Tìm bằng tên đường và tỉnh thành" allowClear onSearch={onSearch} />
+          <Search placeholder={t("page.search.placeholder")} allowClear onSearch={onSearch} />
           <div className="flex items-center justify-center gap-2">
             <div className="border w-2/3 border-[#e4e8ed]"></div>
-            <p className="text-center text-sm">Hoặc</p>
+            <p className="text-center text-sm">{t("page.search.or")}</p>
             <div className="border w-2/3 border-[#e4e8ed]"></div>
           </div>
           <Select
-            placeholder="Chọn Tỉnh/Thành"
+            placeholder={t("page.search.selectCity")}
             onChange={(value) => {
               setSelectedCity(value);
               setSelectedWard(undefined);
@@ -121,7 +123,7 @@ const NhaThuocPage = () => {
             }))}
           />
           <Select
-            placeholder="Chọn Phường/Xã"
+            placeholder={t("page.search.selectWard")}
             disabled={!selectedCity}
             onChange={(value) => setSelectedWard(value)}
             options={wardsData?.data?.map((ward: string) => ({
@@ -130,7 +132,7 @@ const NhaThuocPage = () => {
             }))}
           />
           <div>
-            <p>Bệnh viện gợi ý</p>
+            <p>{t("page.search.suggestions")}</p>
             <Skeleton active loading={isLoading}>
               <Radio.Group
                 onChange={onRadioChange}
@@ -149,7 +151,7 @@ const NhaThuocPage = () => {
                 ))}
                 {visibleCount < filteredHospitals.length && (
                   <Button type="link" onClick={handleLoadMore} style={{ padding: 0 }}>
-                    Xem thêm bệnh viện
+                    {t("page.search.loadMore")}
                   </Button>
                 )}
               </Radio.Group>
@@ -160,15 +162,15 @@ const NhaThuocPage = () => {
     },
     {
       key: "2",
-      label: "Bệnh viện gần bạn",
+      label: t("page.tabs.nearby"),
       children: (
         <div className="flex flex-col gap-2">
           <Button type="primary" onClick={handleFindNearby} loading={findingNearby}>
-            Tìm bệnh viện gần bạn
+            {t("page.nearby.findButton")}
           </Button>
 
           <div>
-            {nearbyHospitals.length === 0 && !findingNearby && <p>Chưa có kết quả</p>}
+            {nearbyHospitals.length === 0 && !findingNearby && <p>{t("page.nearby.noResults")}</p>}
             {nearbyHospitals.length > 0 && (
               <Radio.Group
                 onChange={onRadioChange}
@@ -217,10 +219,8 @@ const NhaThuocPage = () => {
       {bookingType === "new" && (
         <div className="flex flex-col gap-4 animate-fadeIn">
           <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Hệ thống bệnh viện trên toàn quốc</h1>
-            <p className="text-[#4a4f63] text-sm">
-              Thời gian hoạt động: 6:00 - 23:00 hằng ngày (Thay đổi tùy theo từng bệnh viện)
-            </p>
+            <h1 className="text-xl font-semibold">{t("page.title")}</h1>
+            <p className="text-[#4a4f63] text-sm">{t("page.workingHours")}</p>
           </div>
 
           <div className="flex gap-5">
@@ -244,11 +244,11 @@ const NhaThuocPage = () => {
                     />
                     <div className="flex flex-col gap-2">
                       <p>
-                        <span className="font-semibold">Địa chỉ:</span> {hospitalDetail.address},{" "}
-                        {hospitalDetail.ward}, {hospitalDetail.city}
+                        <span className="font-semibold">{t("page.hospitalDetail.address")}</span>{" "}
+                        {hospitalDetail.address}, {hospitalDetail.ward}, {hospitalDetail.city}
                       </p>
                       <p>
-                        <span className="font-semibold">Điện thoại:</span>{" "}
+                        <span className="font-semibold">{t("page.hospitalDetail.phone")}</span>{" "}
                         <a
                           href={`tel:${hospitalDetail.phone}`}
                           className="text-blue-600 hover:underline"
@@ -257,7 +257,7 @@ const NhaThuocPage = () => {
                         </a>
                       </p>
                       <p>
-                        <span className="font-semibold">Email:</span>{" "}
+                        <span className="font-semibold">{t("page.hospitalDetail.email")}</span>{" "}
                         <a
                           href={`mailto:${hospitalDetail.email}`}
                           className="text-blue-600 hover:underline"
@@ -278,17 +278,19 @@ const NhaThuocPage = () => {
                             }
                           }}
                         >
-                          <p className="text-white text-base font-medium">Chọn bệnh viện</p>
+                          <p className="text-white text-base font-medium">
+                            {t("page.hospitalDetail.selectButton")}
+                          </p>
                         </Button>
                         <Button shape="round" size="large" className="!bg-[#eaeffa]">
-                          <p className="text-[#1250dc]">Gọi để tư vấn</p>
+                          <p className="text-[#1250dc]">{t("page.hospitalDetail.callButton")}</p>
                         </Button>
                       </div>
                     </div>
                   </div>
                   {hospitalDetail.image && (
                     <>
-                      <h3>Hình ảnh bệnh viện:</h3>
+                      <h3>{t("page.hospitalDetail.images")}</h3>
                       <Image
                         src={hospitalDetail.image}
                         alt="Ảnh bệnh viện"
@@ -299,7 +301,7 @@ const NhaThuocPage = () => {
                   )}
                 </>
               ) : (
-                <p>Vui lòng chọn bệnh viện để xem chi tiết</p>
+                <p>{t("page.hospitalDetail.selectHospital")}</p>
               )}
             </div>
           </div>

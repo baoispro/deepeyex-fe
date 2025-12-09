@@ -9,8 +9,10 @@ import dayjs from "dayjs";
 import { useUpdatePatientMutation } from "../../hospital/hooks/mutations/patients/use-update-patient.mutation";
 import { useDispatch } from "react-redux";
 import { setPatient } from "@/app/shares/stores/authSlice";
+import { useTranslations } from "next-intl";
 
 export default function PatientInfoForm() {
+  const t = useTranslations("home");
   const [form] = Form.useForm<Patient>();
   const auth = useAppSelector((state) => state.auth);
   const patient = auth.patient;
@@ -30,17 +32,17 @@ export default function PatientInfoForm() {
   );
 
   const updatePatientMutation = useUpdatePatientMutation({
-    onSuccess: (data) => {
-      message.success("Cập nhật thông tin bệnh nhân thành công!");
+    onSuccess: () => {
+      message.success(t("profile.patientInfoForm.updateSuccess"));
     },
     onError: (error) => {
-      message.error(error.message || "Cập nhật thất bại!");
+      message.error(error.message || t("profile.patientInfoForm.updateFailed"));
     },
   });
 
   const beforeUpload = (file: File) => {
     const isImage = file.type.startsWith("image/");
-    if (!isImage) message.error("Bạn chỉ có thể tải lên file hình ảnh!");
+    if (!isImage) message.error(t("profile.patientInfoForm.imageUploadError"));
     return isImage ? false : Upload.LIST_IGNORE;
   };
 
@@ -53,7 +55,7 @@ export default function PatientInfoForm() {
 
   const handleFinish = (values: Patient) => {
     if (!patient?.patientId) {
-      message.error("Không tìm thấy thông tin bệnh nhân để cập nhật.");
+      message.error(t("profile.patientInfoForm.patientNotFound"));
       return;
     }
 
@@ -116,7 +118,7 @@ export default function PatientInfoForm() {
               showUploadList={false}
             >
               <Button icon={<UploadOutlined />} className="mt-4">
-                Thay đổi ảnh đại diện
+                {t("profile.patientInfoForm.changeAvatar")}
               </Button>
             </Upload>
           </div>
@@ -125,48 +127,54 @@ export default function PatientInfoForm() {
         {/* Patient Info */}
         <div className="w-full md:w-2/3">
           <Form.Item
-            label="Họ và tên"
+            label={t("profile.patientInfoForm.fullName.label")}
             name="full_name"
-            rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
+            rules={[{ required: true, message: t("profile.patientInfoForm.fullName.required") }]}
           >
-            <Input placeholder="Nhập họ và tên" />
+            <Input placeholder={t("profile.patientInfoForm.fullName.placeholder")} />
           </Form.Item>
 
           <Form.Item
-            label="Ngày sinh"
+            label={t("profile.patientInfoForm.dob.label")}
             name="dob"
-            rules={[{ required: true, message: "Vui lòng nhập ngày sinh" }]}
+            rules={[{ required: true, message: t("profile.patientInfoForm.dob.required") }]}
           >
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
 
           <Form.Item
-            label="Giới tính"
+            label={t("profile.patientInfoForm.gender.label")}
             name="gender"
-            rules={[{ required: true, message: "Vui lòng chọn giới tính" }]}
+            rules={[{ required: true, message: t("profile.patientInfoForm.gender.required") }]}
           >
             <Select>
-              <Select.Option value="male">Nam</Select.Option>
-              <Select.Option value="female">Nữ</Select.Option>
-              <Select.Option value="other">Khác</Select.Option>
+              <Select.Option value="male">{t("profile.patientInfoForm.gender.male")}</Select.Option>
+              <Select.Option value="female">
+                {t("profile.patientInfoForm.gender.female")}
+              </Select.Option>
+              <Select.Option value="other">
+                {t("profile.patientInfoForm.gender.other")}
+              </Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item label="Địa chỉ" name="address">
-            <Input placeholder="Nhập địa chỉ" />
+          <Form.Item label={t("profile.patientInfoForm.address.label")} name="address">
+            <Input placeholder={t("profile.patientInfoForm.address.placeholder")} />
           </Form.Item>
 
-          <Form.Item label="Số điện thoại" name="phone">
-            <Input placeholder="Nhập số điện thoại" />
+          <Form.Item label={t("profile.patientInfoForm.phone.label")} name="phone">
+            <Input placeholder={t("profile.patientInfoForm.phone.placeholder")} />
           </Form.Item>
 
-          <Form.Item label="Email" name="email">
-            <Input type="email" placeholder="Nhập email" />
+          <Form.Item label={t("profile.patientInfoForm.email.label")} name="email">
+            <Input type="email" placeholder={t("profile.patientInfoForm.email.placeholder")} />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={updatePatientMutation.isPending}>
-              {updatePatientMutation.isPending ? "Đang lưu..." : "Lưu thông tin"}
+              {updatePatientMutation.isPending
+                ? t("profile.patientInfoForm.save.saving")
+                : t("profile.patientInfoForm.save.button")}
             </Button>
           </Form.Item>
         </div>

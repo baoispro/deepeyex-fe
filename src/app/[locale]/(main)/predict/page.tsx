@@ -9,8 +9,10 @@ import { convertLabelToVietnamese } from "@/app/shares/utils/helper";
 import { useCreateAIDiagnosisMutation } from "@/app/modules/hospital/apis/aidiagnosis/hooks/mutations/use-create-diagnosis.mutation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/shares/stores";
+import { useTranslations } from "next-intl";
 
 export default function EyeDiagnosisApp() {
+  const t = useTranslations("predict");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
@@ -23,18 +25,18 @@ export default function EyeDiagnosisApp() {
       setShowModal(true);
     },
     onError: (error) => {
-      console.error("Chẩn đoán thất bại:", error.message);
+      console.error(t("page.errors.diagnosisFailed"), error.message);
       setIsButtonDisabled(false);
     },
   });
 
   const { mutate: createDiagnosis } = useCreateAIDiagnosisMutation({
     onSuccess: (res) => {
-      console.log("Tạo chẩn đoán AI thành công:", res);
+      console.log(t("page.success.createDiagnosisSuccess"), res);
       localStorage.setItem("ai_diagnosis_id", res.data?.id || "");
     },
     onError: (err) => {
-      console.error("Tạo chẩn đoán AI thất bại:", err.message);
+      console.error(t("page.errors.createDiagnosisFailed"), err.message);
     },
   });
 
@@ -91,8 +93,9 @@ export default function EyeDiagnosisApp() {
       confidence: top.probability,
       eye_type: "both",
       main_image_url: file,
-      notes: "Chẩn đoán tự động bởi AI",
+      notes: t("page.diagnoseButton.diagnose"),
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   return (
@@ -107,12 +110,12 @@ export default function EyeDiagnosisApp() {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
-            <p className="text-gray-500 mb-4">Kéo và thả ảnh vào đây hoặc</p>
+            <p className="text-gray-500 mb-4">{t("page.uploadArea.dragDrop")}</p>
             <label
               htmlFor="image-upload"
               className="bg-cyan-600 text-white px-4 py-2 rounded-md font-semibold cursor-pointer hover:bg-cyan-500 transition-colors"
             >
-              Tải ảnh lên
+              {t("page.uploadArea.uploadButton")}
             </label>
             <input
               type="file"
@@ -126,7 +129,7 @@ export default function EyeDiagnosisApp() {
                 <Image
                   id="preview-img"
                   src={previewUrl}
-                  alt="Image Preview"
+                  alt={t("page.uploadArea.imagePreview")}
                   width={400}
                   height={400}
                   className="mx-auto max-w-full h-auto rounded-lg shadow-md"
@@ -138,17 +141,15 @@ export default function EyeDiagnosisApp() {
           {/* Kết quả */}
           <div className="flex-1 flex flex-col">
             <div className="bg-gray-50 p-6 rounded-md shadow-inner flex-grow flex flex-col items-center justify-center text-center">
-              {!file && (
-                <p className="text-gray-500 text-lg">Tải lên một bức ảnh để bắt đầu chẩn đoán.</p>
-              )}
+              {!file && <p className="text-gray-500 text-lg">{t("page.results.uploadPrompt")}</p>}
 
               {file && !isPending && topDiagnoses.length === 0 && (
-                <p className="text-gray-500 text-lg">Nhấn &quot;Chẩn đoán&quot; để xem kết quả.</p>
+                <p className="text-gray-500 text-lg">{t("page.results.diagnosePrompt")}</p>
               )}
 
               {isPending && (
                 <p className="text-lg text-gray-500">
-                  <span className="animate-pulse">Đang chẩn đoán...</span>
+                  <span className="animate-pulse">{t("page.results.diagnosing")}</span>
                 </p>
               )}
 
@@ -203,7 +204,8 @@ export default function EyeDiagnosisApp() {
                           idx === 0 ? "text-yellow-600" : "text-gray-500"
                         }`}
                       >
-                        #{idx + 1}
+                        {t("page.results.rank")}
+                        {idx + 1}
                       </p>
                     </div>
                   ))}
@@ -219,7 +221,7 @@ export default function EyeDiagnosisApp() {
               onClick={handleDiagnose}
               disabled={isButtonDisabled}
             >
-              {isPending ? "Đang chẩn đoán..." : "Chẩn đoán"}
+              {isPending ? t("page.diagnoseButton.diagnosing") : t("page.diagnoseButton.diagnose")}
             </button>
           </div>
         </div>
@@ -227,14 +229,16 @@ export default function EyeDiagnosisApp() {
 
       {topDiagnoses.length > 0 && (
         <Modal open={showModal} onCancel={() => setShowModal(false)} footer={null}>
-          {topDiagnoses[0].name === "Mắt bình thường" ? (
-            <p className="text-center text-green-600 font-semibold">
-              Mắt của bạn bình thường ✅. Nên đi khám định kỳ mỗi 6 - 12 tháng.
-            </p>
+          {topDiagnoses[0].name === "Mắt bình thường" ||
+          topDiagnoses[0].label.toLowerCase() === "normal" ? (
+            <div className="text-center">
+              <p className="text-green-600 font-semibold mb-2">{t("page.modal.normalEye.title")}</p>
+              <p className="text-gray-600">{t("page.modal.normalEye.message")}</p>
+            </div>
           ) : (
             <div>
               <p className="text-center text-red-600 font-semibold mb-4">
-                AI phát hiện dấu hiệu: {topDiagnoses[0].name}
+                {t("page.modal.detected.title")} {topDiagnoses[0].name}
               </p>
               <TreatmentPlanUI disease={topDiagnoses[0].label} />
             </div>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useLocale } from "next-intl";
 import { useCart } from "@/app/shares/hooks/carts/useCart";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
 type Props = {
   data: Drug;
@@ -13,6 +14,7 @@ type Props = {
 
 const ProductCard = ({ data }: Props) => {
   const locale = useLocale();
+  const t = useTranslations("product");
   const { addToCart } = useCart();
 
   return (
@@ -29,7 +31,7 @@ const ProductCard = ({ data }: Props) => {
         <div className="flex justify-center items-center w-full h-[140px]">
           <Image
             src={data.image || "https://via.placeholder.com/300x300?text=No+Image"}
-            alt="hình ảnh sản phẩm"
+            alt={t("productCard.imageAlt")}
             className="mb-3 object-contain w-[140px] h-[140px] rounded-lg"
             width={140}
             height={140}
@@ -66,10 +68,10 @@ const ProductCard = ({ data }: Props) => {
             discount_percent: data.discount_percent,
             quantity: 1,
           });
-          toast.success("Thêm vào giỏ hàng thành công");
+          toast.success(t("productCard.addToCartSuccess"));
         }}
       >
-        Chọn mua
+        {t("addToCart")}
       </Button>
     </div>
   );

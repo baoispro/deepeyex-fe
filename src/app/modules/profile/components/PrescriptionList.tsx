@@ -14,11 +14,8 @@ import {
   FaRobot,
 } from "react-icons/fa";
 import { useRouter } from "@/app/shares/locales/navigation";
-import {
-  Prescription,
-  prescriptionStatusLabels,
-  prescriptionSourceLabels,
-} from "../../hospital/types/prescription";
+import { Prescription, prescriptionStatusLabels } from "../../hospital/types/prescription";
+import { useTranslations } from "next-intl";
 
 dayjs.locale("vi");
 
@@ -44,6 +41,7 @@ export default function PrescriptionList({
   filters,
   onFilterChange,
 }: PrescriptionListProps) {
+  const t = useTranslations("home");
   const router = useRouter();
 
   const handleStatusChange = (value: string) => {
@@ -71,9 +69,11 @@ export default function PrescriptionList({
       {/* Header */}
       <div className="flex justify-between items-center">
         <Title level={4} className="!mb-0">
-          💊 Toa thuốc
+          💊 {t("profile.prescriptionList.title")}
         </Title>
-        <Text className="text-gray-500">Tổng: {prescriptions.length} toa thuốc</Text>
+        <Text className="text-gray-500">
+          {t("profile.prescriptionList.total", { count: prescriptions.length })}
+        </Text>
       </div>
 
       {/* Filters Section */}
@@ -81,36 +81,38 @@ export default function PrescriptionList({
         <div className="flex items-center gap-2 mb-4">
           <FaFilter className="text-blue-600" />
           <Text strong className="text-gray-700">
-            Bộ lọc tìm kiếm
+            {t("profile.prescriptionList.filters.title")}
           </Text>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Status Filter */}
           <div className="flex flex-col gap-2">
-            <Text className="text-sm text-gray-600 font-medium">Trạng thái</Text>
+            <Text className="text-sm text-gray-600 font-medium">
+              {t("profile.prescriptionList.filters.status")}
+            </Text>
             <Select
-              placeholder="Tất cả trạng thái"
+              placeholder={t("profile.prescriptionList.filters.allStatus")}
               allowClear
               value={filters.status || undefined}
               onChange={handleStatusChange}
               className="w-full"
               size="large"
             >
-              <Option value="">Tất cả</Option>
+              <Option value="">{t("profile.prescriptionList.filters.all")}</Option>
               <Option value="PENDING">
                 <Tag color="orange" className="!m-0">
-                  Chờ xử lý
+                  {t("profile.prescriptionList.status.PENDING")}
                 </Tag>
               </Option>
-              <Option value="COMPLETED">
+              <Option value="APPROVED">
                 <Tag color="green" className="!m-0">
-                  Hoàn thành
+                  {t("profile.prescriptionList.status.APPROVED")}
                 </Tag>
               </Option>
               <Option value="CANCELLED">
                 <Tag color="red" className="!m-0">
-                  Đã hủy
+                  {t("profile.prescriptionList.status.CANCELLED")}
                 </Tag>
               </Option>
             </Select>
@@ -118,9 +120,11 @@ export default function PrescriptionList({
 
           {/* Date Filter */}
           <div className="flex flex-col gap-2">
-            <Text className="text-sm text-gray-600 font-medium">Ngày kê đơn</Text>
+            <Text className="text-sm text-gray-600 font-medium">
+              {t("profile.prescriptionList.filters.date")}
+            </Text>
             <DatePicker
-              placeholder="Chọn ngày"
+              placeholder={t("profile.prescriptionList.filters.selectDate")}
               format="DD/MM/YYYY"
               value={
                 filters.date && filters.date !== "" && dayjs(filters.date, "YYYY-MM-DD").isValid()
@@ -143,7 +147,7 @@ export default function PrescriptionList({
               onClick={handleResetFilters}
               className="w-full !h-10"
             >
-              Đặt lại bộ lọc
+              {t("profile.prescriptionList.filters.reset")}
             </Button>
           </div>
         </div>
@@ -152,7 +156,7 @@ export default function PrescriptionList({
       {/* Loading State */}
       {loading && (
         <div className="flex justify-center items-center min-h-[400px]">
-          <Spin size="large" tip="Đang tải toa thuốc..." />
+          <Spin size="large" tip={t("profile.prescriptionList.loading")} />
         </div>
       )}
 
@@ -169,10 +173,10 @@ export default function PrescriptionList({
 
           {/* Text content */}
           <Title level={4} className="!mb-2 text-gray-800">
-            Chưa có toa thuốc
+            {t("profile.prescriptionList.empty.title")}
           </Title>
           <Text className="text-gray-500 text-base mb-6 max-w-md">
-            Bạn chưa có toa thuốc nào. Hãy đặt lịch khám với bác sĩ để được kê đơn thuốc phù hợp.
+            {t("profile.prescriptionList.empty.description")}
           </Text>
 
           {/* Action button */}
@@ -183,7 +187,7 @@ export default function PrescriptionList({
             onClick={() => router.push("/booking")}
             className="!h-11 !px-6 !bg-gradient-to-r !from-blue-500 !to-blue-600 hover:!from-blue-600 hover:!to-green-700"
           >
-            Đặt lịch khám ngay
+            {t("profile.prescriptionList.empty.bookNow")}
           </Button>
         </div>
       )}
@@ -218,7 +222,7 @@ export default function PrescriptionList({
                     </div>
                     <div>
                       <Text strong className="!text-base block">
-                        {prescriptionSourceLabels[prescription.source]}
+                        {t(`profile.prescriptionList.source.${prescription.source}`)}
                       </Text>
                       <Text className="text-sm text-gray-500">
                         {createdDate.format("DD/MM/YYYY HH:mm")}
@@ -227,10 +231,12 @@ export default function PrescriptionList({
                   </div>
 
                   <Tag
-                    color={prescriptionStatusLabels[prescription.status].color}
+                    color={prescriptionStatusLabels[prescription.status]?.color || "default"}
                     className="text-sm px-3 py-1"
                   >
-                    {prescriptionStatusLabels[prescription.status].label}
+                    {t(`profile.prescriptionList.status.${prescription.status}`) ||
+                      prescriptionStatusLabels[prescription.status]?.label ||
+                      prescription.status}
                   </Tag>
                 </div>
 
@@ -238,7 +244,8 @@ export default function PrescriptionList({
                 {prescription.description && (
                   <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded mb-4">
                     <Text className="text-sm">
-                      <strong>📝 Ghi chú:</strong> {prescription.description}
+                      <strong>📝 {t("profile.prescriptionList.card.note")}</strong>{" "}
+                      {prescription.description}
                     </Text>
                   </div>
                 )}
@@ -255,7 +262,9 @@ export default function PrescriptionList({
                         <div className="flex items-center gap-2">
                           <FaPills className="text-green-600" />
                           <Text strong className="text-gray-800">
-                            Chi tiết đơn thuốc ({prescription.items.length} loại thuốc)
+                            {t("profile.prescriptionList.card.details", {
+                              count: prescription.items.length,
+                            })}
                           </Text>
                         </div>
                       ),
@@ -279,28 +288,36 @@ export default function PrescriptionList({
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                       <FaPills className="text-green-500" />
                                       <Text>
-                                        <strong>Liều lượng:</strong> {item.dosage}
+                                        <strong>{t("profile.prescriptionList.card.dosage")}</strong>{" "}
+                                        {item.dosage}
                                       </Text>
                                     </div>
 
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                       <FaClock className="text-blue-500" />
                                       <Text>
-                                        <strong>Tần suất:</strong> {item.frequency}
+                                        <strong>
+                                          {t("profile.prescriptionList.card.frequency")}
+                                        </strong>{" "}
+                                        {item.frequency}
                                       </Text>
                                     </div>
 
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                       <FaCalendarDay className="text-purple-500" />
                                       <Text>
-                                        <strong>Thời gian:</strong> {item.duration_days} ngày
+                                        <strong>
+                                          {t("profile.prescriptionList.card.duration")}
+                                        </strong>{" "}
+                                        {item.duration_days}{" "}
+                                        {t("profile.prescriptionList.card.days")}
                                       </Text>
                                     </div>
 
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                       <FaCalendarDay className="text-orange-500" />
                                       <Text>
-                                        <strong>Từ:</strong>{" "}
+                                        <strong>{t("profile.prescriptionList.card.from")}</strong>{" "}
                                         {dayjs(item.start_date).format("DD/MM/YYYY")} -{" "}
                                         {dayjs(item.end_date).format("DD/MM/YYYY")}
                                       </Text>

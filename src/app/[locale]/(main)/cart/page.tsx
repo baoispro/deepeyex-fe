@@ -50,6 +50,7 @@ export default function CartInfo() {
     }));
     setLocalItems(mapped);
     setSelectAll(mapped.length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleQuantityChange = (value: number | null, record: CartItemWithKey) => {
@@ -92,7 +93,9 @@ export default function CartInfo() {
       title: (
         <Space>
           <Checkbox checked={selectAll} onChange={(e) => handleSelectAll(e.target.checked)} />
-          <Text>Chọn tất cả ({selectedItems.length})</Text>
+          <Text>
+            {t("selectAll")} ({selectedItems.length})
+          </Text>
         </Space>
       ),
       dataIndex: "selected",
@@ -114,7 +117,7 @@ export default function CartInfo() {
             width={48}
             height={48}
             preview={false}
-            alt="product"
+            alt={t("productImageAlt")}
             className="border border-[#e4e8ed] p-1 rounded-xl"
           />
           <Text strong className="text-sm text-[#020b27]">
@@ -183,7 +186,7 @@ export default function CartInfo() {
         href={"/shop"}
         className="px-10 flex gap-1 items-center text-[#1250dc] font-medium hover:text-[#5979c4]"
       >
-        <MdOutlineKeyboardArrowLeft size={20} /> <p>Tiếp tục mua sắm</p>
+        <MdOutlineKeyboardArrowLeft size={20} /> <p>{t("continueShopping")}</p>
       </Link>
 
       <Row gutter={24} className="px-10 pb-10 pt-2">

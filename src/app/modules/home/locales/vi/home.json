@@ -9,11 +9,278 @@
   "contact": "Liên hệ",
   "login": "Đăng nhập",
   "signup": "Đăng ký",
-  "profile": "Hồ sơ",
+  "info": "Hồ sơ",
   "logout": "Đăng xuất",
   "subtitle": "Trung tâm chăm sóc mắt và sức khỏe toàn diện",
   "text": "Chúng tôi giải quyết tất cả các nhu cầu chăm sóc mắt của bạn bằng cách cung cấp dịch vụ cá nhân hóa và toàn diện cho bạn và gia đình!",
   "button": "Chẩn đoán ngay",
   "subtitle1": "Chẩn đoán bệnh về mắt bằng AI",
-  "text1": "Phát hiện sớm, bảo vệ tầm nhìn của bạn"
+  "text1": "Phát hiện sớm, bảo vệ tầm nhìn của bạn",
+  "header": {
+    "notifications": "Thông báo",
+    "markAllRead": "Đánh dấu đã đọc",
+    "noNotifications": "Không có thông báo",
+    "viewAllNotifications": "Xem tất cả thông báo",
+    "dashboard": "Bảng điều khiển",
+    "vietnamese": "Tiếng Việt",
+    "english": "English",
+    "patientNotFound": "Không tìm thấy thông tin bệnh nhân"
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "greeting": "Xin chào!",
+    "todayAppointments": {
+      "title": "Lịch khám hôm nay",
+      "appointments": "lịch hẹn",
+      "noAppointments": "Hôm nay không có lịch khám nào",
+      "bookAppointment": "Đặt lịch khám",
+      "serviceDefault": "Khám bệnh"
+    },
+    "recentDiagnosis": {
+      "title": "Chẩn đoán gần đây",
+      "viewAll": "Xem tất cả",
+      "noHistory": "Chưa có lịch sử chẩn đoán",
+      "noHistoryDescription": "Hãy chẩn đoán ngay để theo dõi tình hình mắt",
+      "diagnoseNow": "Chẩn đoán ngay",
+      "noDiagnosisToday": "Chưa chẩn đoán hôm nay",
+      "noDiagnosisTodayDescription": "Bạn chưa chẩn đoán gì hôm nay. Hãy chẩn đoán ngay để theo dõi tình hình mắt của bạn.",
+      "noDiagnosis": "Chưa có chẩn đoán"
+    },
+    "diagnosisTimeline": {
+      "title": "Dòng thời gian chẩn đoán",
+      "diagnosis": "Chẩn đoán"
+    },
+    "medicationReminder": {
+      "title": "Nhắc uống thuốc",
+      "taken": "✓ Đã uống thuốc",
+      "notTaken": "Chưa uống",
+      "notTimeYet": "Chưa đến giờ"
+    },
+    "notifications": {
+      "title": "Thông báo",
+      "viewAll": "Xem tất cả"
+    }
+  },
+  "profile": {
+    "backToHome": "Trang chủ",
+    "defaultPatientName": "Bệnh nhân",
+    "menu": {
+      "patientInfo": "Thông tin bệnh nhân",
+      "appointments": "Lịch hẹn khám",
+      "prescriptions": "Toa thuốc",
+      "diagnosisHistory": "Lịch sử chẩn đoán",
+      "invoices": "Hóa đơn"
+    },
+    "patientInfoForm": {
+      "updateSuccess": "Cập nhật thông tin bệnh nhân thành công!",
+      "updateFailed": "Cập nhật thất bại!",
+      "imageUploadError": "Bạn chỉ có thể tải lên file hình ảnh!",
+      "patientNotFound": "Không tìm thấy thông tin bệnh nhân để cập nhật.",
+      "changeAvatar": "Thay đổi ảnh đại diện",
+      "fullName": {
+        "label": "Họ và tên",
+        "placeholder": "Nhập họ và tên",
+        "required": "Vui lòng nhập họ và tên"
+      },
+      "dob": {
+        "label": "Ngày sinh",
+        "required": "Vui lòng nhập ngày sinh"
+      },
+      "gender": {
+        "label": "Giới tính",
+        "required": "Vui lòng chọn giới tính",
+        "male": "Nam",
+        "female": "Nữ",
+        "other": "Khác"
+      },
+      "address": {
+        "label": "Địa chỉ",
+        "placeholder": "Nhập địa chỉ"
+      },
+      "phone": {
+        "label": "Số điện thoại",
+        "placeholder": "Nhập số điện thoại"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Nhập email"
+      },
+      "save": {
+        "saving": "Đang lưu...",
+        "button": "Lưu thông tin"
+      }
+    },
+    "diagnosisHistory": {
+      "title": "Lịch sử chẩn đoán",
+      "loading": "Đang tải lịch sử chẩn đoán...",
+      "noHistory": "Chưa có lịch sử chẩn đoán",
+      "noHistoryDescription": "Bạn chưa có lịch sử khám bệnh nào. Hãy đặt lịch khám hoặc sử dụng tính năng chẩn đoán AI để kiểm tra sức khỏe mắt.",
+      "diagnoseAI": "Chẩn đoán AI",
+      "bookAppointment": "Đặt lịch khám",
+      "features": {
+        "aiSmart": "AI thông minh",
+        "highAccuracy": "Chính xác cao",
+        "fast": "Nhanh chóng"
+      },
+      "labels": {
+        "date": "Ngày:",
+        "diagnosis": "Chẩn đoán:",
+        "doctor": "Bác sĩ:",
+        "note": "Ghi chú:"
+      }
+    },
+    "invoice": {
+      "cancelSuccess": "Hủy đơn hàng thành công!",
+      "cancelFailed": "Hủy đơn hàng thất bại:"
+    },
+    "notification": {
+      "title": "Thông báo",
+      "markAllRead": "Đánh dấu tất cả là đã đọc",
+      "tabs": {
+        "all": "Tất cả",
+        "unread": "Chưa đọc"
+      },
+      "empty": "Không có thông báo nào",
+      "groups": {
+        "today": "Hôm nay",
+        "earlier": "Trước đó"
+      }
+    },
+    "appointmentList": {
+      "title": "Lịch hẹn khám",
+      "total": "Tổng: {count} lịch hẹn",
+      "filters": {
+        "title": "Bộ lọc tìm kiếm",
+        "status": "Trạng thái",
+        "allStatus": "Tất cả trạng thái",
+        "all": "Tất cả",
+        "date": "Ngày khám",
+        "selectDate": "Chọn ngày",
+        "reset": "Đặt lại bộ lọc"
+      },
+      "status": {
+        "PENDING": "Chờ xác nhận",
+        "CONFIRMED": "Đã xác nhận",
+        "COMPLETED": "Hoàn thành",
+        "CANCELLED": "Đã hủy",
+        "PENDING_ONLINE": "Chờ xác nhận (Online)",
+        "CONFIRMED_ONLINE": "Đã xác nhận (Online)",
+        "COMPLETED_ONLINE": "Hoàn thành (Online)"
+      },
+      "loading": "Đang tải lịch hẹn...",
+      "empty": {
+        "title": "Chưa có lịch hẹn khám",
+        "description": "Bạn chưa đặt lịch khám nào. Hãy tìm bệnh viện và bác sĩ phù hợp để được tư vấn và điều trị chuyên nghiệp.",
+        "bookNow": "Đặt lịch khám ngay",
+        "buyDrugs": "Mua thuốc"
+      },
+      "card": {
+        "appointmentCode": "Mã lịch hẹn:",
+        "service": "Dịch vụ:",
+        "specialty": "Chuyên khoa Mắt",
+        "contact": "Liên hệ",
+        "note": "Ghi chú:",
+        "bookedAt": "Đặt lúc:",
+        "cancelling": "Đang hủy...",
+        "cancel": "Hủy lịch hẹn",
+        "cancelTooltip": "Hủy lịch hẹn",
+        "pastAppointment": "Đã qua thời gian khám",
+        "cannotCancelPast": "Không thể hủy lịch hẹn đã qua thời gian khám"
+      },
+      "modal": {
+        "title": "Xác nhận hủy lịch hẹn",
+        "message": "Bạn có chắc chắn muốn hủy lịch hẹn {code}?",
+        "warning": "Lưu ý: Sau khi hủy, bạn sẽ không thể hoàn tác thao tác này.",
+        "confirm": "Xác nhận",
+        "close": "Đóng"
+      },
+      "toast": {
+        "cancelSuccess": "Hủy chuyến thành công!",
+        "cancelFailed": "Hủy lịch hẹn thất bại: {message}",
+        "cannotCancelTime": "Không thể hủy lịch hẹn vì thời gian còn lại ít hơn 12 tiếng. Nếu bạn vẫn muốn hủy, vui lòng gọi hotline: 1900-xxx-xxx"
+      }
+    },
+    "prescriptionList": {
+      "title": "Toa thuốc",
+      "total": "Tổng: {count} toa thuốc",
+      "filters": {
+        "title": "Bộ lọc tìm kiếm",
+        "status": "Trạng thái",
+        "allStatus": "Tất cả trạng thái",
+        "all": "Tất cả",
+        "date": "Ngày kê đơn",
+        "selectDate": "Chọn ngày",
+        "reset": "Đặt lại bộ lọc"
+      },
+      "status": {
+        "PENDING": "Chờ xử lý",
+        "APPROVED": "Hoàn thành",
+        "CANCELLED": "Đã hủy"
+      },
+      "source": {
+        "DOCTOR": "Bác sĩ kê đơn",
+        "AI": "AI chẩn đoán"
+      },
+      "loading": "Đang tải toa thuốc...",
+      "empty": {
+        "title": "Chưa có toa thuốc",
+        "description": "Bạn chưa có toa thuốc nào. Hãy đặt lịch khám với bác sĩ để được kê đơn thuốc phù hợp.",
+        "bookNow": "Đặt lịch khám ngay"
+      },
+      "card": {
+        "note": "Ghi chú:",
+        "details": "Chi tiết đơn thuốc ({count} loại thuốc)",
+        "dosage": "Liều lượng:",
+        "frequency": "Tần suất:",
+        "duration": "Thời gian:",
+        "from": "Từ:",
+        "days": "ngày"
+      }
+    },
+    "invoiceSection": {
+      "title": "Hóa đơn",
+      "total": "Tổng: {count} đơn hàng",
+      "loading": "Đang tải hóa đơn...",
+      "empty": {
+        "title": "Chưa có hóa đơn nào",
+        "description": "Bạn chưa có hóa đơn nào. Hãy đặt lịch khám hoặc mua thuốc để xem lịch sử hóa đơn tại đây.",
+        "buyDrugs": "Mua thuốc ngay",
+        "bookAppointment": "Đặt lịch khám",
+        "features": {
+          "electronicInvoice": "Hóa đơn điện tử",
+          "easyPayment": "Thanh toán dễ dàng",
+          "secure": "An toàn bảo mật"
+        }
+      },
+      "order": {
+        "orderNumber": "Đơn hàng #{code}",
+        "productList": "Danh sách sản phẩm/dịch vụ:",
+        "deliveryMethod": "Phương thức nhận:",
+        "subtotal": "Tổng tiền hàng:",
+        "deliveryFee": "Phí vận chuyển:",
+        "total": "Tổng thanh toán:",
+        "printInvoice": "In hóa đơn",
+        "cancelling": "Đang hủy...",
+        "cancel": "Hủy đơn"
+      },
+      "status": {
+        "PENDING": "Chờ xử lý",
+        "CONFIRMED": "Đã xác nhận",
+        "COMPLETED": "Đã hoàn tất",
+        "CANCELLED": "Đã hủy",
+        "PAID": "Đã thanh toán"
+      },
+      "deliveryMethod": {
+        "PICKUP": "Nhận tại cơ sở",
+        "HOME_DELIVERY": "Giao hàng tận nơi"
+      },
+      "modal": {
+        "title": "Xác nhận hủy đơn hàng",
+        "message": "Bạn có chắc chắn muốn hủy đơn hàng #{code}?",
+        "warning": "Lưu ý: Sau khi hủy, bạn sẽ không thể hoàn tác thao tác này.",
+        "confirm": "Xác nhận",
+        "close": "Đóng"
+      }
+    }
+  }
 }

@@ -11,5 +11,33 @@
   "findStore": "Tìm nhà thuốc",
   "description": "Mô tả sản phẩm",
   "successAdd": "Đã thêm sản phẩm vào giỏ hàng",
-  "notFound": "Không tìm thấy sản phẩm"
+  "notFound": "Không tìm thấy sản phẩm",
+  "productCard": {
+    "imageAlt": "hình ảnh sản phẩm",
+    "addToCartSuccess": "Thêm vào giỏ hàng thành công"
+  },
+  "page": {
+    "loading": "Đang tải...",
+    "error": "Có lỗi xảy ra khi tải dữ liệu:"
+  },
+  "detail": {
+    "breadcrumb": {
+      "shop": "Cửa hàng"
+    },
+    "imageAlt": "Hình ảnh sản phẩm",
+    "benefits": {
+      "return30Days": {
+        "title": "Đổi trả trong 30 ngày",
+        "description": "kể từ ngày mua hàng"
+      },
+      "free100": {
+        "title": "Miễn phí 100%",
+        "description": "đổi thuốc"
+      },
+      "freeShipping": {
+        "title": "Miễn phí vận chuyển",
+        "description": "theo chính sách giao hàng"
+      }
+    }
+  }
 }

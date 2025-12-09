@@ -1,0 +1,109 @@
+{
+  "page": {
+    "uploadArea": {
+      "dragDrop": "Drag and drop an image here or",
+      "uploadButton": "Upload Image",
+      "imagePreview": "Image Preview"
+    },
+    "results": {
+      "uploadPrompt": "Upload an image to start diagnosis.",
+      "diagnosePrompt": "Click \"Diagnose\" to see results.",
+      "diagnosing": "Diagnosing...",
+      "rank": "#"
+    },
+    "diagnoseButton": {
+      "diagnosing": "Diagnosing...",
+      "diagnose": "Diagnose"
+    },
+    "modal": {
+      "normalEye": {
+        "title": "Your eyes are normal ✅",
+        "message": "You should have regular check-ups every 6 - 12 months."
+      },
+      "detected": {
+        "title": "AI detected signs of:"
+      }
+    },
+    "errors": {
+      "diagnosisFailed": "Diagnosis failed:",
+      "createDiagnosisFailed": "Failed to create AI diagnosis:"
+    },
+    "success": {
+      "createDiagnosisSuccess": "AI diagnosis created successfully:"
+    }
+  },
+  "treatmentPlan": {
+    "diagnosis": "Diagnosis:",
+    "medicines": "Medications & Treatment:",
+    "noMedicine": "No medication required.",
+    "lifestyle": "Lifestyle Recommendations:",
+    "bookAppointment": "Book Appointment with Doctor",
+    "diseases": {
+      "conjunctivitis": {
+        "diagnosis": "Conjunctivitis (Pink Eye)",
+        "medicines": [
+          "Antibiotic eye drops (e.g., Chloramphenicol)",
+          "Maintain hand and eye hygiene, avoid rubbing eyes"
+        ],
+        "lifestyle": [
+          "Do not share towels or washbasins",
+          "Wash hands frequently",
+          "Avoid crowded places when the disease is contagious"
+        ],
+        "followUp": "Follow-up after 1 week if no improvement."
+      },
+      "eyelidedema": {
+        "diagnosis": "Eyelid Edema",
+        "medicines": [
+          "Cold compress to reduce swelling",
+          "If accompanied by infection: use antibiotics as prescribed by doctor"
+        ],
+        "lifestyle": ["Get enough sleep", "Limit salt in diet", "Avoid rubbing eyes"],
+        "followUp": "Re-examine after 5-7 days."
+      },
+      "healthy_eye": {
+        "diagnosis": "Normal Eye",
+        "medicines": [],
+        "lifestyle": [
+          "Eat plenty of green vegetables, fish rich in Omega-3",
+          "Limit continuous use of electronic devices",
+          "Regular eye check-ups"
+        ],
+        "followUp": "Regular check-ups every 6 - 12 months."
+      },
+      "hordeolum": {
+        "diagnosis": "Stye / Chalazion",
+        "medicines": ["Warm compress 3-4 times/day", "Antibiotic ointment (if prescribed)"],
+        "lifestyle": [
+          "Keep eyelids clean",
+          "Do not squeeze the stye",
+          "Wash hands before touching the eye area"
+        ],
+        "followUp": "Re-examine if no improvement after 1 week."
+      },
+      "keratitiswithulcer": {
+        "diagnosis": "Keratitis with Ulcer",
+        "medicines": [
+          "Broad-spectrum antibiotic eye drops",
+          "May need corticosteroids as prescribed by doctor"
+        ],
+        "lifestyle": [
+          "Avoid contact lenses until healed",
+          "Wear sunglasses when going out",
+          "Supplement vitamin A in diet"
+        ],
+        "followUp": "Follow-up after 2-3 days for evaluation."
+      },
+      "subconjunctival_hemorrhage": {
+        "diagnosis": "Subconjunctival Hemorrhage",
+        "medicines": ["No specific treatment required", "Monitor blood pressure, avoid exertion"],
+        "lifestyle": [
+          "Control blood pressure",
+          "Do not rub eyes hard",
+          "Eat low-salt diet, exercise regularly"
+        ],
+        "followUp": "Self-healing within 1-2 weeks, re-examine if recurring frequently."
+      }
+    }
+  }
+}

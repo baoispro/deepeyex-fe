@@ -4,7 +4,6 @@ import { persistor, RootState, useAppDispatch, useAppSelector } from "@/app/shar
 import { clearTokens } from "@/app/shares/stores/authSlice";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
-import { useState } from "react";
 import { Badge, Button, Dropdown, List, MenuProps, Popover } from "antd";
 import Avatar from "react-avatar";
 import CartPopover from "@/app/shares/components/CartPopover";
@@ -25,7 +24,7 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
-  const [language, setLanguage] = useState<"vi" | "en">(locale as "vi" | "en");
+  const language = locale as "vi" | "en";
   dayjs.locale(language === "vi" ? "vi" : "en");
   const auth = useAppSelector((state) => state.auth);
   const image = auth.patient?.image;
@@ -51,7 +50,7 @@ export default function Header() {
     if (patientId) {
       markAllMutation.mutate(patientId);
     } else {
-      console.error("Không tìm thấy thông tin bệnh nhân");
+      console.error(t("header.patientNotFound"));
     }
   };
 
@@ -64,16 +63,16 @@ export default function Header() {
   const notificationContent = (
     <div className="w-80">
       <div className="flex justify-between items-center mb-2">
-        <span className="font-semibold text-gray-800">{"Thông báo"}</span>
+        <span className="font-semibold text-gray-800">{t("header.notifications")}</span>
         {unreadCount > 0 && (
           <Button type="link" size="small" onClick={handleMarkAllAsRead}>
-            {"Đánh dấu đã đọc"}
+            {t("header.markAllRead")}
           </Button>
         )}
       </div>
       <List
         dataSource={limitedNotifications}
-        locale={{ emptyText: "Không có thông báo" }}
+        locale={{ emptyText: t("header.noNotifications") }}
         renderItem={(item) => (
           <List.Item
             onClick={() => handleClickNotification(item.id, item.read)}
@@ -105,7 +104,7 @@ export default function Header() {
             className="text-[#1250dc] hover:underline"
             onClick={() => router.push("/notification")}
           >
-            {"Xem tất cả thông báo"}
+            {t("header.viewAllNotifications")}
           </Button>
         </div>
       )}
@@ -219,14 +218,14 @@ export default function Header() {
                 className="flex items-center space-x-2 w-full text-left px-2 py-1 text-sm hover:bg-indigo-50 rounded cursor-pointer"
               >
                 <Image src={flags.vi.src} width={20} height={15} alt={flags.vi.alt} />
-                <span>Tiếng Việt</span>
+                <span>{t("header.vietnamese")}</span>
               </button>
               <button
                 onClick={() => handleChangeLanguage("en")}
                 className="flex items-center space-x-2 w-full text-left px-2 py-1 text-sm hover:bg-indigo-50 rounded"
               >
                 <Image src={flags.en.src} width={20} height={15} alt={flags.en.alt} />
-                <span>English</span>
+                <span>{t("header.english")}</span>
               </button>
             </div>
           </div>
@@ -255,13 +254,13 @@ export default function Header() {
                   href="/dashboard"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 rounded-md"
                 >
-                  Bảng điều khiển
+                  {t("header.dashboard")}
                 </Link>
                 <Link
                   href="/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 rounded-md"
                 >
-                  {t("profile")}
+                  {t("info")}
                 </Link>
                 <button
                   onClick={() => {

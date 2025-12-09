@@ -15,5 +15,8 @@
   "agreeTerms": "By placing this order, you agree to our Terms of Service and Privacy Policy.",
   "empty": "No items in the cart.",
   "products": "products",
-  "viewCart": "View cart"
+  "viewCart": "View cart",
+  "selectAll": "Select all",
+  "continueShopping": "Continue shopping",
+  "productImageAlt": "product image"
 }

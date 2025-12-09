@@ -20,6 +20,7 @@ import { useCancelAppointmentMutation } from "../../hospital/hooks/mutations/app
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeyEnum } from "@/app/shares/enums/queryKey";
+import { useTranslations } from "next-intl";
 
 dayjs.locale("vi");
 
@@ -71,6 +72,7 @@ export default function AppointmentList({
   filters,
   onFilterChange,
 }: AppointmentListProps) {
+  const t = useTranslations("home");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -102,7 +104,7 @@ export default function AppointmentList({
 
   const { mutate: cancelAppointment, isPending: isCancelling } = useCancelAppointmentMutation({
     onSuccess: () => {
-      toast.success("Hủy chuyến thành công!");
+      toast.success(t("profile.appointmentList.toast.cancelSuccess"));
       queryClient.invalidateQueries({ queryKey: [QueryKeyEnum.Order, "appointments"] });
       setCancellingId(null);
       setShowCancelModal(false);
@@ -121,14 +123,11 @@ export default function AppointmentList({
         errorMessage.toLowerCase().includes("12") ||
         errorMessage.toLowerCase().includes("hour")
       ) {
-        toast.error(
-          "Không thể hủy lịch hẹn vì thời gian còn lại ít hơn 12 tiếng. Nếu bạn vẫn muốn hủy, vui lòng gọi hotline: 1900-xxx-xxx",
-          {
-            autoClose: 8000,
-          },
-        );
+        toast.error(t("profile.appointmentList.toast.cannotCancelTime"), {
+          autoClose: 8000,
+        });
       } else {
-        toast.error("Hủy lịch hẹn thất bại: " + errorMessage);
+        toast.error(t("profile.appointmentList.toast.cancelFailed", { message: errorMessage }));
       }
     },
   });
@@ -157,9 +156,11 @@ export default function AppointmentList({
       {/* Header */}
       <div className="flex justify-between items-center">
         <Title level={4} className="!mb-0">
-          📅 Lịch hẹn khám
+          📅 {t("profile.appointmentList.title")}
         </Title>
-        <Text className="text-gray-500">Tổng: {appointments.length} lịch hẹn</Text>
+        <Text className="text-gray-500">
+          {t("profile.appointmentList.total", { count: appointments.length })}
+        </Text>
       </div>
 
       {/* Filters Section */}
@@ -167,56 +168,58 @@ export default function AppointmentList({
         <div className="flex items-center gap-2 mb-4">
           <FaFilter className="text-blue-600" />
           <Text strong className="text-gray-700">
-            Bộ lọc tìm kiếm
+            {t("profile.appointmentList.filters.title")}
           </Text>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Status Filter */}
           <div className="flex flex-col gap-2">
-            <Text className="text-sm text-gray-600 font-medium">Trạng thái</Text>
+            <Text className="text-sm text-gray-600 font-medium">
+              {t("profile.appointmentList.filters.status")}
+            </Text>
             <Select
-              placeholder="Tất cả trạng thái"
+              placeholder={t("profile.appointmentList.filters.allStatus")}
               allowClear
               value={filters.status || undefined}
               onChange={handleStatusChange}
               className="w-full"
               size="large"
             >
-              <Option value="">Tất cả</Option>
+              <Option value="">{t("profile.appointmentList.filters.all")}</Option>
               <Option value="PENDING">
                 <Tag color="orange" className="!m-0">
-                  Chờ xác nhận
+                  {t("profile.appointmentList.status.PENDING")}
                 </Tag>
               </Option>
               <Option value="CONFIRMED">
                 <Tag color="blue" className="!m-0">
-                  Đã xác nhận
+                  {t("profile.appointmentList.status.CONFIRMED")}
                 </Tag>
               </Option>
               <Option value="COMPLETED">
                 <Tag color="green" className="!m-0">
-                  Hoàn thành
+                  {t("profile.appointmentList.status.COMPLETED")}
                 </Tag>
               </Option>
               <Option value="CANCELLED">
                 <Tag color="red" className="!m-0">
-                  Đã hủy
+                  {t("profile.appointmentList.status.CANCELLED")}
                 </Tag>
               </Option>
               <Option value="PENDING_ONLINE">
                 <Tag color="blue" className="!m-0">
-                  Chờ xác nhận (Online)
+                  {t("profile.appointmentList.status.PENDING_ONLINE")}
                 </Tag>
               </Option>
               <Option value="CONFIRMED_ONLINE">
                 <Tag color="cyan" className="!m-0">
-                  Đã xác nhận (Online)
+                  {t("profile.appointmentList.status.CONFIRMED_ONLINE")}
                 </Tag>
               </Option>
               <Option value="COMPLETED_ONLINE">
                 <Tag color="teal" className="!m-0">
-                  Hoàn thành (Online)
+                  {t("profile.appointmentList.status.COMPLETED_ONLINE")}
                 </Tag>
               </Option>
             </Select>
@@ -224,9 +227,11 @@ export default function AppointmentList({
 
           {/* Date Filter */}
           <div className="flex flex-col gap-2">
-            <Text className="text-sm text-gray-600 font-medium">Ngày khám</Text>
+            <Text className="text-sm text-gray-600 font-medium">
+              {t("profile.appointmentList.filters.date")}
+            </Text>
             <DatePicker
-              placeholder="Chọn ngày"
+              placeholder={t("profile.appointmentList.filters.selectDate")}
               format="DD/MM/YYYY"
               value={
                 filters.date && filters.date !== "" && dayjs(filters.date, "YYYY-MM-DD").isValid()
@@ -249,7 +254,7 @@ export default function AppointmentList({
               onClick={handleResetFilters}
               className="w-full !h-10"
             >
-              Đặt lại bộ lọc
+              {t("profile.appointmentList.filters.reset")}
             </Button>
           </div>
         </div>
@@ -258,7 +263,7 @@ export default function AppointmentList({
       {/* Loading State */}
       {loading && (
         <div className="flex justify-center items-center min-h-[400px]">
-          <Spin size="large" tip="Đang tải lịch hẹn..." />
+          <Spin size="large" tip={t("profile.appointmentList.loading")} />
         </div>
       )}
 
@@ -275,11 +280,10 @@ export default function AppointmentList({
 
           {/* Text content */}
           <Title level={4} className="!mb-2 text-gray-800">
-            Chưa có lịch hẹn khám
+            {t("profile.appointmentList.empty.title")}
           </Title>
           <Text className="text-gray-500 text-base mb-6 max-w-md">
-            Bạn chưa đặt lịch khám nào. Hãy tìm bệnh viện và bác sĩ phù hợp để được tư vấn và điều
-            trị chuyên nghiệp.
+            {t("profile.appointmentList.empty.description")}
           </Text>
 
           {/* Action buttons */}
@@ -291,10 +295,10 @@ export default function AppointmentList({
               onClick={() => router.push("/booking")}
               className="!h-11 !px-6 !bg-gradient-to-r !from-blue-500 !to-blue-600 hover:!from-blue-600 hover:!to-blue-700"
             >
-              Đặt lịch khám ngay
+              {t("profile.appointmentList.empty.bookNow")}
             </Button>
             <Button size="large" onClick={() => router.push("/shop")} className="!h-11 !px-6">
-              Mua thuốc
+              {t("profile.appointmentList.empty.buyDrugs")}
             </Button>
           </div>
         </div>
@@ -304,17 +308,22 @@ export default function AppointmentList({
       {!loading && appointments.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {appointments.map((appt) => {
-            const timeSlot = appt?.time_slots[0];
+            const timeSlot = appt?.time_slots?.[0];
             const doctor = timeSlot?.doctor;
-            const startTime = dayjs(timeSlot?.start_time);
-            const endTime = dayjs(timeSlot?.end_time);
+            const startTime = timeSlot?.start_time ? dayjs(timeSlot.start_time) : null;
+            const endTime = timeSlot?.end_time ? dayjs(timeSlot.end_time) : null;
             const currentTime = dayjs();
 
             // Kiểm tra xem đã qua thời gian khám chưa
-            const isPastAppointment = currentTime.isAfter(startTime);
+            const isPastAppointment = startTime ? currentTime.isAfter(startTime) : false;
 
             // Kiểm tra có thể hủy không (chưa qua giờ khám và status là PENDING)
             const canCancel = appt.status === "PENDING" && !isPastAppointment;
+
+            // Nếu không có timeSlot, bỏ qua appointment này
+            if (!timeSlot || !startTime || !endTime) {
+              return null;
+            }
 
             return (
               <div
@@ -339,8 +348,8 @@ export default function AppointmentList({
                     </div>
                   </div>
 
-                  <Tag color={statusColors[appt.status]} className="text-sm px-3 py-1">
-                    {statusLabels[appt.status].label}
+                  <Tag color={statusColors[appt.status] || "default"} className="text-sm px-3 py-1">
+                    {statusLabels[appt.status]?.label || appt.status}
                   </Tag>
                 </div>
 
@@ -349,7 +358,7 @@ export default function AppointmentList({
                   <div className="flex items-center gap-2">
                     <FaFileAlt className="text-gray-400" />
                     <Text className="text-gray-600 !text-base">
-                      <strong>Mã lịch hẹn:</strong>{" "}
+                      <strong>{t("profile.appointmentList.card.appointmentCode")}</strong>{" "}
                       <span className="text-blue-600">{appt.appointment_code}</span>
                     </Text>
                   </div>
@@ -357,7 +366,8 @@ export default function AppointmentList({
                     <div className="flex items-center gap-2">
                       <FaStethoscope className="text-gray-400" />
                       <Text className="text-gray-600 !text-base">
-                        <strong>Dịch vụ:</strong> {appt.service_name}
+                        <strong>{t("profile.appointmentList.card.service")}</strong>{" "}
+                        {appt.service_name}
                       </Text>
                     </div>
                   )}
@@ -382,12 +392,14 @@ export default function AppointmentList({
                         </div>
                         <Text className="text-sm text-gray-500 block">
                           {doctor.specialty === "ophthalmology"
-                            ? "Chuyên khoa Mắt"
+                            ? t("profile.appointmentList.card.specialty")
                             : doctor.specialty}
                         </Text>
                       </div>
                       <div className="text-right">
-                        <Text className="text-xs text-gray-500 block">📞 Liên hệ</Text>
+                        <Text className="text-xs text-gray-500 block">
+                          📞 {t("profile.appointmentList.card.contact")}
+                        </Text>
                         <Text className="text-sm text-blue-600">{doctor.phone}</Text>
                       </div>
                     </div>
@@ -397,7 +409,7 @@ export default function AppointmentList({
                   {appt.notes && (
                     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
                       <Text className="text-sm">
-                        <strong>📝 Ghi chú:</strong> {appt.notes}
+                        <strong>📝 {t("profile.appointmentList.card.note")}</strong> {appt.notes}
                       </Text>
                     </div>
                   )}
@@ -405,7 +417,8 @@ export default function AppointmentList({
                   {/* Footer với thời gian tạo */}
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                     <Text className="text-xs text-gray-400">
-                      Đặt lúc: {dayjs(appt.created_at).format("DD/MM/YYYY HH:mm")}
+                      {t("profile.appointmentList.card.bookedAt")}{" "}
+                      {dayjs(appt.created_at).format("DD/MM/YYYY HH:mm")}
                     </Text>
                     {appt.status === "PENDING" && (
                       <div className="flex flex-col items-end gap-1">
@@ -419,16 +432,18 @@ export default function AppointmentList({
                           className="bg-red-500 cursor-pointer text-white px-4 py-2 rounded-md hover:bg-red-600 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           title={
                             isPastAppointment
-                              ? "Không thể hủy lịch hẹn đã qua thời gian khám"
-                              : "Hủy lịch hẹn"
+                              ? t("profile.appointmentList.card.cannotCancelPast")
+                              : t("profile.appointmentList.card.cancelTooltip")
                           }
                         >
                           {isCancelling && cancellingId === appt.appointment_id
-                            ? "Đang hủy..."
-                            : "Hủy lịch hẹn"}
+                            ? t("profile.appointmentList.card.cancelling")
+                            : t("profile.appointmentList.card.cancel")}
                         </button>
                         {isPastAppointment && (
-                          <Text className="text-xs text-red-500">Đã qua thời gian khám</Text>
+                          <Text className="text-xs text-red-500">
+                            {t("profile.appointmentList.card.pastAppointment")}
+                          </Text>
                         )}
                       </div>
                     )}
@@ -442,21 +457,21 @@ export default function AppointmentList({
 
       {/* Modal xác nhận hủy lịch */}
       <Modal
-        title="Xác nhận hủy lịch hẹn"
+        title={t("profile.appointmentList.modal.title")}
         open={showCancelModal}
         onOk={handleConfirmCancel}
         onCancel={handleCloseModal}
-        okText="Xác nhận"
-        cancelText="Đóng"
+        okText={t("profile.appointmentList.modal.confirm")}
+        cancelText={t("profile.appointmentList.modal.close")}
         okButtonProps={{ danger: true, loading: isCancelling }}
         cancelButtonProps={{ disabled: isCancelling }}
       >
         <p>
-          Bạn có chắc chắn muốn hủy lịch hẹn <strong>{selectedAppointment?.code}</strong>?
+          {t("profile.appointmentList.modal.message", {
+            code: selectedAppointment?.code || "",
+          })}
         </p>
-        <p className="text-gray-500 text-sm mt-2">
-          Lưu ý: Sau khi hủy, bạn sẽ không thể hoàn tác thao tác này.
-        </p>
+        <p className="text-gray-500 text-sm mt-2">{t("profile.appointmentList.modal.warning")}</p>
       </Modal>
     </div>
   );

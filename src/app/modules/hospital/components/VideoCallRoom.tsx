@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { VideoCameraOutlined } from "@ant-design/icons";
 import { ImPhoneHangUp } from "react-icons/im";
 import { FaVolumeMute } from "react-icons/fa";
@@ -8,6 +8,7 @@ import { RootState } from "@/app/shares/stores";
 import { callEventEmitter } from "@/app/shares/utils/callEvents";
 import { hangupCall, makeVideoCall, muteCall } from "@/app/shares/utils/stringee";
 import { Button } from "antd";
+import { useTranslations } from "next-intl";
 
 interface ChatHeaderProps {
   userId?: string;
@@ -21,21 +22,10 @@ interface IncomingCall {
 }
 
 const ChatHeader = ({ userId }: ChatHeaderProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("booking");
   const [openModal, setOpenModal] = useState(false);
   const [mute, setMute] = useState(true);
   const userSenderId = useSelector((state: RootState) => state.auth.userId);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   useEffect(() => {
     const handler = (incomingCall: IncomingCall) => {
@@ -81,7 +71,7 @@ const ChatHeader = ({ userId }: ChatHeaderProps) => {
             onClick={() => handleCall(true)}
             icon={<VideoCameraOutlined size={20} color="white" className="!text-white" />}
           >
-            Tham gia cuộc gọi video
+            {t("videoCall.joinVideoCall")}
           </Button>
         </div>
       </div>
@@ -89,7 +79,7 @@ const ChatHeader = ({ userId }: ChatHeaderProps) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-[#1a1a1a] p-6 rounded-lg w-[600px]">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white text-lg font-semibold">Video Call</h2>
+              <h2 className="text-white text-lg font-semibold">{t("videoCall.title")}</h2>
               <button onClick={handleCancel} className="text-white text-2xl hover:text-red-500">
                 ×
               </button>
@@ -115,12 +105,16 @@ const ChatHeader = ({ userId }: ChatHeaderProps) => {
               <button
                 onClick={hangup}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                title={t("videoCall.hangup")}
+                aria-label={t("videoCall.hangup")}
               >
                 <ImPhoneHangUp />
               </button>
               <button
                 onClick={muteFunction}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                title={mute ? t("videoCall.unmute") : t("videoCall.mute")}
+                aria-label={mute ? t("videoCall.unmute") : t("videoCall.mute")}
               >
                 <FaVolumeMute />
               </button>

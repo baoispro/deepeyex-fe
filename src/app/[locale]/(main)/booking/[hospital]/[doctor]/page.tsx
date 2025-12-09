@@ -31,9 +31,10 @@ import { HomeOutlined } from "@ant-design/icons";
 import { useGetTimeSlotsByDoctorAndMonthQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-month.query";
 import { useGetTimeSlotsByDoctorAndDateQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-date.query";
 import { useGetAllServicesByDoctorIdQuery } from "@/app/modules/hospital/hooks/queries/services/use-get-list-service.query";
+import { useTranslations } from "next-intl";
 
 interface PatientFormValues {
-  patientType: "Bản thân" | "Người khác";
+  patientType: "self" | "other";
   full_name: string;
   phone: string;
   email: string;
@@ -47,6 +48,7 @@ const { Step } = Steps;
 
 // ---------------- BƯỚC 1: CHỌN DỊCH VỤ ----------------
 const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () => void }) => {
+  const t = useTranslations("booking");
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const specialty = doctor.specialty;
   const { data: dataServices } = useGetAllServicesByDoctorIdQuery(doctor.doctor_id);
@@ -67,14 +69,14 @@ const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () =>
 
   return (
     <Card>
-      <Title level={4}>Thông tin đặt khám</Title>
+      <Title level={4}>{t("appointmentPage.step1.title")}</Title>
       <Paragraph>
-        <Text strong>Chuyên khoa:</Text> {specialty}
+        <Text strong>{t("appointmentPage.step1.specialty")}</Text> {specialty}
       </Paragraph>
 
       <div style={{ marginBottom: "24px" }}>
         <Paragraph>
-          <Text strong>Dịch vụ</Text>
+          <Text strong>{t("appointmentPage.step1.service")}</Text>
         </Paragraph>
         <Radio.Group
           onChange={(e) => setSelectedService(e.target.value)}
@@ -101,7 +103,7 @@ const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () =>
 
       <Button type="primary" size="large" style={{ width: "100%", marginBottom: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between" }} className="gap-1">
-          <Text style={{ color: "#fff" }}>Tổng cộng:</Text>
+          <Text style={{ color: "#fff" }}>{t("appointmentPage.step1.total")}</Text>
           <Text style={{ color: "#fff" }}>{total.toLocaleString()} ₫</Text>
         </div>
       </Button>
@@ -113,7 +115,7 @@ const SelectSpecialtyStep = ({ doctor, onNext }: { doctor: Doctor; onNext: () =>
             onClick={handleNext}
             disabled={!selectedService} // 🔒 Không chọn thì disable
           >
-            Chọn ngày & giờ <FaChevronRight />
+            {t("appointmentPage.step1.nextButton")} <FaChevronRight />
           </Button>
         </Col>
       </Row>
@@ -131,6 +133,7 @@ const SelectDateTimeStep = ({
   onNext: () => void;
   onBack: () => void;
 }) => {
+  const t = useTranslations("booking");
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
@@ -190,11 +193,11 @@ const SelectDateTimeStep = ({
 
   return (
     <Card>
-      <Title level={4}>Thông tin đặt khám</Title>
+      <Title level={4}>{t("appointmentPage.step2.title")}</Title>
 
       <div>
         <div>
-          <Title level={5}>Chọn ngày</Title>
+          <Title level={5}>{t("appointmentPage.step2.selectDate")}</Title>
           <Calendar
             fullscreen={true}
             onSelect={handleSelectDate}
@@ -215,10 +218,10 @@ const SelectDateTimeStep = ({
         </div>
 
         <div>
-          <Title level={5}>Chọn giờ</Title>
+          <Title level={5}>{t("appointmentPage.step2.selectTime")}</Title>
           {selectedDate ? (
             isDayLoading ? (
-              <Spin tip="Đang tải lịch..." fullscreen />
+              <Spin tip={t("appointmentPage.step2.loadingSlots")} fullscreen />
             ) : timeSlots.length > 0 ? (
               <Radio.Group
                 onChange={(e) => setSelectedSlot(e.target.value)}
@@ -244,10 +247,10 @@ const SelectDateTimeStep = ({
                 </Row>
               </Radio.Group>
             ) : (
-              <Text type="danger">Không có lịch cho ngày này</Text>
+              <Text type="danger">{t("appointmentPage.step2.noSlots")}</Text>
             )
           ) : (
-            <Text>Vui lòng chọn ngày trước</Text>
+            <Text>{t("appointmentPage.step2.selectDateFirst")}</Text>
           )}
         </div>
       </div>
@@ -255,12 +258,12 @@ const SelectDateTimeStep = ({
       <Row justify="space-between" style={{ marginTop: "24px" }}>
         <Col>
           <Button onClick={onBack}>
-            <FaChevronLeft /> Quay lại
+            <FaChevronLeft /> {t("appointmentPage.step2.backButton")}
           </Button>
         </Col>
         <Col>
           <Button type="primary" onClick={handleNext} disabled={!selectedDate || !selectedSlot}>
-            Thêm thông tin bệnh nhân <FaChevronRight />
+            {t("appointmentPage.step2.nextButton")} <FaChevronRight />
           </Button>
         </Col>
       </Row>
@@ -270,6 +273,7 @@ const SelectDateTimeStep = ({
 
 // ---------------- BƯỚC 3: THÔNG TIN BỆNH NHÂN ----------------
 const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
+  const t = useTranslations("booking");
   const patient = useSelector((state: RootState) => state.auth.patient);
   const [form] = Form.useForm();
   const router = useRouter();
@@ -286,7 +290,7 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
         form={form}
         layout="vertical"
         initialValues={{
-          patientType: "Bản thân",
+          patientType: "self",
           full_name: patient?.fullName || "",
           phone: patient?.phone || "",
           email: patient?.email || "",
@@ -295,7 +299,7 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
           address: patient?.address || "",
         }}
         onValuesChange={(changed) => {
-          if (changed.patientType === "Người khác") {
+          if (changed.patientType === "other") {
             form.setFieldsValue({
               full_name: "",
               phone: "",
@@ -304,7 +308,7 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
               gender: "",
               address: "",
             });
-          } else if (changed.patientType === "Bản thân") {
+          } else if (changed.patientType === "self") {
             form.setFieldsValue({
               full_name: patient?.fullName || "",
               phone: patient?.phone || "",
@@ -319,66 +323,70 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
       >
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
-            <Form.Item label="Chọn bệnh nhân" name="patientType">
+            <Form.Item label={t("appointmentPage.step3.patientType")} name="patientType">
               <Select>
-                <Select.Option value="Bản thân">Bản thân</Select.Option>
-                <Select.Option value="Người khác">Người khác</Select.Option>
+                <Select.Option value="self">
+                  {t("appointmentPage.step3.patientTypeSelf")}
+                </Select.Option>
+                <Select.Option value="other">
+                  {t("appointmentPage.step3.patientTypeOther")}
+                </Select.Option>
               </Select>
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
             <Form.Item
-              label="Họ và tên"
+              label={t("appointmentPage.step3.fullName")}
               name="full_name"
-              rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
+              rules={[{ required: true, message: t("appointmentPage.step3.fullNameRequired") }]}
             >
-              <Input placeholder="Nhập họ và tên" />
+              <Input placeholder={t("appointmentPage.step3.fullNamePlaceholder")} />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
             <Form.Item
-              label="Số điện thoại"
+              label={t("appointmentPage.step3.phone")}
               name="phone"
               rules={[
-                { required: true, message: "Vui lòng nhập số điện thoại" },
+                { required: true, message: t("appointmentPage.step3.phoneRequired") },
                 {
                   pattern: /^(0|\+84)(\d{9})$/,
-                  message: "Số điện thoại không hợp lệ (VD: 0912345678)",
+                  message: t("appointmentPage.step3.phoneInvalid"),
                 },
               ]}
             >
-              <Input placeholder="Nhập số điện thoại" />
+              <Input placeholder={t("appointmentPage.step3.phonePlaceholder")} />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
             <Form.Item
-              label="Email"
+              label={t("appointmentPage.step3.email")}
               name="email"
               rules={[
-                { required: true, message: "Vui lòng nhập email" },
-                { type: "email", message: "Email không hợp lệ" },
+                { required: true, message: t("appointmentPage.step3.emailRequired") },
+                { type: "email", message: t("appointmentPage.step3.emailInvalid") },
               ]}
             >
-              <Input placeholder="Nhập email" />
+              <Input placeholder={t("appointmentPage.step3.emailPlaceholder")} />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
             <Form.Item
-              label="Ngày sinh"
+              label={t("appointmentPage.step3.dob")}
               name="dob"
               rules={[
-                { required: true, message: "Vui lòng chọn ngày sinh" },
+                { required: true, message: t("appointmentPage.step3.dobRequired") },
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
                     const age = dayjs().diff(dayjs(value), "year");
                     return age > 0 && age <= 100
                       ? Promise.resolve()
-                      : Promise.reject("Tuổi phải từ 1 đến 100");
+                      : Promise.reject(t("appointmentPage.step3.ageInvalid"));
                   },
                 },
               ]}
@@ -389,24 +397,26 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
 
           <Col xs={24} md={12}>
             <Form.Item
-              label="Giới tính"
+              label={t("appointmentPage.step3.gender")}
               name="gender"
-              rules={[{ required: true, message: "Vui lòng chọn giới tính" }]}
+              rules={[{ required: true, message: t("appointmentPage.step3.genderRequired") }]}
             >
               <Select>
-                <Select.Option value="male">Nam</Select.Option>
-                <Select.Option value="female">Nữ</Select.Option>
+                <Select.Option value="male">{t("appointmentPage.step3.genderMale")}</Select.Option>
+                <Select.Option value="female">
+                  {t("appointmentPage.step3.genderFemale")}
+                </Select.Option>
               </Select>
             </Form.Item>
           </Col>
 
           <Col xs={24}>
             <Form.Item
-              label="Địa chỉ"
+              label={t("appointmentPage.step3.address")}
               name="address"
-              rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
+              rules={[{ required: true, message: t("appointmentPage.step3.addressRequired") }]}
             >
-              <Input placeholder="Nhập địa chỉ" />
+              <Input placeholder={t("appointmentPage.step3.addressPlaceholder")} />
             </Form.Item>
           </Col>
         </Row>
@@ -414,12 +424,12 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
         <Row justify="space-between" style={{ marginTop: "24px" }}>
           <Col>
             <Button onClick={onBack}>
-              <FaChevronLeft /> Quay lại
+              <FaChevronLeft /> {t("appointmentPage.step3.backButton")}
             </Button>
           </Col>
           <Col>
             <Button type="primary" htmlType="submit">
-              Chọn hình thức thanh toán <FaChevronRight />
+              {t("appointmentPage.step3.nextButton")} <FaChevronRight />
             </Button>
           </Col>
         </Row>
@@ -430,6 +440,7 @@ const BasicInfoStep = ({ onBack }: { onBack: () => void }) => {
 
 // ---------------- MAIN ----------------
 export default function BookAppointmentPage() {
+  const t = useTranslations("booking");
   const params = useParams();
   const slug = params.doctor as string;
 
@@ -438,9 +449,9 @@ export default function BookAppointmentPage() {
 
   const [currentStep, setCurrentStep] = useState(1);
 
-  if (isLoading) return <Spin tip="Đang tải thông tin bác sĩ..." fullscreen />;
+  if (isLoading) return <Spin tip={t("appointmentPage.loading")} fullscreen />;
 
-  if (!doctor) return <Paragraph>Không tìm thấy bác sĩ</Paragraph>;
+  if (!doctor) return <Paragraph>{t("appointmentPage.doctorNotFound")}</Paragraph>;
 
   return (
     <div style={{ padding: "24px", maxWidth: "900px", margin: "auto" }}>
@@ -454,12 +465,12 @@ export default function BookAppointmentPage() {
           {
             title: (
               <Link href={"/booking"}>
-                <span>Đặt khám</span>
+                <span>{t("appointmentPage.breadcrumb.booking")}</span>
               </Link>
             ),
           },
           {
-            title: "Đặt lịch hẹn",
+            title: t("appointmentPage.breadcrumb.appointment"),
           },
         ]}
       />
@@ -483,9 +494,9 @@ export default function BookAppointmentPage() {
 
       {/* Các bước */}
       <Steps current={currentStep - 1} style={{ marginBottom: "32px" }}>
-        <Step title="Chuyên khoa & Dịch vụ" />
-        <Step title="Ngày & Giờ" />
-        <Step title="Thông tin bệnh nhân" />
+        <Step title={t("appointmentPage.steps.service")} />
+        <Step title={t("appointmentPage.steps.datetime")} />
+        <Step title={t("appointmentPage.steps.patient")} />
       </Steps>
 
       {currentStep === 1 && (
