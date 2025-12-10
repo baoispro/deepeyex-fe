@@ -55,7 +55,7 @@ export interface SendOrderConfirmationRequest {
   delivery_note: string;
   delivery_fee: number;
   delivery_city: string;
-  delivery_district: string;
+  delivery_district?: string; // Optional vì có thể không có district
   delivery_ward: string;
 }
 

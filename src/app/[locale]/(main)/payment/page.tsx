@@ -51,6 +51,16 @@ interface District {
   name: string;
   codename: string;
   division_type: string;
+  short_codename?: string;
+  wards?: Ward[];
+}
+
+interface Ward {
+  code: number;
+  name: string;
+  codename: string;
+  division_type: string;
+  short_codename?: string;
 }
 
 interface City {
@@ -59,7 +69,8 @@ interface City {
   codename: string;
   division_type: string;
   phone_code: number;
-  districts: District[];
+  districts?: District[];
+  wards?: Ward[]; // API v2 có thể trả về wards trực tiếp
 }
 
 const mockPaymentMethods = [
@@ -116,10 +127,10 @@ const OrderPage = () => {
 
   // State cho địa chỉ từ API
   const [cities, setCities] = useState<City[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
   const [selectedCityCode, setSelectedCityCode] = useState<number | null>(null);
-  const [selectedDistrictCode, setSelectedDistrictCode] = useState<number | null>(null);
-  const [wardText, setWardText] = useState<string>(""); // Nhập tay phường/xã
+  const [selectedWardCode, setSelectedWardCode] = useState<number | null>(null);
+  const [wardText, setWardText] = useState<string>(""); // Nhập tay phường/xã (fallback)
   const [selectedProvince, setSelectedProvince] = useState<string>("");
   // State cho thông tin giao hàng (thuốc)
   const [deliveryInfo, setDeliveryInfo] = useState({
@@ -248,7 +259,7 @@ const OrderPage = () => {
 
   // Fetch danh sách tỉnh/thành phố từ API
   useEffect(() => {
-    fetch("https://provinces.open-api.vn/api/?depth=2")
+    fetch("https://provinces.open-api.vn/api/v2/?depth=2")
       .then((res) => res.json())
       .then((data: City[]) => {
         setCities(data);
@@ -256,28 +267,49 @@ const OrderPage = () => {
       .catch((error) => console.error("Error fetching cities:", error));
   }, []);
 
-  // Cập nhật districts khi chọn city
+  // Cập nhật wards khi chọn city
   useEffect(() => {
     if (selectedCityCode) {
       const selectedCity = cities.find((city) => city.code === selectedCityCode);
       if (selectedCity) {
-        setDistricts(selectedCity.districts || []);
         setSelectedProvince(selectedCity.name);
-        // Reset district và ward khi đổi city
-        setSelectedDistrictCode(null);
+
+        // Nếu city đã có wards từ API depth=2
+        if (selectedCity.wards && selectedCity.wards.length > 0) {
+          setWards(selectedCity.wards);
+        } else {
+          // Nếu chưa có, fetch wards trực tiếp từ city
+          fetch(`https://provinces.open-api.vn/api/v2/p/${selectedCityCode}?depth=2`)
+            .then((res) => res.json())
+            .then((cityData: City | { wards?: Ward[] } | Ward[]) => {
+              if (Array.isArray(cityData)) {
+                // Nếu trả về array wards trực tiếp
+                setWards(cityData);
+              } else if ("wards" in cityData && cityData.wards) {
+                // Nếu trả về object có wards
+                setWards(cityData.wards);
+              } else if ("wards" in cityData && Array.isArray((cityData as City).wards)) {
+                // Nếu là City object có wards
+                setWards((cityData as City).wards || []);
+              } else {
+                setWards([]);
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching wards:", error);
+              setWards([]);
+            });
+        }
+
+        // Reset ward khi đổi city
         setWardText("");
+        setSelectedWardCode(null);
       }
     } else {
-      setDistricts([]);
+      setWards([]);
+      setSelectedWardCode(null);
     }
   }, [selectedCityCode, cities]);
-
-  // Reset ward text khi đổi district
-  useEffect(() => {
-    if (selectedDistrictCode) {
-      setWardText("");
-    }
-  }, [selectedDistrictCode]);
 
   useEffect(() => {
     const localType = localStorage.getItem("type");
@@ -468,10 +500,6 @@ const OrderPage = () => {
         toast.error("Vui lòng chọn Tỉnh/Thành phố.");
         return;
       }
-      if (!selectedDistrictCode) {
-        toast.error("Vui lòng chọn Quận/Huyện.");
-        return;
-      }
       if (!deliveryInfo.address.trim()) {
         toast.error("Vui lòng nhập địa chỉ cụ thể.");
         return;
@@ -480,7 +508,7 @@ const OrderPage = () => {
 
     // Build địa chỉ đầy đủ
     const selectedCity = cities.find((c) => c.code === selectedCityCode);
-    const selectedDistrict = districts.find((d) => d.code === selectedDistrictCode);
+    const selectedWard = wards.find((w) => w.code === selectedWardCode);
 
     // Map cartItems sang order_items backend yêu cầu
     const order_items = cartItems.map((item) => ({
@@ -501,8 +529,7 @@ const OrderPage = () => {
         note: deliveryInfo.note,
         method: shippingMethod === "delivery" ? ("HOME_DELIVERY" as const) : ("PICKUP" as const),
         city: selectedCity?.name,
-        district: selectedDistrict?.name,
-        ward: wardText || undefined, // Sử dụng wardText thay vì selectedWard
+        ward: selectedWard?.name || wardText || undefined, // Ưu tiên selectedWard, fallback về wardText
         fee: shippingFee,
         fullName: deliveryInfo.receiverName,
         email: deliveryInfo.receiverEmail,
@@ -524,9 +551,11 @@ const OrderPage = () => {
       delivery_note: deliveryInfo.note,
       delivery_fee: shippingFee,
       delivery_city: selectedCity?.name || "",
-      delivery_district: selectedDistrict?.name || "",
-      delivery_ward: wardText,
+      delivery_ward: selectedWard?.name || wardText || "",
     };
+
+    // Lưu phí vận chuyển vào localStorage để hiển thị ở trang success
+    localStorage.setItem("shippingFee", shippingFee.toString());
 
     // Nếu thanh toán bằng ATM, lưu thông tin email vào localStorage để gửi sau khi thanh toán thành công
     if (paymentMethod === "atm") {
@@ -697,29 +726,37 @@ const OrderPage = () => {
                         </option>
                       ))}
                     </select>
-                    <select
-                      value={selectedDistrictCode || ""}
-                      onChange={(e) => setSelectedDistrictCode(Number(e.target.value))}
-                      disabled={!selectedCityCode}
-                      className="p-3 border border-gray-600 rounded-md appearance-none bg-white cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    >
-                      <option value="" disabled>
-                        Chọn Quận/Huyện
-                      </option>
-                      {districts.map((district) => (
-                        <option key={district.code} value={district.code}>
-                          {district.name}
+                    {wards.length > 0 ? (
+                      <select
+                        value={selectedWardCode || ""}
+                        onChange={(e) => {
+                          const wardCode = Number(e.target.value);
+                          setSelectedWardCode(wardCode);
+                          const selectedWard = wards.find((w) => w.code === wardCode);
+                          setWardText(selectedWard?.name || "");
+                        }}
+                        disabled={!selectedCityCode}
+                        className="p-3 border border-gray-600 rounded-md appearance-none bg-white cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="" disabled>
+                          Chọn Phường/Xã
                         </option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Nhập Phường/Xã"
-                      value={wardText}
-                      onChange={(e) => setWardText(e.target.value)}
-                      disabled={!selectedDistrictCode}
-                      className="p-3 border border-gray-600 rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    />
+                        {wards.map((ward) => (
+                          <option key={ward.code} value={ward.code}>
+                            {ward.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Nhập Phường/Xã"
+                        value={wardText}
+                        onChange={(e) => setWardText(e.target.value)}
+                        disabled={!selectedCityCode}
+                        className="p-3 border border-gray-600 rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                    )}
                     <input
                       type="text"
                       placeholder="Nhập địa chỉ cụ thể (số nhà, tên đường)"
