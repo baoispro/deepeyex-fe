@@ -65,12 +65,12 @@ interface City {
 const mockPaymentMethods = [
   {
     key: "cash",
-    icon: <FaMoneyBill className="text-blue-500" />,
+    icon: <FaMoneyBill className="text-blue-500" size={30} />,
     name: "Thanh toán tiền mặt khi nhận hàng",
   },
   {
     key: "atm",
-    icon: <FaRegCreditCard className="text-blue-500" />,
+    icon: <FaRegCreditCard className="text-blue-500" size={45} />,
     name: "Thanh toán bằng thẻ ATM nội địa và tài khoản ngân hàng",
   },
 ];
@@ -444,10 +444,10 @@ const OrderPage = () => {
 
   // Hàm xử lý đặt hàng thuốc (order)
   const handleCompleteOrderDrug = () => {
-    if (!patient_id || !user_id) {
-      toast.error("Vui lòng đăng nhập để đặt hàng.");
-      return;
-    }
+    // if (!patient_id || !user_id) {
+    //   toast.error("Vui lòng đăng nhập để đặt hàng.");
+    //   return;
+    // }
 
     if (!paymentMethod) {
       toast.error("Vui lòng chọn phương thức thanh toán.");
@@ -492,8 +492,8 @@ const OrderPage = () => {
     }));
 
     const orderRequest = {
-      patient_id: patient_id,
-      book_user_id: user_id,
+      patient_id: patient_id || "0",
+      book_user_id: user_id || "0",
       items: order_items,
       delivery_info: {
         address: deliveryInfo.address,
@@ -589,22 +589,22 @@ const OrderPage = () => {
                             {item.sale_price ? (
                               <>
                                 <span className="line-through text-gray-500 text-sm">
-                                  Giá gốc: {item.price.toLocaleString()}₫
+                                  Giá gốc: {item.price.toLocaleString()}đ
                                 </span>
                                 <span className="text-red-500 font-bold">
-                                  Giá sale: {item.sale_price.toLocaleString()}₫
+                                  Giá sale: {item.sale_price.toLocaleString()}đ
                                 </span>
                               </>
                             ) : (
                               <span className="text-blue-500 font-bold">
-                                {item.price.toLocaleString()}₫
+                                {item.price.toLocaleString()}đ
                               </span>
                             )}
                           </>
                         )}
                         {type === "booking" && (
                           <span className="text-red-500 font-bold">
-                            {item.price.toLocaleString()}₫
+                            {item.price.toLocaleString()}đ
                           </span>
                         )}
                       </div>
@@ -651,16 +651,6 @@ const OrderPage = () => {
                 >
                   Giao hàng tận nơi
                 </button>
-                {/* <button
-                  className={`py-2 px-4 rounded-full font-medium ${
-                    shippingMethod === "pickup"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                  onClick={() => setShippingMethod("pickup")}
-                >
-                  Nhận tại nhà thuốc
-                </button> */}
               </div>
 
               {shippingMethod === "delivery" && (
@@ -770,7 +760,7 @@ const OrderPage = () => {
                   <p>
                     Mua thêm{" "}
                     <span className="font-bold">
-                      {(SHIPPING_CONFIG.freeShippingThreshold - subtotal).toLocaleString()}₫
+                      {(SHIPPING_CONFIG.freeShippingThreshold - subtotal).toLocaleString()}đ
                     </span>{" "}
                     để được <span className="font-bold">MIỄN PHÍ VẬN CHUYỂN</span>!
                   </p>
@@ -779,7 +769,7 @@ const OrderPage = () => {
             <div className="space-y-2 mb-4 text-base">
               <div className="flex justify-between">
                 <p className="font-semibold">Tổng tiền</p>
-                <p>{subtotal.toLocaleString()}₫</p>
+                <p>{subtotal.toLocaleString()}đ</p>
               </div>
               {directDiscount > 0 && (
                 <div className="flex justify-between">
@@ -814,17 +804,27 @@ const OrderPage = () => {
                     </p>
                   )}
                 </div>
-                {shippingFee === 0 && type === "thuoc" ? (
-                  <p className="text-green-500 font-semibold">Miễn phí</p>
+                {type === "thuoc" && shippingMethod === "delivery" ? (
+                  selectedProvince ? (
+                    shippingFee === 0 ? (
+                      <p className="text-green-500 font-semibold">Miễn phí</p>
+                    ) : (
+                      <p className="text-blue-500 font-semibold">
+                        +{shippingFee.toLocaleString()}đ
+                      </p>
+                    )
+                  ) : (
+                    <p className="text-gray-400">—</p> // Khi chưa chọn tỉnh
+                  )
                 ) : (
-                  <p className="text-blue-500 font-semibold">+{shippingFee.toLocaleString()}₫</p>
+                  <p className="text-gray-400">—</p>
                 )}
               </div>
             </div>
             <div className="border-t border-gray-200 pt-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold">Thành tiền</h3>
-                <h3 className="text-xl font-bold text-blue-500">{total.toLocaleString()}₫</h3>
+                <h3 className="text-xl font-bold text-blue-500">{total.toLocaleString()}đ</h3>
               </div>
             </div>
           </div>
@@ -854,7 +854,7 @@ const OrderPage = () => {
                   onClick={() => setPaymentMethod(method.key)}
                 >
                   <div
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                    className={`w-5 h-5 rounded-full border shrink-0 flex items-center justify-center ${
                       paymentMethod === method.key
                         ? "border-blue-500 bg-blue-500"
                         : "border-gray-400"

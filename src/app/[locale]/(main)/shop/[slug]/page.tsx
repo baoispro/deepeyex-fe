@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Typography, Spin, Divider, Breadcrumb } from "antd";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useCart } from "@/app/shares/hooks/carts/useCart";
 import Image from "next/image";
@@ -15,7 +15,6 @@ const { Text } = Typography;
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const t = useTranslations("product");
   const locale = useLocale();
   const { addToCart } = useCart();
@@ -42,11 +41,6 @@ export default function ProductDetailPage() {
     });
 
     toast.success(t("successAdd"));
-  };
-
-  const handleBuyNow = () => {
-    handleAddToCart();
-    router.push(`/${locale}/cart`);
   };
 
   if (isLoading) {
@@ -171,13 +165,6 @@ export default function ProductDetailPage() {
               onClick={handleAddToCart}
             >
               {t("addToCart")}
-            </button>
-            <button
-              className="flex-1 cursor-pointer bg-gray-100 text-blue-600 text-sm font-semibold py-3 rounded-full hover:bg-gray-200"
-              disabled={drug.stock_quantity === 0}
-              onClick={handleBuyNow}
-            >
-              {t("findStore")}
             </button>
           </div>
 

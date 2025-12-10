@@ -24,6 +24,7 @@ import { useGetHospitalbyAddressQuery } from "@/app/modules/hospital/hooks/queri
 import { useFindHospitalByNearbyMutation } from "@/app/modules/hospital/hooks/mutations/hospitals/use-find-nearby.mutation";
 import BookingTypeModal from "@/app/modules/hospital/components/BookingTypeModal";
 import FollowUpBooking from "@/app/modules/hospital/components/FollowUpBooking";
+import ProtectedPage from "@/app/shares/components/ProtectedPage";
 
 const NhaThuocPage = () => {
   const router = useRouter();
@@ -202,113 +203,115 @@ const NhaThuocPage = () => {
   }, []);
 
   return (
-    <div className="p-10">
-      {/* Modal chọn loại lịch */}
-      <BookingTypeModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSelect={(type) => {
-          setBookingType(type);
-          setIsModalOpen(false);
-        }}
-      />
+    <ProtectedPage>
+      <div className="p-10">
+        {/* Modal chọn loại lịch */}
+        <BookingTypeModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSelect={(type) => {
+            setBookingType(type);
+            setIsModalOpen(false);
+          }}
+        />
 
-      {/* Giao diện đặt khám mới */}
-      {bookingType === "new" && (
-        <div className="flex flex-col gap-4 animate-fadeIn">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Hệ thống bệnh viện trên toàn quốc</h1>
-            <p className="text-[#4a4f63] text-sm">
-              Thời gian hoạt động: 6:00 - 23:00 hằng ngày (Thay đổi tùy theo từng bệnh viện)
-            </p>
-          </div>
-
-          <div className="flex gap-5">
-            <div className="bg-white w-1/3 p-5 rounded-2xl">
-              <Tabs defaultActiveKey="1" items={tabItems} />
+        {/* Giao diện đặt khám mới */}
+        {bookingType === "new" && (
+          <div className="flex flex-col gap-4 animate-fadeIn">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-xl font-semibold">Hệ thống bệnh viện trên toàn quốc</h1>
+              <p className="text-[#4a4f63] text-sm">
+                Thời gian hoạt động: 6:00 - 23:00 hằng ngày (Thay đổi tùy theo từng bệnh viện)
+              </p>
             </div>
 
-            <div className="bg-white w-2/3 p-5 rounded-2xl">
-              {hospitalDetail ? (
-                <>
-                  <h2 className="font-semibold">{hospitalDetail.name}</h2>
-                  <div className="flex gap-5">
-                    <iframe
-                      src={hospitalDetail.url_map}
-                      width="300"
-                      height="150"
-                      style={{ border: 0 }}
-                      allowFullScreen={true}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                    />
-                    <div className="flex flex-col gap-2">
-                      <p>
-                        <span className="font-semibold">Địa chỉ:</span> {hospitalDetail.address},{" "}
-                        {hospitalDetail.ward}, {hospitalDetail.city}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Điện thoại:</span>{" "}
-                        <a
-                          href={`tel:${hospitalDetail.phone}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {hospitalDetail.phone}
-                        </a>
-                      </p>
-                      <p>
-                        <span className="font-semibold">Email:</span>{" "}
-                        <a
-                          href={`mailto:${hospitalDetail.email}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {hospitalDetail.email}
-                        </a>
-                      </p>
-                      <div className="flex gap-5 items-center">
-                        <Button
-                          shape="round"
-                          size="large"
-                          className="!bg-gradient-to-tr from-[#1250dc] to-[#306de4]"
-                          onClick={() => {
-                            if (hospitalDetail) {
-                              localStorage.setItem("hospital_id", hospitalDetail.hospital_id);
-                              localStorage.setItem("hospital_name", hospitalDetail.name);
-                              router.push(`/booking/${hospitalDetail.slug}`);
-                            }
-                          }}
-                        >
-                          <p className="text-white text-base font-medium">Chọn bệnh viện</p>
-                        </Button>
-                        <Button shape="round" size="large" className="!bg-[#eaeffa]">
-                          <p className="text-[#1250dc]">Gọi để tư vấn</p>
-                        </Button>
+            <div className="flex gap-5">
+              <div className="bg-white w-1/3 p-5 rounded-2xl">
+                <Tabs defaultActiveKey="1" items={tabItems} />
+              </div>
+
+              <div className="bg-white w-2/3 p-5 rounded-2xl">
+                {hospitalDetail ? (
+                  <>
+                    <h2 className="font-semibold">{hospitalDetail.name}</h2>
+                    <div className="flex gap-5">
+                      <iframe
+                        src={hospitalDetail.url_map}
+                        width="300"
+                        height="150"
+                        style={{ border: 0 }}
+                        allowFullScreen={true}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                      <div className="flex flex-col gap-2">
+                        <p>
+                          <span className="font-semibold">Địa chỉ:</span> {hospitalDetail.address},{" "}
+                          {hospitalDetail.ward}, {hospitalDetail.city}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Điện thoại:</span>{" "}
+                          <a
+                            href={`tel:${hospitalDetail.phone}`}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {hospitalDetail.phone}
+                          </a>
+                        </p>
+                        <p>
+                          <span className="font-semibold">Email:</span>{" "}
+                          <a
+                            href={`mailto:${hospitalDetail.email}`}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {hospitalDetail.email}
+                          </a>
+                        </p>
+                        <div className="flex gap-5 items-center">
+                          <Button
+                            shape="round"
+                            size="large"
+                            className="!bg-gradient-to-tr from-[#1250dc] to-[#306de4]"
+                            onClick={() => {
+                              if (hospitalDetail) {
+                                localStorage.setItem("hospital_id", hospitalDetail.hospital_id);
+                                localStorage.setItem("hospital_name", hospitalDetail.name);
+                                router.push(`/booking/${hospitalDetail.slug}`);
+                              }
+                            }}
+                          >
+                            <p className="text-white text-base font-medium">Chọn bệnh viện</p>
+                          </Button>
+                          <Button shape="round" size="large" className="!bg-[#eaeffa]">
+                            <p className="text-[#1250dc]">Gọi để tư vấn</p>
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {hospitalDetail.image && (
-                    <>
-                      <h3>Hình ảnh bệnh viện:</h3>
-                      <Image
-                        src={hospitalDetail.image}
-                        alt="Ảnh bệnh viện"
-                        width={156}
-                        height={88}
-                      />
-                    </>
-                  )}
-                </>
-              ) : (
-                <p>Vui lòng chọn bệnh viện để xem chi tiết</p>
-              )}
+                    {hospitalDetail.image && (
+                      <>
+                        <h3>Hình ảnh bệnh viện:</h3>
+                        <Image
+                          src={hospitalDetail.image}
+                          alt="Ảnh bệnh viện"
+                          width={156}
+                          height={88}
+                        />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <p>Vui lòng chọn bệnh viện để xem chi tiết</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Giao diện tái khám */}
-      {bookingType === "reexam" && <FollowUpBooking />}
-    </div>
+        {/* Giao diện tái khám */}
+        {bookingType === "reexam" && <FollowUpBooking />}
+      </div>
+    </ProtectedPage>
   );
 };
 

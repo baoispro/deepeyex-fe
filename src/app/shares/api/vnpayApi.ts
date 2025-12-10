@@ -2,7 +2,7 @@ import { AxiosInstance } from "axios";
 import api from "../configs/axios";
 import { ApiResponse } from "../types/response";
 
-const endpoint = "/hospital/vnpay";
+const endpoint = "/vnpay";
 
 // ---------------- REQUEST TYPES ----------------
 export interface CreatePaymentRequest {

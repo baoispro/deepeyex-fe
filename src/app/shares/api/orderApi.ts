@@ -3,7 +3,7 @@ import api from "../configs/axios";
 import { OrdersResponse } from "@/app/shares/types/order";
 import { ApiResponse } from "../types/response";
 
-const endpoint = "/hospital/orders";
+const endpoint = "/orders";
 // ---------------- ENUM ----------------
 export type OrderStatus = "PENDING" | "PAID" | "CANCELED" | "DELIVERED";
 

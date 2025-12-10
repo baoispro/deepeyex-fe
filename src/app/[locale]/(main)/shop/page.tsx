@@ -1,10 +1,14 @@
 "use client";
 import { ProductCard } from "@/app/modules/shop/components/ProductCard";
 import { useGetAllDrugsQuery } from "@/app/modules/hospital/hooks/queries/drugs/use-get-list-drug.query";
-import { Spin } from "antd";
+import { Breadcrumb, Spin } from "antd";
+import { HomeOutlined } from "@ant-design/icons";
+import Link from "next/link";
+import { useLocale } from "next-intl";
 
 export default function ShopPage() {
   const { data: drugsResponse, isLoading, error } = useGetAllDrugsQuery();
+  const locale = useLocale();
 
   // Xử lý loading state
   if (isLoading) {
@@ -30,6 +34,22 @@ export default function ShopPage() {
 
   return (
     <div className="py-5 px-10">
+      <Breadcrumb
+        className="!pb-2"
+        items={[
+          {
+            href: `/${locale}`,
+            title: <HomeOutlined />,
+          },
+          {
+            title: (
+              <Link href={`/${locale}/shop`}>
+                <span>Cửa hàng</span>
+              </Link>
+            ),
+          },
+        ]}
+      />
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-6 gap-3">
         {drugsResponse?.data?.map((drug) => (
           <ProductCard key={drug.drug_id} data={drug} />

@@ -3,7 +3,7 @@ import api from "@/app/shares/configs/axios";
 import { AxiosInstance } from "axios";
 import { GetDrugByIdResponse, ListDrugsResponse } from "../../types/response";
 
-const endpoint = "/hospital/drugs";
+const endpoint = "/drugs";
 
 class DrugClient {
   private readonly client: AxiosInstance;

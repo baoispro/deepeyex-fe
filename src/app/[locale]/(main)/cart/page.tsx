@@ -31,6 +31,7 @@ export interface CartItemWithKey {
   price: number;
   sale_price?: number;
   quantity: number;
+  variant_unit?: string;
 }
 
 export default function CartInfo() {
@@ -127,6 +128,7 @@ export default function CartInfo() {
       title: t("price"),
       dataIndex: "price",
       align: "center" as const,
+      width: 95,
       render: (_: number, record: CartItemWithKey) => {
         const hasDiscount = record.sale_price && record.sale_price < record.price;
         return hasDiscount ? (
@@ -157,11 +159,11 @@ export default function CartInfo() {
         />
       ),
     },
-    {
-      title: t("unit"),
-      dataIndex: "variant_unit",
-      align: "center" as const,
-    },
+    // {
+    //   title: t("unit"),
+    //   dataIndex: "variant_unit",
+    //   align: "center" as const,
+    // },
     {
       title: t("delete"),
       dataIndex: "actions",

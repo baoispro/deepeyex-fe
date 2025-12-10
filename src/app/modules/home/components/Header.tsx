@@ -17,6 +17,7 @@ import "dayjs/locale/vi";
 import { useMarkAllNotificationsReadMutation } from "../../hospital/hooks/mutations/notifications/use-mark-all-read.mutation";
 import { useMarkNotificationReadMutation } from "../../hospital/hooks/mutations/notifications/use-mark-read.mutation";
 import { logoutFromStringee } from "@/app/shares/utils/stringee";
+import { useLogoutMutation } from "../../auth/hooks/mutations/use-logout.mutation";
 
 export default function Header() {
   dayjs.extend(relativeTime);
@@ -144,6 +145,14 @@ export default function Header() {
     },
   ];
 
+  const logoutMutation = useLogoutMutation({
+    onSuccess: () => {
+      dispatch(clearTokens());
+      persistor.flush();
+      logoutFromStringee();
+    },
+  });
+
   return (
     <header className="bg-white shadow-md py-4 px-6 md:px-12 fixed top-0 w-full z-50">
       <nav className="flex justify-between items-center max-w-7xl mx-auto">
@@ -196,7 +205,7 @@ export default function Header() {
 
             <li>
               <Link
-                href="#contact"
+                href="mailto:support@deepeye.com"
                 className="text-gray-600 hover:text-[#1250dc] transition-colors duration-300"
               >
                 {t("contact")}
@@ -264,11 +273,7 @@ export default function Header() {
                   {t("profile")}
                 </Link>
                 <button
-                  onClick={() => {
-                    dispatch(clearTokens());
-                    persistor.flush();
-                    logoutFromStringee();
-                  }}
+                  onClick={() => logoutMutation.mutate()}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 rounded-md"
                 >
                   {t("logout")}

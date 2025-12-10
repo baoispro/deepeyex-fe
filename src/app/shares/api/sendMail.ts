@@ -93,7 +93,7 @@ class EmailClient {
 
   // 📦 Gửi email đơn hàng
   async sendOrderConfirmation(payload: SendOrderConfirmationRequest) {
-    const response = await this.client.post("/hospital/emails/order-confirmation", payload);
+    const response = await this.client.post("/emails/order-confirmation", payload);
     return response.data;
   }
 }
