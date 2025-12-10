@@ -46,7 +46,9 @@ export default function ContactModal({ open, onClose }: ContactModalProps) {
             <FaMapMarkerAlt className="text-blue-500 text-xl" />
             <div>
               <p className="font-semibold text-gray-800">Địa chỉ</p>
-              <p className="text-gray-600">123 Đường ABC, Quận XYZ, TP.HCM</p>
+              <p className="text-gray-600">
+                Số 12 Nguyễn Văn Bảo, Phường Hạnh Thông, TP. Hồ Chí Minh
+              </p>
             </div>
           </div>
         </div>
