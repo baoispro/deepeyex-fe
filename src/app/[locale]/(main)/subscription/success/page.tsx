@@ -1,11 +1,10 @@
 "use client";
 
 import { useRouter } from "@/app/shares/locales/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { FaCheckCircle, FaCrown, FaRocket, FaHome, FaUser } from "react-icons/fa";
 import { VnpayApi } from "@/app/shares/api/vnpayApi";
 import { toast } from "react-toastify";
-import { SubscriptionApi } from "@/app/shares/api/subscriptionApi";
 
 export default function SubscriptionSuccessPage() {
   const router = useRouter();
@@ -13,7 +12,6 @@ export default function SubscriptionSuccessPage() {
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [planName, setPlanName] = useState<string>("");
-  const paymentCompletedRef = useRef(false);
 
   useEffect(() => {
     const handleVnpayReturn = async () => {
@@ -21,12 +19,26 @@ export default function SubscriptionSuccessPage() {
       console.log("=== Subscription Success Page Debug ===");
       console.log("Current URL:", window.location.href);
       console.log("Query string:", window.location.search);
-      console.log("Pending subscription:", localStorage.getItem("pendingSubscription"));
-      console.log("Subscription type:", localStorage.getItem("subscriptionType"));
 
-      // Kiểm tra xem có phải từ VNPay return không
+      // Đọc params từ URL: type=subscription&subscriptionId=...&userId=...&planName=...&duration=...
+      const urlParams = new URLSearchParams(window.location.search);
+      const type = urlParams.get("type");
+      const subscriptionId = urlParams.get("subscriptionId");
+      const userId = urlParams.get("userId");
+      const planNameFromUrl = urlParams.get("planName");
+      const durationFromUrl = urlParams.get("duration");
+
+      console.log("URL Params:", {
+        type,
+        subscriptionId,
+        userId,
+        planNameFromUrl,
+        durationFromUrl,
+      });
+
+      // Kiểm tra xem có phải từ VNPay return cho subscription không
       const queryString = window.location.search;
-      if (queryString.includes("vnp_ResponseCode")) {
+      if (queryString.includes("vnp_ResponseCode") && type === "subscription") {
         console.log("Detected VNPay return with query:", queryString);
         setIsVerifyingPayment(true);
         try {
@@ -37,57 +49,17 @@ export default function SubscriptionSuccessPage() {
 
           if (status === "success") {
             setPaymentStatus("success");
-            toast.success("Thanh toán thành công!");
+            setPlanName(planNameFromUrl || "");
+            toast.success("Thanh toán thành công! Đăng ký gói thành công!");
 
-            // Lấy thông tin subscription từ localStorage
-            const pendingSubscription = localStorage.getItem("pendingSubscription");
-            console.log("Pending subscription data:", pendingSubscription);
-            if (pendingSubscription) {
-              const subscriptionData = JSON.parse(pendingSubscription);
-              console.log("Parsed subscription data:", subscriptionData);
-              setPlanName(subscriptionData.planName || "");
-
-              // Gọi API complete-payment để backend tạo subscription
-              if (
-                !paymentCompletedRef.current &&
-                subscriptionData.subscriptionId &&
-                subscriptionData.userId &&
-                subscriptionData.planName
-              ) {
-                paymentCompletedRef.current = true;
-                console.log("Calling completePayment with:", {
-                  subscription_id: subscriptionData.subscriptionId,
-                  user_id: subscriptionData.userId,
-                  plan_name: subscriptionData.planName,
-                  duration: subscriptionData.duration || 30,
-                });
-                try {
-                  const completeResult = await SubscriptionApi.completePayment({
-                    subscription_id: subscriptionData.subscriptionId,
-                    user_id: subscriptionData.userId,
-                    plan_name: subscriptionData.planName,
-                    duration: subscriptionData.duration || 30,
-                  });
-                  console.log("Complete payment thành công:", completeResult);
-                  toast.success("Đăng ký gói thành công!");
-                  // Xóa thông tin pending sau khi complete thành công
-                  localStorage.removeItem("pendingSubscription");
-                  localStorage.removeItem("subscriptionType");
-                } catch (error) {
-                  console.error("Error completing payment:", error);
-                  toast.error("Có lỗi xảy ra khi hoàn tất thanh toán. Vui lòng liên hệ hỗ trợ.");
-                }
-              } else {
-                console.warn("Cannot call completePayment:", {
-                  paymentCompletedRef: paymentCompletedRef.current,
-                  subscriptionId: subscriptionData.subscriptionId,
-                  userId: subscriptionData.userId,
-                  planName: subscriptionData.planName,
-                });
-              }
-            } else {
-              console.warn("No pending subscription found in localStorage");
-            }
+            // Backend đã tự động gọi CompleteSubscription() và tạo subscription trong database
+            // Không cần gọi completePayment nữa
+            console.log("Backend đã tự động tạo subscription với:", {
+              subscriptionId,
+              userId,
+              planName: planNameFromUrl,
+              duration: durationFromUrl,
+            });
           } else {
             setPaymentStatus("failed");
             toast.error("Thanh toán thất bại. Vui lòng thử lại.");
@@ -100,64 +72,16 @@ export default function SubscriptionSuccessPage() {
           setIsVerifyingPayment(false);
           setIsInitializing(false);
         }
+      } else if (type === "subscription" && subscriptionId && userId && planNameFromUrl) {
+        // Có params từ URL nhưng không có vnp_ResponseCode (trường hợp đặc biệt)
+        console.log("Subscription params from URL (no VNPay return)");
+        setPlanName(planNameFromUrl || "");
+        setPaymentStatus("success");
+        setIsInitializing(false);
       } else {
-        console.log("Not from VNPay return, checking localStorage...");
-        // Không phải từ VNPay, hiển thị success bình thường (nếu có thông tin từ localStorage)
-        const pendingSubscription = localStorage.getItem("pendingSubscription");
-        console.log("Pending subscription (no VNPay):", pendingSubscription);
-        if (pendingSubscription) {
-          const subscriptionData = JSON.parse(pendingSubscription);
-          console.log("Parsed subscription data (no VNPay):", subscriptionData);
-          setPlanName(subscriptionData.planName || "");
-          setPaymentStatus("success");
-
-          // Nếu có subscription_id, gọi complete-payment
-          // Nếu không có subscription_id, vẫn gọi complete-payment với user_id và plan_name
-          // Backend có thể tự tạo subscription_id mới
-          if (
-            !paymentCompletedRef.current &&
-            subscriptionData.userId &&
-            subscriptionData.planName
-          ) {
-            paymentCompletedRef.current = true;
-            // Nếu không có subscription_id, tạo một ID tạm hoặc để backend tự tạo
-            const subscriptionIdToUse =
-              subscriptionData.subscriptionId || `temp_${Date.now()}_${subscriptionData.userId}`;
-
-            console.log("Calling completePayment (no VNPay) with:", {
-              subscription_id: subscriptionIdToUse,
-              user_id: subscriptionData.userId,
-              plan_name: subscriptionData.planName,
-              duration: subscriptionData.duration || 30,
-            });
-            SubscriptionApi.completePayment({
-              subscription_id: subscriptionIdToUse,
-              user_id: subscriptionData.userId,
-              plan_name: subscriptionData.planName,
-              duration: subscriptionData.duration || 30,
-            })
-              .then((result) => {
-                console.log("Complete payment thành công (no VNPay):", result);
-                toast.success("Đăng ký gói thành công!");
-                localStorage.removeItem("pendingSubscription");
-                localStorage.removeItem("subscriptionType");
-              })
-              .catch((error) => {
-                console.error("Error completing payment (no VNPay):", error);
-                toast.error("Có lỗi xảy ra khi hoàn tất thanh toán.");
-              });
-          } else {
-            console.warn("Cannot call completePayment (no VNPay):", {
-              paymentCompletedRef: paymentCompletedRef.current,
-              subscriptionId: subscriptionData.subscriptionId,
-              userId: subscriptionData.userId,
-              planName: subscriptionData.planName,
-            });
-          }
-        } else {
-          console.warn("No pending subscription found (no VNPay)");
-          setPaymentStatus("success");
-        }
+        // Không có params từ URL, hiển thị success bình thường
+        console.log("No subscription params in URL");
+        setPaymentStatus("success");
         setIsInitializing(false);
       }
     };

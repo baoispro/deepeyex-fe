@@ -38,7 +38,22 @@ export default function SubscribeModal({
         duration,
       };
 
-      await SubscriptionApi.subscribe(payload);
+      const response = await SubscriptionApi.subscribe(payload);
+
+      // Nếu là gói FREE, đăng ký trực tiếp
+      if (planName === "FREE") {
+        toast.success(`Đăng ký gói ${planName} thành công!`);
+        onSuccess?.();
+        onClose();
+        return;
+      }
+
+      if (response.data?.payment_url && response.data?.subscription_id) {
+        window.location.href = response.data.payment_url;
+        return;
+      }
+
+      // Nếu không có payment_url, có thể đã đăng ký thành công (trường hợp đặc biệt)
       toast.success(`Đăng ký gói ${planName} thành công!`);
       onSuccess?.();
       onClose();
