@@ -558,14 +558,19 @@ const OrderPage = () => {
     localStorage.setItem("shippingFee", shippingFee.toString());
 
     // Nếu thanh toán bằng ATM, lưu thông tin email vào localStorage để gửi sau khi thanh toán thành công
+    // Nếu thanh toán bằng cash, lưu vào state để gửi ngay trong onSuccess
     if (paymentMethod === "atm") {
       localStorage.setItem("pendingEmailData", JSON.stringify(emailData));
+      // Xóa state để tránh gửi email 2 lần
+      setPendingEmailData(null);
     } else {
-      // Lưu dữ liệu email để gửi sau khi order thành công (thanh toán COD)
+      // Lưu dữ liệu email vào state để gửi sau khi order thành công (thanh toán COD)
       setPendingEmailData(emailData);
+      // Xóa localStorage để tránh gửi email 2 lần
+      localStorage.removeItem("pendingEmailData");
     }
 
-    // Tạo order - email sẽ được gửi trong onSuccess callback
+    // Tạo order - email sẽ được gửi trong onSuccess callback (cash) hoặc ở success page (ATM)
     createOrder(orderRequest);
   };
 

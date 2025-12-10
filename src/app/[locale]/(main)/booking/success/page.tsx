@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "@/app/shares/locales/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   FaCheckCircle,
   FaBox,
@@ -43,82 +43,88 @@ export default function ConfirmOrderPage() {
   const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | null>(null);
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const emailSentRef = useRef(false); // Flag để đảm bảo chỉ gửi email 1 lần
 
-  useEffect(() => {
-    const handleVnpayReturn = async () => {
-      // Kiểm tra xem có phải từ VNPay return không
-      const queryString = window.location.search;
-      if (queryString.includes("vnp_ResponseCode")) {
-        setIsVerifyingPayment(true);
-        try {
-          // Gọi API verify payment
-          const result = await VnpayApi.verifyReturn(queryString);
-          const { status, orderId } = result.data || {};
+  const handleVnpayReturn = async () => {
+    // Kiểm tra xem có phải từ VNPay return không
+    const queryString = window.location.search;
+    if (queryString.includes("vnp_ResponseCode")) {
+      setIsVerifyingPayment(true);
+      try {
+        // Gọi API verify payment
+        const result = await VnpayApi.verifyReturn(queryString);
+        const { status, orderId } = result.data || {};
 
-          if (status === "success") {
-            setPaymentStatus("success");
-            toast.success("Thanh toán thành công!");
+        if (status === "success") {
+          setPaymentStatus("success");
+          toast.success("Thanh toán thành công!");
 
-            if (orderType == "booking") {
-              const doctorResponse = JSON.parse(localStorage.getItem("doctor") || "");
-              const patientResponse = JSON.parse(localStorage.getItem("patient") || "");
-              const appointment_id = localStorage.getItem("appointment");
-              await createOrGetConversation(
-                doctorResponse?.data || ({} as Doctor),
-                patientResponse?.data || ({} as Patient),
-                appointment_id || null,
-              );
+          if (orderType == "booking") {
+            const doctorResponse = JSON.parse(localStorage.getItem("doctor") || "");
+            const patientResponse = JSON.parse(localStorage.getItem("patient") || "");
+            const appointment_id = localStorage.getItem("appointment");
+            await createOrGetConversation(
+              doctorResponse?.data || ({} as Doctor),
+              patientResponse?.data || ({} as Patient),
+              appointment_id || null,
+            );
+          }
+
+          localStorage.removeItem("doctor");
+          localStorage.removeItem("patient");
+          localStorage.removeItem("appointment");
+
+          // Cập nhật trạng thái đơn hàng thành PAID
+          if (orderId) {
+            try {
+              await OrderApi.updateOrderStatus(orderId, "PAID");
+            } catch (error) {
+              console.error("Error updating order status:", error);
             }
+          }
 
-            localStorage.removeItem("doctor");
-            localStorage.removeItem("patient");
-            localStorage.removeItem("appointment");
-
-            // Cập nhật trạng thái đơn hàng thành PAID
-            if (orderId) {
-              try {
-                await OrderApi.updateOrderStatus(orderId, "PAID");
-              } catch (error) {
-                console.error("Error updating order status:", error);
-              }
-            }
-
-            // Gửi email xác nhận (nếu có thông tin)
+          // Gửi email xác nhận (nếu có thông tin) - chỉ gửi 1 lần
+          if (!emailSentRef.current) {
             const pendingEmailData = localStorage.getItem("pendingEmailData");
             if (pendingEmailData && orderId) {
+              // Đánh dấu đã gửi email để tránh gửi 2 lần
+              emailSentRef.current = true;
+              // Xóa ngay để tránh gửi 2 lần nếu useEffect chạy lại
+              localStorage.removeItem("pendingEmailData");
               try {
                 const emailData: SendOrderConfirmationRequest = {
                   ...JSON.parse(pendingEmailData),
                   order_code: orderId,
                 };
                 await SendEmailApi.sendOrderConfirmation(emailData);
-                localStorage.removeItem("pendingEmailData");
               } catch (error) {
                 console.error("Error sending email:", error);
               }
             }
-
-            // Clear cart
-            clearCart();
-          } else {
-            setPaymentStatus("failed");
-            toast.error("Thanh toán thất bại. Vui lòng thử lại.");
           }
-        } catch (error) {
-          console.error("Error verifying payment:", error);
+
+          // Clear cart
+          clearCart();
+        } else {
           setPaymentStatus("failed");
-          toast.error("Có lỗi xảy ra khi xác thực thanh toán.");
-        } finally {
-          setIsVerifyingPayment(false);
-          setIsInitializing(false);
+          toast.error("Thanh toán thất bại. Vui lòng thử lại.");
         }
-      } else {
-        // Không phải từ VNPay, hiển thị success bình thường
-        setPaymentStatus("success");
+      } catch (error) {
+        console.error("Error verifying payment:", error);
+        setPaymentStatus("failed");
+        toast.error("Có lỗi xảy ra khi xác thực thanh toán.");
+      } finally {
+        setIsVerifyingPayment(false);
         setIsInitializing(false);
       }
-    };
+    } else {
+      // Không phải từ VNPay, hiển thị success bình thường
+      setPaymentStatus("success");
+      setIsInitializing(false);
+    }
+  };
 
+  useEffect(() => {
     const type = localStorage.getItem("type");
     setOrderType(type);
 
