@@ -39,6 +39,7 @@ export default function ConfirmOrderPage() {
   const [showAnimation, setShowAnimation] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderTotal, setOrderTotal] = useState(0);
+  const [shippingFee, setShippingFee] = useState(0);
   const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | null>(null);
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -128,12 +129,19 @@ export default function ConfirmOrderPage() {
         const items = JSON.parse(cartItems);
         setOrderItems(items);
 
-        // Tính tổng tiền
-        const total = items.reduce((sum: number, item: OrderItem) => {
+        // Tính tổng tiền sản phẩm
+        const subtotal = items.reduce((sum: number, item: OrderItem) => {
           const price = item.sale_price || item.price;
           return sum + price * item.quantity;
         }, 0);
-        setOrderTotal(total);
+
+        // Load phí vận chuyển từ localStorage
+        const savedShippingFee = localStorage.getItem("shippingFee");
+        const fee = savedShippingFee ? parseInt(savedShippingFee, 10) : 0;
+        setShippingFee(fee);
+
+        // Tổng tiền = tổng sản phẩm + phí vận chuyển
+        setOrderTotal(subtotal + fee);
       }
     }
 
@@ -142,11 +150,13 @@ export default function ConfirmOrderPage() {
 
     // Trigger animation after mount
     setTimeout(() => setShowAnimation(true), 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clearCart]);
 
   const handleBackToHome = () => {
     localStorage.removeItem("type");
     localStorage.removeItem("cartItems");
+    localStorage.removeItem("shippingFee");
     router.push("/");
   };
 
@@ -336,12 +346,30 @@ export default function ConfirmOrderPage() {
                   ))}
                 </div>
 
-                {/* Tổng tiền đơn hàng */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                {/* Chi tiết tổng tiền */}
+                <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-700">
-                      Tổng giá trị đơn hàng:
+                    <span className="text-gray-600">Tổng tiền sản phẩm:</span>
+                    <span className="text-gray-800 font-semibold">
+                      {(orderTotal - shippingFee).toLocaleString()}₫
                     </span>
+                  </div>
+                  {shippingFee > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Phí vận chuyển:</span>
+                      <span className="text-gray-800 font-semibold">
+                        {shippingFee.toLocaleString()}₫
+                      </span>
+                    </div>
+                  )}
+                  {shippingFee === 0 && orderType === "thuoc" && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Phí vận chuyển:</span>
+                      <span className="text-green-600 font-semibold">Miễn phí</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <span className="text-lg font-semibold text-gray-700">Tổng cộng:</span>
                     <span className="text-2xl font-bold text-blue-600">
                       {orderTotal.toLocaleString()}₫
                     </span>
