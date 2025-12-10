@@ -46,6 +46,14 @@ export default function ConfirmOrderPage() {
   const emailSentRef = useRef(false); // Flag để đảm bảo chỉ gửi email 1 lần
 
   const handleVnpayReturn = async () => {
+    // Kiểm tra subscription type trước - nếu là subscription thì redirect ngay
+    const subscriptionType = localStorage.getItem("subscriptionType");
+    if (subscriptionType === "subscription") {
+      // Redirect ngay đến subscription success, không xử lý gì ở đây
+      router.push("/subscription/success");
+      return;
+    }
+
     // Kiểm tra xem có phải từ VNPay return không
     const queryString = window.location.search;
     if (queryString.includes("vnp_ResponseCode")) {
@@ -125,6 +133,14 @@ export default function ConfirmOrderPage() {
   };
 
   useEffect(() => {
+    // Kiểm tra subscription type ngay đầu tiên và redirect nếu cần
+    const subscriptionType = localStorage.getItem("subscriptionType");
+    if (subscriptionType === "subscription") {
+      // Redirect ngay đến subscription success, không render gì
+      router.push("/subscription/success");
+      return;
+    }
+
     const type = localStorage.getItem("type");
     setOrderType(type);
 

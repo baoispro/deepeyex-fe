@@ -11,6 +11,9 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/app/shares/stores";
 import ProtectedPage from "@/app/shares/components/ProtectedPage";
 import FaceTracker from "@/app/modules/hospital/components/FaceTracker";
+import { SubscriptionApi } from "@/app/shares/api/subscriptionApi";
+import { toast } from "react-toastify";
+import SubscribeModal from "@/app/modules/home/components/SubscribeModal";
 
 export default function EyeDiagnosisApp() {
   const [file, setFile] = useState<File | null>(null);
@@ -18,7 +21,9 @@ export default function EyeDiagnosisApp() {
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"upload" | "webcam">("upload");
+  const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const patient_id = useSelector((state: RootState) => state.auth.patient?.patientId);
+  const userId = useSelector((state: RootState) => state.auth.userId);
 
   const { mutate, data, isPending } = usePredictMutation({
     onSuccess: () => {
@@ -78,8 +83,46 @@ export default function EyeDiagnosisApp() {
     }
   };
 
-  const handleDiagnose = () => {
+  const handleDiagnose = async () => {
     if (!file) return;
+    if (!userId) {
+      toast.error("Vui lòng đăng nhập để sử dụng chẩn đoán AI");
+      return;
+    }
+
+    // Kiểm tra limit trước khi chẩn đoán
+    try {
+      const limitCheck = await SubscriptionApi.checkAILimit(userId);
+      const data = limitCheck.data;
+
+      // Kiểm tra nếu chưa đăng ký gói nào (limit = 0 hoặc không có plan_name)
+      if (!data?.plan_name && (data?.limit === 0 || data?.limit === undefined)) {
+        toast.error("Bạn cần đăng ký gói để sử dụng chẩn đoán AI");
+        setSubscribeModalOpen(true);
+        return;
+      }
+
+      // Kiểm tra nếu không thể sử dụng (hết limit hoặc chưa đăng ký)
+      if (!data?.can_use) {
+        if (data?.remaining === 0) {
+          toast.error("Bạn đã hết lượt chẩn đoán AI. Vui lòng đăng ký gói để tiếp tục sử dụng.");
+        } else {
+          toast.error("Bạn cần đăng ký gói để sử dụng chẩn đoán AI");
+        }
+        setSubscribeModalOpen(true);
+        return;
+      }
+    } catch (error: unknown) {
+      // Nếu API trả về 403 hoặc 404, có nghĩa là chưa đăng ký gói hoặc hết limit
+      const err = error as { response?: { status?: number } };
+      if (err?.response?.status === 403 || err?.response?.status === 404) {
+        toast.error("Bạn cần đăng ký gói để sử dụng chẩn đoán AI");
+        setSubscribeModalOpen(true);
+        return;
+      }
+      console.error("Error checking limit:", error);
+    }
+
     setIsButtonDisabled(true);
     mutate({ file });
   };
@@ -284,6 +327,16 @@ export default function EyeDiagnosisApp() {
             )}
           </Modal>
         )}
+
+        <SubscribeModal
+          open={subscribeModalOpen}
+          onClose={() => setSubscribeModalOpen(false)}
+          planName="VIP"
+          onSuccess={() => {
+            // Refresh lại sau khi đăng ký thành công
+            window.location.reload();
+          }}
+        />
       </section>
     </ProtectedPage>
   );

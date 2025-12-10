@@ -6,6 +6,7 @@ import Footer from "../modules/home/components/Footer";
 import About from "../modules/home/components/About";
 import Ophthalmologist from "../modules/home/components/Ophthalmologist";
 import HowItWorks from "../modules/home/components/HowItWorks";
+import PricingSection from "../modules/home/components/PricingSection";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
         <About />
         <Ophthalmologist />
         <HowItWorks />
+        <PricingSection />
       </main>
       {/* Footer */}
       <Footer />

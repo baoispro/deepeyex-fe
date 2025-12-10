@@ -17,6 +17,7 @@ import { AiOutlineGlobal } from "react-icons/ai";
 import { FaGoogle } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { SubscriptionApi } from "@/app/shares/api/subscriptionApi";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -36,10 +37,25 @@ export default function RegisterPage() {
     message: string;
   };
   const registerMutation = useRegisterMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      const userId = data.data?.id || "";
       localStorage.setItem("email", email);
-      localStorage.setItem("user_id", data.data?.id || "");
-      toast.success("Đăng ký thành công! Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
+      localStorage.setItem("user_id", userId);
+
+      // Tự động đăng ký gói FREE cho user mới
+      try {
+        await SubscriptionApi.subscribe({
+          user_id: userId,
+          plan_name: "FREE",
+          duration: 30, // 30 ngày
+        });
+        console.log("Đã tự động đăng ký gói FREE cho user mới");
+      } catch (subscribeError) {
+        // Không block flow nếu đăng ký gói thất bại, chỉ log lỗi
+        console.error("Lỗi khi tự động đăng ký gói FREE:", subscribeError);
+      }
+
+      toast.success("Đăng ký thành công! Bạn đã được tự động đăng ký gói FREE.");
       router.push("/create-patient");
     },
     onError: (error) => {
@@ -131,12 +147,13 @@ export default function RegisterPage() {
 
   const loginFirebaseMutation = useLoginFirebaseMutation({
     onSuccess: async (data) => {
+      const userId = data.data?.user_id || "";
       localStorage.setItem("email", email);
-      localStorage.setItem("user_id", data.data?.user_id || "");
+      localStorage.setItem("user_id", userId);
       toast.success("Login Google thành công!");
 
       try {
-        const patient = await PatientApi.getByUserID(data.data?.user_id || "");
+        const patient = await PatientApi.getByUserID(userId);
         const patientInfo = {
           patientId: patient.data?.patient_id ?? null,
           fullName: patient.data?.full_name ?? null,
@@ -150,8 +167,41 @@ export default function RegisterPage() {
         dispatch(setPatient(patientInfo));
         localStorage.removeItem("email");
         localStorage.removeItem("user_id");
+
+        // Kiểm tra và tự động đăng ký gói FREE nếu chưa có subscription
+        try {
+          const limitCheck = await SubscriptionApi.checkAILimit(userId);
+          // Nếu chưa có plan_name, tự động đăng ký gói FREE
+          if (!limitCheck.data?.plan_name) {
+            await SubscriptionApi.subscribe({
+              user_id: userId,
+              plan_name: "FREE",
+              duration: 30,
+            });
+            console.log("Đã tự động đăng ký gói FREE cho user Google mới");
+          }
+        } catch (subscribeError) {
+          // Không block flow nếu đăng ký gói thất bại
+          console.error("Lỗi khi kiểm tra/đăng ký gói FREE:", subscribeError);
+        }
+
         router.push("/");
       } catch (err) {
+        // Nếu chưa có patient, tự động đăng ký gói FREE khi tạo patient
+        try {
+          const limitCheck = await SubscriptionApi.checkAILimit(userId);
+          if (!limitCheck.data?.plan_name) {
+            await SubscriptionApi.subscribe({
+              user_id: userId,
+              plan_name: "FREE",
+              duration: 30,
+            });
+            console.log("Đã tự động đăng ký gói FREE cho user Google mới");
+          }
+        } catch (subscribeError) {
+          console.error("Lỗi khi đăng ký gói FREE:", subscribeError);
+        }
+
         toast.warning("Vui lòng hoàn thành hồ sơ bệnh nhân của bạn.");
         router.push("/create-patient");
       }
