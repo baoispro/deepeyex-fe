@@ -9,7 +9,7 @@ import { Badge, Button, Dropdown, List, MenuProps, Popover } from "antd";
 import Avatar from "react-avatar";
 import CartPopover from "@/app/shares/components/CartPopover";
 import { useSelector } from "react-redux";
-import { BellOutlined } from "@ant-design/icons";
+import { BellOutlined, CrownOutlined } from "@ant-design/icons";
 import { useGetNotificationsByUserQuery } from "../../hospital/hooks/queries/notification/use-get-all-notification.query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -18,6 +18,7 @@ import { useMarkAllNotificationsReadMutation } from "../../hospital/hooks/mutati
 import { useMarkNotificationReadMutation } from "../../hospital/hooks/mutations/notifications/use-mark-read.mutation";
 import { logoutFromStringee } from "@/app/shares/utils/stringee";
 import { useLogoutMutation } from "../../auth/hooks/mutations/use-logout.mutation";
+import { useGetSubscriptionQuery } from "@/app/shares/hooks/queries/use-get-subscription.query";
 
 export default function Header() {
   dayjs.extend(relativeTime);
@@ -35,6 +36,13 @@ export default function Header() {
   const name = auth.patient?.fullName;
   const socketConnected = useSelector((state: RootState) => state.auth.socketConnected);
   const { data: notificationsData } = useGetNotificationsByUserQuery(auth.patient?.patientId || "");
+  const { data: subscriptionData } = useGetSubscriptionQuery(auth.userId);
+
+  const isVip =
+    subscriptionData?.data?.has_plan &&
+    subscriptionData?.data?.is_valid &&
+    (subscriptionData?.data?.plan_name === "VIP" ||
+      subscriptionData?.data?.plan_name === "ENTERPRISE");
 
   const notifications = Array.isArray(notificationsData?.data) ? notificationsData.data : [];
   const limitedNotifications = notifications.slice(0, MAX_VISIBLE_NOTIFICATIONS);
@@ -258,7 +266,14 @@ export default function Header() {
             </>
           ) : (
             <div className="relative group">
-              <Avatar name={name || ""} src={image || ""} size="40" round={true} />
+              <div className="relative">
+                <Avatar name={name || ""} src={image || ""} size="40" round={true} />
+                {isVip && (
+                  <div className="absolute h-5 w-5 -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full shadow-lg flex items-center justify-center">
+                    <CrownOutlined className="text-white text-xs" />
+                  </div>
+                )}
+              </div>
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition p-2">
                 <Link
                   href="/dashboard"

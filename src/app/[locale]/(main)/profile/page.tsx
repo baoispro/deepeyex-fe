@@ -1,6 +1,7 @@
 "use client";
 import { useAppSelector } from "@/app/shares/stores";
 import { Layout, Menu } from "antd";
+import { CrownOutlined } from "@ant-design/icons";
 import Avatar from "react-avatar";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -16,6 +17,7 @@ import { MdDateRange } from "react-icons/md";
 import { useGetAppointmentsByPatientId } from "@/app/modules/hospital/hooks/queries/appointment/use-get-appointments.query";
 import { useGetOrdersByPatientId } from "@/app/modules/hospital/hooks/mutations/orders/use-get-orders.query";
 import { useGetPrescriptionsByPatientId } from "@/app/modules/hospital/hooks/queries/prescription/use-get-prescriptions.query";
+import { useGetSubscriptionQuery } from "@/app/shares/hooks/queries/use-get-subscription.query";
 
 const { Sider, Content } = Layout;
 
@@ -36,6 +38,24 @@ export default function PatientProfile() {
   const image = auth.patient?.image;
   const name = auth.patient?.fullName;
   const patientId = auth.patient?.patientId;
+  const { data: subscriptionData } = useGetSubscriptionQuery(auth.userId);
+
+  const isVip =
+    subscriptionData?.data?.has_plan &&
+    subscriptionData?.data?.is_valid &&
+    (subscriptionData?.data?.plan_name === "VIP" ||
+      subscriptionData?.data?.plan_name === "ENTERPRISE");
+
+  const getPlanDisplayName = () => {
+    if (!subscriptionData?.data?.has_plan || !subscriptionData?.data?.is_valid) {
+      return "Chưa đăng ký gói";
+    }
+    const planName = subscriptionData.data.plan_name;
+    if (planName === "VIP") return "Gói VIP";
+    if (planName === "ENTERPRISE") return "Gói Enterprise";
+    if (planName === "FREE") return "Gói Free";
+    return "Chưa đăng ký gói";
+  };
 
   // Fetch appointments from API with filters
   const { data: appointmentsData, isLoading: isLoadingAppointments } =
@@ -96,8 +116,16 @@ export default function PatientProfile() {
           }}
         >
           <div className="flex flex-col items-center py-6">
-            <Avatar name={name || ""} src={image || ""} size="100" round={true} />
+            <div className="relative">
+              <Avatar name={name || ""} src={image || ""} size="100" round={true} />
+              {isVip && (
+                <div className="absolute h-6 w-6 top-1 right-1 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full shadow-lg flex items-center justify-center">
+                  <CrownOutlined className="text-white text-sm" />
+                </div>
+              )}
+            </div>
             <h2 className="mt-4 text-xl font-semibold">{name || "Bệnh nhân"}</h2>
+            <p className="mt-2 text-sm text-gray-600">{getPlanDisplayName()}</p>
           </div>
           <Menu
             defaultSelectedKeys={["profile"]}
