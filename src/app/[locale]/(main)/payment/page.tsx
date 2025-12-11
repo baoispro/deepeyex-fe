@@ -24,6 +24,8 @@ import {
   InitMedicalRecordAndDiagnosisRequest,
   MedicalRecordApi,
 } from "@/app/modules/hospital/apis/medical_record/medicalRecordApi";
+import { SubscriptionApi } from "@/app/shares/api/subscriptionApi";
+import SubscribeModal from "@/app/modules/home/components/SubscribeModal";
 
 interface BookingService {
   service_id: string;
@@ -124,6 +126,7 @@ const OrderPage = () => {
   const patient_id = auth.patient?.patientId;
   const user_id = auth.userId;
   const [shippingMethod, setShippingMethod] = useState("delivery");
+  const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
 
   // State cho địa chỉ từ API
   const [cities, setCities] = useState<City[]>([]);
@@ -414,9 +417,51 @@ const OrderPage = () => {
       return;
     }
 
-    if (bookingInfo.service?.name === "Tư vấn trực tuyến với bác sĩ" && paymentMethod != "atm") {
-      toast.error("Dịch vụ này chỉ hỗ trợ thanh toán online.");
-      return;
+    // Kiểm tra limit tư vấn nếu là dịch vụ tư vấn trực tuyến
+    if (bookingInfo.service?.name === "Tư vấn trực tuyến với bác sĩ") {
+      if (!user_id) {
+        toast.error("Vui lòng đăng nhập để đặt lịch tư vấn");
+        return;
+      }
+
+      try {
+        const limitCheck = await SubscriptionApi.checkConsultLimit(user_id);
+        const data = limitCheck.data;
+
+        // Kiểm tra nếu chưa đăng ký gói nào (limit = 0 hoặc không có plan_name)
+        if (!data?.plan_name && (data?.limit === 0 || data?.limit === undefined)) {
+          toast.error("Bạn cần đăng ký gói để sử dụng dịch vụ tư vấn trực tuyến");
+          setSubscribeModalOpen(true);
+          return;
+        }
+
+        // Kiểm tra nếu không thể sử dụng (hết limit hoặc chưa đăng ký)
+        if (!data?.can_use) {
+          if (data?.remaining === 0) {
+            toast.error(
+              "Bạn đã hết lượt tư vấn. Vui lòng đăng ký gói để tiếp tục sử dụng dịch vụ.",
+            );
+          } else {
+            toast.error("Bạn cần đăng ký gói để sử dụng dịch vụ tư vấn trực tuyến");
+          }
+          setSubscribeModalOpen(true);
+          return;
+        }
+      } catch (error: unknown) {
+        // Nếu API trả về 403 hoặc 404, có nghĩa là chưa đăng ký gói hoặc hết limit
+        const err = error as { response?: { status?: number } };
+        if (err?.response?.status === 403 || err?.response?.status === 404) {
+          toast.error("Bạn cần đăng ký gói để sử dụng dịch vụ tư vấn trực tuyến");
+          setSubscribeModalOpen(true);
+          return;
+        }
+        console.error("Error checking consult limit:", error);
+      }
+
+      if (paymentMethod != "atm") {
+        toast.error("Dịch vụ này chỉ hỗ trợ thanh toán online.");
+        return;
+      }
     }
 
     // Map cartItems sang order_items backend yêu cầu
@@ -933,6 +978,16 @@ const OrderPage = () => {
           </div>
         </div>
       </div>
+
+      <SubscribeModal
+        open={subscribeModalOpen}
+        onClose={() => setSubscribeModalOpen(false)}
+        planName="VIP"
+        onSuccess={() => {
+          // Refresh lại sau khi đăng ký thành công
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };

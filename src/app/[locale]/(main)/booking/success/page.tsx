@@ -46,6 +46,25 @@ export default function ConfirmOrderPage() {
   const emailSentRef = useRef(false); // Flag để đảm bảo chỉ gửi email 1 lần
 
   const handleVnpayReturn = async () => {
+    // Kiểm tra subscription type từ URL params trước (vì localStorage có thể bị mất)
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeFromUrl = urlParams.get("type");
+
+    // Nếu URL có type=subscription, redirect ngay đến subscription success
+    if (typeFromUrl === "subscription") {
+      // Giữ nguyên query string để subscription/success page có thể đọc params
+      router.push(`/subscription/success${window.location.search}`);
+      return;
+    }
+
+    // Kiểm tra subscription type từ localStorage
+    const subscriptionType = localStorage.getItem("subscriptionType");
+    if (subscriptionType === "subscription") {
+      // Redirect ngay đến subscription success, không xử lý gì ở đây
+      router.push("/subscription/success");
+      return;
+    }
+
     // Kiểm tra xem có phải từ VNPay return không
     const queryString = window.location.search;
     if (queryString.includes("vnp_ResponseCode")) {
@@ -125,6 +144,25 @@ export default function ConfirmOrderPage() {
   };
 
   useEffect(() => {
+    // Kiểm tra subscription type từ URL params trước (vì localStorage có thể bị mất)
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeFromUrl = urlParams.get("type");
+
+    // Nếu URL có type=subscription, redirect ngay đến subscription success
+    if (typeFromUrl === "subscription") {
+      // Giữ nguyên query string để subscription/success page có thể đọc params
+      router.push(`/subscription/success${window.location.search}`);
+      return;
+    }
+
+    // Kiểm tra subscription type từ localStorage
+    const subscriptionType = localStorage.getItem("subscriptionType");
+    if (subscriptionType === "subscription") {
+      // Redirect ngay đến subscription success, không render gì
+      router.push("/subscription/success");
+      return;
+    }
+
     const type = localStorage.getItem("type");
     setOrderType(type);
 
