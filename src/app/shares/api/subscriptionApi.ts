@@ -24,6 +24,12 @@ export interface SubscribeResponse {
   payment_url?: string | null; // URL thanh toán (nếu có)
 }
 
+export interface CheckPlanResponse {
+  plan_name: string | null;
+  is_valid: boolean;
+  has_plan: boolean;
+}
+
 class SubscriptionClient {
   private readonly client: AxiosInstance;
 
@@ -58,6 +64,16 @@ class SubscriptionClient {
     const response = await this.client.post<ApiResponse<SubscribeResponse>>(
       "/hospital/subscriptions/subscribe",
       data,
+    );
+    return response.data;
+  }
+
+  /**
+   * Kiểm tra gói subscription của user
+   */
+  async checkPlan(userId: string): Promise<ApiResponse<CheckPlanResponse>> {
+    const response = await this.client.get<ApiResponse<CheckPlanResponse>>(
+      `/hospital/subscriptions/check-plan?userId=${userId}`,
     );
     return response.data;
   }

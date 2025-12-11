@@ -12,4 +12,5 @@ export enum QueryKeyEnum {
   MedicalRecords = "medical_records",
   Prescription = "prescriptions",
   Notification = "notifications",
+  Subscription = "subscriptions",
 }
