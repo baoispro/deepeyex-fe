@@ -304,7 +304,7 @@ export default function AppointmentList({
       {!loading && appointments.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {appointments.map((appt) => {
-            const timeSlot = appt?.time_slots[0];
+            const timeSlot = appt?.time_slots?.[0];
             const doctor = timeSlot?.doctor;
             const startTime = dayjs(timeSlot?.start_time);
             const endTime = dayjs(timeSlot?.end_time);
@@ -340,7 +340,7 @@ export default function AppointmentList({
                   </div>
 
                   <Tag color={statusColors[appt.status]} className="text-sm px-3 py-1">
-                    {statusLabels[appt.status].label}
+                    {statusLabels[appt.status]?.label}
                   </Tag>
                 </div>
 
