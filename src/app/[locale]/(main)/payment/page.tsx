@@ -182,6 +182,7 @@ const OrderPage = () => {
       localStorage.setItem("doctor", JSON.stringify(doctorResponse));
       localStorage.setItem("patient", JSON.stringify(patientResponse));
       localStorage.setItem("appointment", data.data.appointment.appointment_id);
+      localStorage.setItem("appointmentCode", data.data.appointment.appointment_code);
       if (paymentMethod === "atm") {
         const orderId = data.data.order?.order_id || Date.now().toString();
         handleVnpayPayment(orderId);

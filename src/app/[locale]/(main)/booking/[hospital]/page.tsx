@@ -21,6 +21,7 @@ import { useState } from "react";
 import { FaUser, FaSearch, FaMapMarkerAlt, FaEye } from "react-icons/fa";
 import { useGetHospitalbySlugQuery } from "@/app/modules/hospital/hooks/queries/hospitals/use-get-hospital-by-slug.query";
 import { Doctor } from "@/app/modules/hospital/types/doctor";
+import { Specialty } from "@/app/modules/hospital/enums/specialty";
 
 export default function BookingDoctorPage() {
   const router = useRouter();
@@ -36,14 +37,18 @@ export default function BookingDoctorPage() {
 
   const hospital = data?.data;
   const doctors: Doctor[] = hospital?.Doctors || [];
+  const validSpecialties = Object.values(Specialty);
 
   // State lọc
   const [nameFilter, setNameFilter] = useState("");
-  const [specialtyFilter, setSpecialtyFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
+  const [specialtyFilter, setSpecialtyFilter] = useState<Specialty | "">("");
 
   // Lọc theo input
   const filteredDoctors = doctors.filter((doc) => {
+    if (!validSpecialties.includes(doc.specialty as Specialty)) {
+      return false;
+    }
     let match = true;
     if (nameFilter && !doc.full_name.toLowerCase().includes(nameFilter.toLowerCase())) {
       match = false;
@@ -85,12 +90,14 @@ export default function BookingDoctorPage() {
                   <Select
                     placeholder="Chọn chuyên khoa"
                     style={{ width: "100%" }}
-                    onChange={(value) => setSpecialtyFilter(value)}
+                    value={specialtyFilter || undefined}
+                    onChange={(value) => setSpecialtyFilter(value as Specialty | "")}
                     allowClear
+                    onClear={() => setSpecialtyFilter("")}
                   >
-                    <Option value="NHAN_KHOA">Nhãn khoa</Option>
-                    <Option value="PHAU_THUAT">Phẫu thuật</Option>
-                    <Option value="KHUC_XA">Khúc xạ</Option>
+                    <Option value={Specialty.SpecialtyOphthalmology}>Nhãn khoa</Option>
+                    <Option value={Specialty.SpecialtyInternalMedicine}>Phẫu thuật</Option>
+                    <Option value={Specialty.SpecialtyNeurology}>Khúc xạ</Option>
                   </Select>
                 </div>
                 <div>
@@ -151,7 +158,15 @@ export default function BookingDoctorPage() {
                         }
                         description={
                           <Space direction="vertical">
-                            <Tag color="blue">{item.specialty}</Tag>
+                            <Tag color="blue">
+                              {item.specialty === Specialty.SpecialtyOphthalmology
+                                ? "Nhãn khoa"
+                                : item.specialty === Specialty.SpecialtyInternalMedicine
+                                  ? "Phẫu thuật"
+                                  : item.specialty === Specialty.SpecialtyNeurology
+                                    ? "Khúc xạ"
+                                    : item.specialty}
+                            </Tag>{" "}
                             <Paragraph style={{ margin: 0 }}>
                               <Text strong>SĐT:</Text> {item.phone}
                             </Paragraph>

@@ -1,4 +1,5 @@
 import { Appointment } from "./appointment";
+import { Doctor } from "./doctor";
 
 export type MedicalRecord = {
   record_id: string;
@@ -14,4 +15,5 @@ export type MedicalRecord = {
   //   attachments: AttachmentResponse[];
   //   prescriptions: PrescriptionResponse[];
   appointment?: Appointment | null;
+  // doctor?: Doctor | null;
 };

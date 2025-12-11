@@ -1,3 +1,5 @@
+import { MedicalRecord } from "./medical_record";
+
 export interface PrescriptionItem {
   prescription_item_id: string;
   prescription_id: string;
@@ -19,6 +21,9 @@ export interface Prescription {
   items: PrescriptionItem[];
   CreatedAt: string;
   UpdatedAt: string;
+  // medical_record: MedicalRecord;
+  doctor_name: string;
+  notes: string;
 }
 
 export const prescriptionStatusLabels: Record<
