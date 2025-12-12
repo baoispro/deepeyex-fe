@@ -31,6 +31,7 @@ import { HomeOutlined } from "@ant-design/icons";
 import { useGetTimeSlotsByDoctorAndMonthQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-month.query";
 import { useGetTimeSlotsByDoctorAndDateQuery } from "@/app/modules/hospital/hooks/queries/timeslots/use-get-time-slots-by-doctor-and-date.query";
 import { useGetAllServicesByDoctorIdQuery } from "@/app/modules/hospital/hooks/queries/services/use-get-list-service.query";
+import { Specialty } from "@/app/modules/hospital/enums/specialty";
 
 interface PatientFormValues {
   patientType: "Bản thân" | "Người khác";
@@ -475,7 +476,15 @@ export default function BookAppointmentPage() {
               {doctor.full_name}
             </Title>
             <Paragraph style={{ marginBottom: 0, color: "#1890ff" }}>
-              <Text type="secondary">{doctor.specialty}</Text>
+              <Text type="secondary">
+                {doctor.specialty === Specialty.SpecialtyOphthalmology
+                  ? "Nhãn khoa"
+                  : doctor.specialty === Specialty.SpecialtyInternalMedicine
+                    ? "Phẫu thuật"
+                    : doctor.specialty === Specialty.SpecialtyNeurology
+                      ? "Khúc xạ"
+                      : doctor.specialty}
+              </Text>
             </Paragraph>
           </Col>
         </Row>

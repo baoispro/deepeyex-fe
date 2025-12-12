@@ -43,6 +43,7 @@ export default function ConfirmOrderPage() {
   const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | null>(null);
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [appointmentCode, setAppointmentCode] = useState<string | null>(null);
   const emailSentRef = useRef(false); // Flag để đảm bảo chỉ gửi email 1 lần
 
   const handleVnpayReturn = async () => {
@@ -89,9 +90,16 @@ export default function ConfirmOrderPage() {
             );
           }
 
+          // Lưu appointmentCode vào state trước khi xóa localStorage
+          if (orderType === "booking") {
+            const code = localStorage.getItem("appointmentCode");
+            if (code) setAppointmentCode(code);
+          }
+
           localStorage.removeItem("doctor");
           localStorage.removeItem("patient");
           localStorage.removeItem("appointment");
+          localStorage.removeItem("appointmentCode");
 
           // Cập nhật trạng thái đơn hàng thành PAID
           if (orderId) {
@@ -165,6 +173,12 @@ export default function ConfirmOrderPage() {
 
     const type = localStorage.getItem("type");
     setOrderType(type);
+
+    // Load appointmentCode nếu là đặt lịch khám
+    if (type === "booking") {
+      const code = localStorage.getItem("appointmentCode");
+      setAppointmentCode(code);
+    }
 
     // Load cart items nếu là đặt thuốc
     if (type === "thuoc") {
@@ -322,6 +336,12 @@ export default function ConfirmOrderPage() {
                     {orderType === "booking" ? "Đặt lịch khám bệnh" : "Đặt mua thuốc"}
                   </span>
                 </div>
+                {orderType === "booking" && appointmentCode && (
+                  <div className="flex justify-between items-center bg-white rounded-lg p-3 md:col-span-2">
+                    <span className="text-gray-600 font-medium">Số phiếu chờ:</span>
+                    <span className="text-blue-600 font-bold">{appointmentCode}</span>
+                  </div>
+                )}
               </div>
             </div>
 
