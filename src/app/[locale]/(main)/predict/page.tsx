@@ -31,7 +31,7 @@ export default function EyeDiagnosisApp() {
       setShowModal(true);
     },
     onError: (error) => {
-      console.error("Chẩn đoán thất bại:", error.message);
+      toast.error(`Không phát hiện được mắt trong ảnh.`);
       setIsButtonDisabled(false);
     },
   });
