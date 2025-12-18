@@ -11,7 +11,7 @@ export interface OrderItem {
   price: number;
 }
 
-export type OrderStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "PAID";
 export type DeliveryMethod = "PICKUP" | "HOME_DELIVERY";
 
 export interface Order {
@@ -40,6 +40,7 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
   CONFIRMED: "Đã xác nhận",
   COMPLETED: "Đã hoàn tất",
   CANCELLED: "Đã hủy",
+  PAID: "Đã thanh toán",
 };
 
 export const deliveryMethodLabels: Record<DeliveryMethod, string> = {

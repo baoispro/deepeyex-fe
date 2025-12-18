@@ -22,6 +22,7 @@ const statusColors: Record<Order["status"], string> = {
   CONFIRMED: "blue",
   COMPLETED: "green",
   CANCELLED: "red",
+  PAID: "green",
 };
 
 export default function InvoiceSection({ orders, loading }: InvoiceProps) {
