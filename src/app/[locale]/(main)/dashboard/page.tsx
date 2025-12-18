@@ -1,157 +1,156 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "@/app/shares/locales/navigation";
+import { useMemo } from "react";
 import { FaCalendarAlt, FaStethoscope, FaPills, FaBell, FaArrowRight } from "react-icons/fa";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
 import Image from "next/image";
 import Link from "next/link";
-import Avatar from "react-avatar";
+import { Spin } from "antd";
+import { useAppSelector } from "@/app/shares/stores";
+import { useGetAppointmentsByPatientId } from "@/app/modules/hospital/hooks/queries/appointment/use-get-appointments.query";
+import { useGetNotificationsByUserQuery } from "@/app/modules/hospital/hooks/queries/notification/use-get-all-notification.query";
+import { useGetAIDiagnosisByPatientId } from "@/app/modules/hospital/hooks/queries/aidiagnosis/use-get-aidiagnosis-by-patient.query";
+import { useGetMedicationRemindersByPatientId } from "@/app/modules/hospital/hooks/queries/medication-reminder/use-get-medication-reminders-by-patient.query";
+import { MedicationReminderApi } from "@/app/modules/hospital/apis/medication-reminder/medicationReminderApi";
+import { AIDiagnosis } from "@/app/modules/hospital/apis/aidiagnosis/types/aidiagnosis";
 
+dayjs.extend(relativeTime);
 dayjs.locale("vi");
 
-// Mock data
-const mockAppointmentsToday = [
-  {
-    appointment_id: "1",
-    appointment_code: "APPT-001",
-    doctor: {
-      full_name: "Nguyễn Văn An",
-      image:
-        "https://deepeyex-admin.s3.ap-southeast-1.amazonaws.com/doctors/a03fc991-c81c-4887-8412-dab5aa643e53.webp",
-      specialty: "ophthalmology",
-    },
-    service_name: "Khám tổng quát",
-    time_slots: [
-      {
-        start_time: dayjs().hour(14).minute(0).toISOString(),
-        end_time: dayjs().hour(14).minute(30).toISOString(),
-      },
-    ],
-  },
-  {
-    appointment_id: "2",
-    appointment_code: "APPT-002",
-    doctor: {
-      full_name: "Trần Thị Bình",
-      image:
-        "https://deepeyex-admin.s3.ap-southeast-1.amazonaws.com/doctors/a03fc991-c81c-4887-8412-dab5aa643e53.webp",
-      specialty: "ophthalmology",
-    },
-    service_name: "Kiểm tra mắt",
-    time_slots: [
-      {
-        start_time: dayjs().hour(16).minute(0).toISOString(),
-        end_time: dayjs().hour(16).minute(30).toISOString(),
-      },
-    ],
-  },
-];
-
-const mockRecentDiagnosis = [
-  {
-    record_id: "1",
-    diagnosis: "Viêm kết mạc (Đau mắt đỏ)",
-    notes: "Cần điều trị bằng thuốc nhỏ mắt",
-    created_at: dayjs().subtract(1, "day").toISOString(),
-    patient_id: "p1",
-    appointment_id: "a1",
-    doctor_id: "d1",
-  },
-  {
-    record_id: "2",
-    diagnosis: "Khô mắt",
-    notes: "Bổ sung nước mắt nhân tạo",
-    created_at: dayjs().subtract(3, "days").toISOString(),
-    patient_id: "p1",
-    appointment_id: "a2",
-    doctor_id: "d2",
-  },
-  {
-    record_id: "3",
-    diagnosis: "Mắt bình thường",
-    notes: "Không có dấu hiệu bất thường",
-    created_at: dayjs().subtract(5, "days").toISOString(),
-    patient_id: "p1",
-    appointment_id: "a3",
-    doctor_id: "d3",
-  },
-  {
-    record_id: "4",
-    diagnosis: "Chắp / Lẹo",
-    notes: "Chườm nóng, vệ sinh mắt",
-    created_at: dayjs().subtract(7, "days").toISOString(),
-    patient_id: "p1",
-    appointment_id: "a4",
-    doctor_id: "d4",
-  },
-];
-
-const mockMedications = [
-  {
-    id: "1",
-    name: "Thuốc nhỏ mắt",
-    time: "9:00 AM",
-    instruction: "1 lần, nhỏ 2 giọt mỗi bên mắt",
-    taken: true,
-  },
-  {
-    id: "2",
-    name: "Vitamin A",
-    time: "12:00 PM",
-    instruction: "1 viên sau khi ăn trưa",
-    taken: false,
-  },
-  {
-    id: "3",
-    name: "Kháng sinh",
-    time: "6:00 PM",
-    instruction: "1 viên với nước",
-    taken: false,
-    isUpcoming: true,
-  },
-];
-
-const mockNotifications = [
-  {
-    id: "1",
-    type: "appointment",
-    title: "Lịch khám tới",
-    message: "Bạn có lịch khám vào ngày mai lúc 14:00",
-    time: "2 giờ trước",
-    color: "blue",
-  },
-  {
-    id: "2",
-    type: "diagnosis",
-    title: "Chẩn đoán mới",
-    message: "Kết quả chẩn đoán của bạn đã sẵn sàng",
-    time: "5 giờ trước",
-    color: "green",
-  },
-  {
-    id: "3",
-    type: "medication",
-    title: "Nhắc uống thuốc",
-    message: "Đừng quên uống thuốc sau bữa ăn",
-    time: "1 ngày trước",
-    color: "orange",
-  },
-];
-
 export default function PatientDashboard() {
-  const router = useRouter();
-  const [medications, setMedications] = useState(mockMedications);
+  const auth = useAppSelector((state) => state.auth);
+  const patientId = auth.patient?.patientId;
+  const userId = auth.userId;
   const today = dayjs().format("YYYY-MM-DD");
 
+  // Fetch appointments
+  const { data: appointmentsData, isLoading: isLoadingAppointments } =
+    useGetAppointmentsByPatientId(patientId || undefined, {
+      date: today,
+      sort: "newest",
+    });
+
+  // Fetch notifications
+  const { data: notificationsData, isLoading: isLoadingNotifications } =
+    useGetNotificationsByUserQuery(userId || "");
+
+  // Fetch AI diagnoses
+  const { data: aiDiagnosesData, isLoading: isLoadingDiagnoses } = useGetAIDiagnosisByPatientId(
+    patientId || undefined,
+  );
+
+  // Fetch medication reminders
+  const { data: medicationRemindersData, isLoading: isLoadingMedications } =
+    useGetMedicationRemindersByPatientId(patientId || undefined);
+
+  // Process appointments for today
+  const appointmentsToday = useMemo(() => {
+    if (!appointmentsData?.data) return [];
+    return appointmentsData.data.filter((appt) => {
+      const firstSlot = appt.time_slots?.[0];
+      if (!firstSlot) return false;
+      const appointmentDate = dayjs(firstSlot.start_time).format("YYYY-MM-DD");
+      return appointmentDate === today;
+    });
+  }, [appointmentsData, today]);
+
+  // Process AI diagnoses - map to MedicalRecord-like format
+  const recentDiagnoses = useMemo(() => {
+    if (!aiDiagnosesData || !Array.isArray(aiDiagnosesData)) return [];
+    return aiDiagnosesData
+      .map((diagnosisResponse) => {
+        // API returns array, handle both ApiResponse<AIDiagnosis> and AIDiagnosis formats
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const responseAny = diagnosisResponse as any;
+        const diagnosis: AIDiagnosis = responseAny.data || responseAny;
+        return {
+          record_id: diagnosis.record_id || "",
+          diagnosis: diagnosis.disease_code || "Chưa có chẩn đoán",
+          notes: diagnosis.notes || "",
+          created_at: diagnosis.created_at || "",
+          patient_id: diagnosis.patient_id || "",
+          appointment_id: "",
+          doctor_id: diagnosis.verified_by || "",
+        };
+      })
+      .sort((a, b) => dayjs(b.created_at).valueOf() - dayjs(a.created_at).valueOf());
+  }, [aiDiagnosesData]);
+
+  // Process medication reminders
+  const medications = useMemo(() => {
+    if (!medicationRemindersData?.data) return [];
+    const now = dayjs();
+    return medicationRemindersData.data.map((med) => {
+      // Parse reminder_time từ ISO datetime string
+      const reminderDateTime = dayjs(med.reminder_time);
+      const isUpcoming = reminderDateTime.isAfter(now);
+      const isToday = reminderDateTime.format("YYYY-MM-DD") === today;
+      const isTomorrow =
+        reminderDateTime.format("YYYY-MM-DD") === dayjs().add(1, "day").format("YYYY-MM-DD");
+
+      // Format ngày hiển thị
+      let dateDisplay = "";
+      if (isToday) {
+        dateDisplay = "Hôm nay";
+      } else if (isTomorrow) {
+        dateDisplay = "Ngày mai";
+      } else {
+        dateDisplay = reminderDateTime.format("DD/MM/YYYY");
+      }
+
+      return {
+        id: med.id,
+        name: med.drug_name,
+        time: reminderDateTime.format("h:mm A"),
+        date: dateDisplay,
+        dateTime: reminderDateTime.format("YYYY-MM-DD"),
+        instruction: med.notes || "",
+        taken: med.status === "DONE",
+        isUpcoming,
+      };
+    });
+  }, [medicationRemindersData, today]);
+
+  // Process notifications
+  const notifications = useMemo(() => {
+    if (!notificationsData?.data) return [];
+    return notificationsData.data.slice(0, 3).map((notif) => {
+      let color = "blue";
+      if (
+        notif.title.toLowerCase().includes("chẩn đoán") ||
+        notif.title.toLowerCase().includes("diagnosis")
+      ) {
+        color = "green";
+      } else if (
+        notif.title.toLowerCase().includes("thuốc") ||
+        notif.title.toLowerCase().includes("medication")
+      ) {
+        color = "orange";
+      }
+      return {
+        id: notif.id,
+        title: notif.title,
+        message: notif.message,
+        time: dayjs(notif.createdAt).fromNow(),
+        color,
+      };
+    });
+  }, [notificationsData]);
+
   // Kiểm tra hôm nay đã chẩn đoán chưa
-  const hasDiagnosisToday = mockRecentDiagnosis.some((record) => {
+  const hasDiagnosisToday = recentDiagnoses.some((record) => {
     return dayjs(record.created_at).format("YYYY-MM-DD") === today;
   });
 
-  const handleMarkMedicationTaken = (id: string) => {
-    setMedications((prev) => prev.map((med) => (med.id === id ? { ...med, taken: true } : med)));
+  const handleMarkMedicationTaken = async (id: string) => {
+    try {
+      await MedicationReminderApi.markTaken(id);
+      // Refetch sẽ tự động cập nhật UI
+    } catch (error) {
+      console.error("Error marking medication as taken:", error);
+    }
   };
 
   const getColorClasses = (color: string) => {
@@ -186,14 +185,18 @@ export default function PatientDashboard() {
                   <FaCalendarAlt className="text-blue-500 text-xl" />
                   <h2 className="text-xl font-bold text-gray-800">Lịch khám hôm nay</h2>
                 </div>
-                {mockAppointmentsToday.length > 0 && (
+                {appointmentsToday.length > 0 && (
                   <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
-                    {mockAppointmentsToday.length} lịch hẹn
+                    {appointmentsToday.length} lịch hẹn
                   </span>
                 )}
               </div>
 
-              {mockAppointmentsToday.length === 0 ? (
+              {isLoadingAppointments ? (
+                <div className="flex justify-center py-8">
+                  <Spin size="large" />
+                </div>
+              ) : appointmentsToday.length === 0 ? (
                 <div className="text-center py-8">
                   <FaCalendarAlt className="text-gray-300 text-6xl mx-auto mb-4" />
                   <p className="text-gray-600 mb-4">Hôm nay không có lịch khám nào</p>
@@ -206,7 +209,7 @@ export default function PatientDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {mockAppointmentsToday.map((appt) => {
+                  {appointmentsToday.map((appt) => {
                     const timeSlot = appt?.time_slots?.[0];
                     const startTime = timeSlot ? dayjs(timeSlot.start_time) : null;
                     const endTime = timeSlot ? dayjs(timeSlot.end_time) : null;
@@ -267,7 +270,11 @@ export default function PatientDashboard() {
                 </Link>
               </div>
 
-              {mockRecentDiagnosis.length === 0 ? (
+              {isLoadingDiagnoses ? (
+                <div className="flex justify-center py-8">
+                  <Spin size="large" />
+                </div>
+              ) : recentDiagnoses.length === 0 ? (
                 <div className="text-center py-8 bg-gradient-to-br from-blue-50 to-green-50 rounded-lg border-2 border-dashed border-gray-300">
                   <FaStethoscope className="text-green-300 text-6xl mx-auto mb-4" />
                   <p className="text-gray-700 font-semibold mb-2">Chưa có lịch sử chẩn đoán</p>
@@ -283,7 +290,7 @@ export default function PatientDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {mockRecentDiagnosis.slice(0, 3).map((record) => (
+                  {recentDiagnoses.slice(0, 3).map((record) => (
                     <div
                       key={record.record_id}
                       className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -330,7 +337,7 @@ export default function PatientDashboard() {
             </div>
 
             {/* Timeline chẩn đoán */}
-            {mockRecentDiagnosis.length > 0 && (
+            {recentDiagnoses.length > 0 && (
               <div className="bg-white rounded-xl shadow-md p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <FaStethoscope className="text-purple-500 text-xl" />
@@ -342,7 +349,7 @@ export default function PatientDashboard() {
 
                   {/* Timeline items */}
                   <div className="space-y-4 relative">
-                    {mockRecentDiagnosis.map((record, index) => (
+                    {recentDiagnoses.map((record, index) => (
                       <div key={record.record_id} className="flex items-start gap-4 relative">
                         {/* Dot */}
                         <div className="relative z-10 flex-shrink-0">
@@ -376,48 +383,70 @@ export default function PatientDashboard() {
                 <FaPills className="text-orange-500 text-xl" />
                 <h2 className="text-xl font-bold text-gray-800">Nhắc uống thuốc</h2>
               </div>
-              <div className="space-y-3">
-                {medications.map((med) => (
-                  <div
-                    key={med.id}
-                    className={`${
-                      med.isUpcoming ? "opacity-50 bg-gray-50" : "bg-orange-50"
-                    } border border-orange-200 rounded-lg p-4`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <p
-                        className={`font-semibold ${med.isUpcoming ? "text-gray-600" : "text-orange-900"}`}
-                      >
-                        {med.name}
-                      </p>
-                      <span
-                        className={`text-xs text-white px-2 py-1 rounded-full ${
-                          med.isUpcoming ? "bg-gray-400" : "bg-orange-500"
-                        }`}
-                      >
-                        {med.time}
-                      </span>
-                    </div>
-                    <p
-                      className={`text-sm mb-2 ${med.isUpcoming ? "text-gray-600" : "text-orange-800"}`}
+              {isLoadingMedications ? (
+                <div className="flex justify-center py-8">
+                  <Spin size="large" />
+                </div>
+              ) : medications.length === 0 ? (
+                <div className="text-center py-8">
+                  <FaPills className="text-gray-300 text-6xl mx-auto mb-4" />
+                  <p className="text-gray-600">Không có nhắc nhở uống thuốc</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {medications.map((med) => (
+                    <div
+                      key={med.id}
+                      className={`${
+                        med.isUpcoming ? "opacity-50 bg-gray-50" : "bg-orange-50"
+                      } border border-orange-200 rounded-lg p-4`}
                     >
-                      {med.instruction}
-                    </p>
-                    {med.taken ? (
-                      <p className="text-xs text-green-600 font-semibold">✓ Đã uống thuốc</p>
-                    ) : !med.isUpcoming ? (
-                      <button
-                        onClick={() => handleMarkMedicationTaken(med.id)}
-                        className="text-xs text-orange-600 hover:text-orange-700 font-semibold"
+                      <div className="flex items-center justify-between mb-2">
+                        <p
+                          className={`font-semibold ${med.isUpcoming ? "text-gray-600" : "text-orange-900"}`}
+                        >
+                          {med.name}
+                        </p>
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-xs text-white px-2 py-1 rounded-full ${
+                                med.isUpcoming ? "bg-gray-400" : "bg-orange-500"
+                              }`}
+                            >
+                              {med.time}
+                            </span>
+                            <span
+                              className={`text-xs ${
+                                med.isUpcoming ? "text-gray-500" : "text-orange-600"
+                              } font-medium`}
+                            >
+                              {med.date}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <p
+                        className={`text-sm mb-2 ${med.isUpcoming ? "text-gray-600" : "text-orange-800"}`}
                       >
-                        Chưa uống
-                      </button>
-                    ) : (
-                      <p className="text-xs text-gray-500 font-semibold">Chưa đến giờ</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+                        {med.instruction}
+                      </p>
+                      {med.taken ? (
+                        <p className="text-xs text-green-600 font-semibold">✓ Đã uống thuốc</p>
+                      ) : !med.isUpcoming ? (
+                        <button
+                          onClick={() => handleMarkMedicationTaken(med.id)}
+                          className="text-xs text-orange-600 hover:text-orange-700 font-semibold"
+                        >
+                          Chưa uống
+                        </button>
+                      ) : (
+                        <p className="text-xs text-gray-500 font-semibold">Chưa đến giờ</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Thông báo */}
@@ -434,18 +463,29 @@ export default function PatientDashboard() {
                   Xem tất cả
                 </Link>
               </div>
-              <div className="space-y-3">
-                {mockNotifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`border-l-4 rounded p-3 ${getColorClasses(notif.color)}`}
-                  >
-                    <p className="text-sm font-semibold text-gray-900 mb-1">{notif.title}</p>
-                    <p className="text-xs text-gray-600">{notif.message}</p>
-                    <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
-                  </div>
-                ))}
-              </div>
+              {isLoadingNotifications ? (
+                <div className="flex justify-center py-8">
+                  <Spin size="large" />
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="text-center py-8">
+                  <FaBell className="text-gray-300 text-6xl mx-auto mb-4" />
+                  <p className="text-gray-600">Không có thông báo</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`border-l-4 rounded p-3 ${getColorClasses(notif.color)}`}
+                    >
+                      <p className="text-sm font-semibold text-gray-900 mb-1">{notif.title}</p>
+                      <p className="text-xs text-gray-600">{notif.message}</p>
+                      <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
